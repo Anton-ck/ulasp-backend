@@ -1,11 +1,10 @@
 import express from "express";
 
 import {
-  registerSchema,
-  loginSchema,
-  updateUserName,
-  refreshSchema
-} from "../../schemas/user.js";
+  adminLoginSchema,
+  updateAdminName,
+  refreshSchema,
+} from "../../schemas/admin.js";
 
 import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
@@ -17,24 +16,23 @@ import controllers from "../../controllers/auth.js";
 const router = express.Router();
 
 router.post(
-  "/signup",
+  "/signup-admin",
   isEmptyBody,
-  validateBody(registerSchema),
-  controllers.signUp
+  controllers.signUpAdmin
 );
 
 router.post(
-  "/signin",
+  "/signin-admin",
   isEmptyBody,
-  validateBody(loginSchema),
-  controllers.signIn
+  // validateBody(adminLoginSchema),
+  controllers.adminSignIn
 );
 
-router.post("/refreshUser", validateBody(refreshSchema), controllers.getRefreshToken);
+// router.post("/refreshUser", validateBody(refreshSchema), controllers.getRefreshToken);
 
-router.get("/current", authenticate, controllers.getCurrentUser);
+// router.get("/current", authenticate, controllers.getCurrentUser);
 
-router.post("/logout", authenticate, controllers.logoutUser);
+// router.post("/logout", authenticate, controllers.logoutUser);
 
 // router.patch(
 //   "/avatars",
@@ -43,11 +41,11 @@ router.post("/logout", authenticate, controllers.logoutUser);
 //   controllers.updateAvatar
 // );
 
-router.patch(
-  "/",
-  authenticate,
-  validateBody(updateUserName),
-  controllers.updateUserName
-);
+// router.patch(
+//   "/",
+//   authenticate,
+//   validateBody(updateUserName),
+//   controllers.updateUserName
+// );
 
 export default router;

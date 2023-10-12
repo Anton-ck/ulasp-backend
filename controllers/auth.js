@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-import User from "../models/user.js";
+import Admin from "../models/admin.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 
@@ -10,18 +10,18 @@ dotenv.config();
 
 const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 
-const accessTokenExpires = "30m";
+const accessTokenExpires = "130m";
 
-const signUp = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
+const signUpAdmin = async (req, res) => {
+  const { login, password } = req.body;
+  const user = await Admin.findOne({ login });
 
   if (user) {
-    throw HttpError(409, "Email in use");
+    throw HttpError(409, "login in use");
   }
   const hashPassword = await bcrypt.hash(password, 10);
 
-  const newUser = await User.create({
+  const newUser = await Admin.create({
     ...req.body,
     password: hashPassword,
   });
@@ -30,47 +30,56 @@ const signUp = async (req, res) => {
     id: newUser._id,
   };
 
-  const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, { expiresIn: accessTokenExpires });
+  const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
+    expiresIn: accessTokenExpires,
+  });
 
-  const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, { expiresIn: "7d" });
+  const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, {
+    expiresIn: "7d",
+  });
 
-  await User.findByIdAndUpdate(newUser._id, { accessToken, refreshToken });
+  await Admin.findByIdAndUpdate(newUser._id, { accessToken, refreshToken });
 
   res.status(201).json({
     accessToken,
     refreshToken,
     user: {
-      name: newUser.name,
-      email: newUser.email,
+      login: newUser.login,
     },
   });
 };
 
-const signIn = async (req, res) => {
-  const { email, password } = req.body;
 
-  const user = await User.findOne({ email });
-  const passwordCompare = await bcrypt.compare(password, user.password);
-  if (!user || !passwordCompare) {
-    throw HttpError(401, "Email  or password is wrong");
+
+const adminSignIn = async (req, res) => {
+  const { login, password } = req.body;
+
+  const admin = await Admin.findOne({ login });
+  const passwordCompare = await bcrypt.compare(password, admin.password);
+  if (!admin || !passwordCompare) {
+    throw HttpError(401, "Login  or password is wrong");
   }
 
   const payload = {
-    id: user._id,
+    id: admin._id,
   };
 
-  if (!user || !passwordCompare) {
-    throw HttpError(401, "Email  or password is wrong");
+  if (!admin || !passwordCompare) {
+    throw HttpError(401, "Login  or password is wrong");
   }
 
-  const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, { expiresIn: accessTokenExpires });
+  const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
+    expiresIn: accessTokenExpires,
+  });
 
-  const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, { expiresIn: "7d" });
-  await User.findByIdAndUpdate(user._id, { accessToken, refreshToken });
+  const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, {
+    expiresIn: "7d",
+  });
+  await Admin.findByIdAndUpdate(admin._id, { accessToken, refreshToken });
   res.json({
     accessToken,
     refreshToken,
-    user: { name: user.name, email: user.email, avatarURL: user.avatarURL },
+    admin: { name: admin.name, login: admin.login, avatarURL: admin.avatarURL },
   });
 };
 
@@ -79,7 +88,7 @@ const getRefreshToken = async (req, res, next) => {
   try {
     const { id } = jwt.verify(token, REFRESH_SECRET_KEY);
 
-    const isExist = await User.findOne({ refreshToken: token });
+    const isExist = await Admin.findOne({ refreshToken: token });
     if (!isExist) {
       next(HttpError(403), "Token invalid");
     }
@@ -88,11 +97,15 @@ const getRefreshToken = async (req, res, next) => {
       id,
     };
 
-    const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, { expiresIn: accessTokenExpires });
+    const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
+      expiresIn: accessTokenExpires,
+    });
 
-    const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, { expiresIn: "7d" });
+    const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, {
+      expiresIn: "7d",
+    });
 
-    await User.findByIdAndUpdate(isExist._id, { accessToken, refreshToken });
+    await Admin.findByIdAndUpdate(isExist._id, { accessToken, refreshToken });
 
     res.json({ accessToken, refreshToken });
   } catch (error) {
@@ -100,53 +113,53 @@ const getRefreshToken = async (req, res, next) => {
   }
 };
 
-const getCurrentUser = async (req, res) => {
-  const { name, email, avatarURL } = req.user;
+// const getCurrentUser = async (req, res) => {
+//   const { name, email, avatarURL } = req.user;
 
-  res.json({
-    name,
-    email,
-    avatarURL,
-  });
-};
+//   res.json({
+//     name,
+//     email,
+//     avatarURL,
+//   });
+// };
 
-const logoutUser = async (req, res) => {
-  const { _id } = req.user;
-  await User.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
-  res.status(204).json();
-};
+// const logoutUser = async (req, res) => {
+//   const { _id } = req.user;
+//   await User.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
+//   res.status(204).json();
+// };
 
-const updateUserName = async (req, res) => {
-  const { _id } = req.user;
-  const result = await User.findByIdAndUpdate(_id, req.body, { new: true });
-  if (!result) {
-    throw HttpError(404, "Not found");
-  }
-  res.json({ name: result.name });
-};
+// const updateUserName = async (req, res) => {
+//   const { _id } = req.user;
+//   const result = await User.findByIdAndUpdate(_id, req.body, { new: true });
+//   if (!result) {
+//     throw HttpError(404, "Not found");
+//   }
+//   res.json({ name: result.name });
+// };
 
-const updateAvatar = async (req, res) => {
-  const { _id } = req.user;
+// const updateAvatar = async (req, res) => {
+//   const { _id } = req.user;
 
-  if (!req.file) {
-    throw HttpError(404, "File not found for upload");
-  }
+//   if (!req.file) {
+//     throw HttpError(404, "File not found for upload");
+//   }
 
-  const avatarURL = req.file.path;
+//   const avatarURL = req.file.path;
 
-  await User.findByIdAndUpdate(_id, { avatarURL });
+//   await User.findByIdAndUpdate(_id, { avatarURL });
 
-  res.json({
-    avatarURL,
-  });
-};
+//   res.json({
+//     avatarURL,
+//   });
+// };
 
 export default {
-  signUp: ctrlWrapper(signUp),
-  signIn: ctrlWrapper(signIn),
-  getRefreshToken: ctrlWrapper(getRefreshToken),
-  getCurrentUser: ctrlWrapper(getCurrentUser),
-  logoutUser: ctrlWrapper(logoutUser),
-  updateUserName: ctrlWrapper(updateUserName),
-  updateAvatar: ctrlWrapper(updateAvatar),
+  signUpAdmin: ctrlWrapper(signUpAdmin),
+  adminSignIn: ctrlWrapper(adminSignIn),
+  // getRefreshToken: ctrlWrapper(getRefreshToken),
+  // getCurrentUser: ctrlWrapper(getCurrentUser),
+  // logoutUser: ctrlWrapper(logoutUser),
+  // updateUserName: ctrlWrapper(updateUserName),
+  // updateAvatar: ctrlWrapper(updateAvatar),
 };

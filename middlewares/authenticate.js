@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-import User from "../models/user.js";
+import Admin from "../models/admin.js";
 
 import HttpError from "../helpers/HttpError.js";
 
@@ -20,12 +20,12 @@ const authenticate = async (req, res, next) => {
 
   try {
     const { id } = jwt.verify(accessToken, ACCESS_SECRET_KEY);
-    const user = await User.findById(id);
-    if (!user || !user.accessToken || user.accessToken !== accessToken) {
+    const admin = await Admin.findById(id);
+    if (!admin || !admin.accessToken || admin.accessToken !== accessToken) {
       next(HttpError(401));
     }
 
-    req.user = user;
+    req.admin = admin;
     next();
   } catch (error) {
     next(HttpError(401));

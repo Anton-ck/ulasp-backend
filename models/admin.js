@@ -2,24 +2,22 @@ import { Schema, model } from "mongoose";
 
 import handleMongooseError from "../helpers/handleMongooseError.js";
 
-import emailRegexp from "../helpers/regExp.js";
 
-const userSchema = new Schema(
+const adminSchema = new Schema(
   {
     name: {
       type: String,
-      required: true,
+      default: "",
     },
-    email: {
+    login: {
       type: String,
-      required: [true, "Email is required"],
-      match: emailRegexp,
+      required: [true, "Login is required"],
       unique: true,
     },
     password: {
       type: String,
       minlength: 6,
-      required: [true, "Set password for user"],
+      required: [true, "Set password for admin"],
     },
     accessToken: {
       type: String,
@@ -33,16 +31,16 @@ const userSchema = new Schema(
       type: String,
       default: null,
     },
-    subscription: {
-      type: Boolean,
-      default: false,
+    role: {
+      type: String,
+      default: null,
     },
   },
   { versionKey: false, timestamps: true }
 );
 
-userSchema.post("save", handleMongooseError);
+adminSchema.post("save", handleMongooseError);
 
-const User = model("user", userSchema);
+const Admin = model("admin", adminSchema);
 
-export default User;
+export default Admin;
