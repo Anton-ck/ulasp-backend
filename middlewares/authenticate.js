@@ -9,7 +9,7 @@ dotenv.config();
 
 const { ACCESS_SECRET_KEY } = process.env;
 
-const authenticate = async (req, res, next) => {
+export const authenticateAdmin = async (req, res, next) => {
   const { authorization = "" } = req.headers;
   const [bearer, accessToken] = authorization.split(" ");
 
@@ -32,4 +32,3 @@ const authenticate = async (req, res, next) => {
   }
 };
 
-export default authenticate;

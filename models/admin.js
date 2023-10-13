@@ -31,9 +31,13 @@ const adminSchema = new Schema(
       type: String,
       default: null,
     },
-    role: {
-      type: String,
-      default: null,
+    adminRole: {
+      type: Boolean,
+      default: false,
+    },
+    editorRole: {
+      type: Boolean,
+      default: false,
     },
   },
   { versionKey: false, timestamps: true }

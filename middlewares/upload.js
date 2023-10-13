@@ -1,10 +1,15 @@
-// import multer from "multer";
-// import path from "path";
+import multer from "multer";
+import path from "path";
+import { fileURLToPath } from "url";
 // import { v2 as cloudinary } from "cloudinary";
 // import { CloudinaryStorage } from "multer-storage-cloudinary";
 // import dotenv from "dotenv";
 
-// import HttpError from "../helpers/HttpError.js";
+import HttpError from "../helpers/HttpError.js";
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
 
 // dotenv.config();
 
@@ -72,22 +77,32 @@
 //   },
 // });
 
-// const upload = multer({
-//   storage: storage,
-//   fileFilter: (req, file, cb) => {
-//     const ext = path.extname(file.originalname);
-//     if (ext !== ".png" && ext !== ".jpg" && ext && ext !== ".jpeg") {
-//       cb(
-//         HttpError(
-//           400,
-//           "Wrong extension type! Extensions should be *.png, *.jpg, *.jpeg"
-//         ),
-//         false
-//       );
-//     } else {
-//       cb(null, true);
-//     }
-//   },
-// });
+const tempDir = path.join(__dirname, "../", "tmp");
 
-// export default upload;
+const multerConfig = multer.diskStorage({
+  destination: tempDir,
+  filename: (req, file, cb) => {
+    const originalName = file.originalname.replace(/\.jpeg|\.jpg|\.png/gi, "");
+    cb(null, originalName);
+  },
+});
+
+const upload = multer({
+  storage: multerConfig,
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    if (ext !== ".png" && ext !== ".jpg" && ext && ext !== ".jpeg") {
+      cb(
+        HttpError(
+          400,
+          "Wrong extension type! Extensions should be *.png, *.jpg, *.jpeg"
+        ),
+        false
+      );
+    } else {
+      cb(null, true);
+    }
+  },
+});
+
+export default upload;

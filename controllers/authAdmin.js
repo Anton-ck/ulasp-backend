@@ -1,10 +1,18 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import fs from "fs/promises";
+import Jimp from "jimp";
+import path from "path";
+import { fileURLToPath } from "url";
 
 import Admin from "../models/admin.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
+
+const __filename = fileURLToPath(import.meta.url);
+
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
@@ -49,8 +57,6 @@ const signUpAdmin = async (req, res) => {
   });
 };
 
-
-
 const adminSignIn = async (req, res) => {
   const { login, password } = req.body;
 
@@ -79,11 +85,17 @@ const adminSignIn = async (req, res) => {
   res.json({
     accessToken,
     refreshToken,
-    admin: { name: admin.name, login: admin.login, avatarURL: admin.avatarURL },
+    admin: {
+      name: admin.name,
+      login: admin.login,
+      avatarURL: admin.avatarURL,
+      adminRole: admin.adminRole,
+      editorRole: admin.editorRole,
+    },
   });
 };
 
-const getRefreshToken = async (req, res, next) => {
+const getRefreshTokenAdmin = async (req, res, next) => {
   const { refreshToken: token } = req.body;
   try {
     const { id } = jwt.verify(token, REFRESH_SECRET_KEY);
@@ -113,53 +125,74 @@ const getRefreshToken = async (req, res, next) => {
   }
 };
 
-// const getCurrentUser = async (req, res) => {
-//   const { name, email, avatarURL } = req.user;
+const getCurrentAdmin = async (req, res) => {
+  const { name, login, avatarURL, adminRole, editorRole } = req.admin;
 
-//   res.json({
-//     name,
-//     email,
-//     avatarURL,
-//   });
-// };
+  res.json({
+    name,
+    login,
+    avatarURL,
+    adminRole,
+    editorRole,
+  });
+};
 
-// const logoutUser = async (req, res) => {
-//   const { _id } = req.user;
-//   await User.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
-//   res.status(204).json();
-// };
+const logoutAdmin = async (req, res) => {
+  const { _id } = req.admin;
+  await Admin.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
+  res.status(204).json();
+};
 
-// const updateUserName = async (req, res) => {
-//   const { _id } = req.user;
-//   const result = await User.findByIdAndUpdate(_id, req.body, { new: true });
-//   if (!result) {
-//     throw HttpError(404, "Not found");
-//   }
-//   res.json({ name: result.name });
-// };
+const updateAdminName = async (req, res) => {
+  const { _id } = req.admin;
+  const result = await Admin.findByIdAndUpdate(_id, req.body, { new: true });
+  if (!result) {
+    throw HttpError(404, "Not found");
+  }
+  res.json({ name: result.name });
+};
 
-// const updateAvatar = async (req, res) => {
-//   const { _id } = req.user;
+const avatarsDir = path.join(__dirname, "../", "public", "avatars");
+const tempDirResize = path.join(__dirname, "../", "tmp", "resize");
 
-//   if (!req.file) {
-//     throw HttpError(404, "File not found for upload");
-//   }
+const updateAdminAvatar = async (req, res) => {
+  if (!req.file) {
+    throw HttpError(404, "File not found for upload");
+  }
+  const { _id } = req.admin;
+  const { path: tempDir, originalname } = req.file;
 
-//   const avatarURL = req.file.path;
+  const sizeImg = "250x250_";
+  const fileName = `${_id}_${originalname}`;
+  const resizeFileName = `${sizeImg}${fileName}`;
+  const resultUpload = path.join(avatarsDir, resizeFileName);
+  const resizeResultUpload = path.join(tempDirResize, resizeFileName);
 
-//   await User.findByIdAndUpdate(_id, { avatarURL });
+  const reziseImg = await Jimp.read(tempDir);
 
-//   res.json({
-//     avatarURL,
-//   });
-// };
+  reziseImg
+    .autocrop()
+    .cover(250, 250)
+    .writeAsync(`${tempDirResize}/${resizeFileName}`);
+
+  await fs.unlink(tempDir);
+  await fs.rename(resizeResultUpload, resultUpload);
+
+  const avatarURL = path.join("avatars", resizeFileName);
+
+  await Admin.findByIdAndUpdate(_id, { avatarURL });
+
+  res.json({
+    avatarURL,
+  });
+};
 
 export default {
   signUpAdmin: ctrlWrapper(signUpAdmin),
   adminSignIn: ctrlWrapper(adminSignIn),
-  // getRefreshToken: ctrlWrapper(getRefreshToken),
-  // getCurrentUser: ctrlWrapper(getCurrentUser),
-  // logoutUser: ctrlWrapper(logoutUser),
-  // updateUserName: ctrlWrapper(updateUserName),
-  // updateAvatar: ctrlWrapper(updateAvatar),
+  getRefreshTokenAdmin: ctrlWrapper(getRefreshTokenAdmin),
+  getCurrentAdmin: ctrlWrapper(getCurrentAdmin),
+  logoutAdmin: ctrlWrapper(logoutAdmin),
+  updateAdminName: ctrlWrapper(updateAdminName),
+  updateAdminAvatar: ctrlWrapper(updateAdminAvatar),
 };

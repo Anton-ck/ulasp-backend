@@ -8,44 +8,44 @@ import {
 
 import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
-import authenticate from "../../middlewares/authenticate.js";
-// import upload from "../../middlewares/upload.js";
+import {authenticateAdmin} from "../../middlewares/authenticate.js";
+import upload from "../../middlewares/upload.js";
 
-import controllers from "../../controllers/auth.js";
+import controllers from "../../controllers/authAdmin.js";
 
 const router = express.Router();
 
 router.post(
-  "/signup-admin",
+  "/signup",
   isEmptyBody,
   controllers.signUpAdmin
 );
 
 router.post(
-  "/signin-admin",
+  "/signin",
   isEmptyBody,
-  // validateBody(adminLoginSchema),
+  validateBody(adminLoginSchema),
   controllers.adminSignIn
 );
 
-// router.post("/refreshUser", validateBody(refreshSchema), controllers.getRefreshToken);
+router.post("/refresh", validateBody(refreshSchema), controllers.getRefreshTokenAdmin);
 
-// router.get("/current", authenticate, controllers.getCurrentUser);
+router.get("/current", authenticateAdmin, controllers.getCurrentAdmin);
 
-// router.post("/logout", authenticate, controllers.logoutUser);
+router.post("/logout", authenticateAdmin, controllers.logoutAdmin);
 
-// router.patch(
-//   "/avatars",
-//   authenticate,
-//   upload.single("avatarURL"),
-//   controllers.updateAvatar
-// );
+router.patch(
+  "/",
+  authenticateAdmin,
+  validateBody(updateAdminName),
+  controllers.updateAdminName
+);
 
-// router.patch(
-//   "/",
-//   authenticate,
-//   validateBody(updateUserName),
-//   controllers.updateUserName
-// );
+router.patch(
+  "/avatars",
+  authenticateAdmin,
+  upload.single("avatarURL"),
+  controllers.updateAdminAvatar
+);
 
 export default router;
