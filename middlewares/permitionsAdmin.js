@@ -9,25 +9,22 @@ dotenv.config();
 
 const { ACCESS_SECRET_KEY } = process.env;
 
-export const authenticateAdmin = async (req, res, next) => {
+export const permisionsAdmin = async (req, res, next) => {
   const { authorization = "" } = req.headers;
   const [bearer, accessToken] = authorization.split(" ");
-
-  if (bearer !== "Bearer") {
-    next(HttpError(401));
-    return;
-  }
 
   try {
     const { id } = jwt.verify(accessToken, ACCESS_SECRET_KEY);
     const admin = await Admin.findById(id);
-    if (!admin || !admin.accessToken || admin.accessToken !== accessToken) {
-      next(HttpError(401));
+
+    if (!admin.adminRole) {
+      next(HttpError(403, "You don't have access for this operation"));
     }
 
     req.admin = admin;
     next();
   } catch (error) {
     next(HttpError(401));
+    console.log(error);
   }
 };

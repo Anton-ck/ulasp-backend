@@ -22,10 +22,8 @@ const validateBody = (schema) => {
           throw HttpError(400, `${error.details[0].message}`);
 
         case "string.pattern.base":
-          throw HttpError(
-            400,
-            `${errorContext.key} ${errorContext.value} is invalid!`
-          );
+          console.log(error);
+          throw HttpError(400, `${error.details[0].message}`);
 
         case "any.only":
           throw HttpError(

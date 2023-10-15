@@ -7,7 +7,7 @@ import swaggerUi from "swagger-ui-express";
 import swaggerDocument from "./swagger.json" assert { type: "json" };
 
 import authRouter from "./routes/api/auth.js";
-
+import controlAdminRouter from "./routes/api/controlAdmin.js";
 
 dotenv.config();
 
@@ -21,6 +21,7 @@ app.use(express.json());
 app.use(express.static("public"));
 
 app.use("/admin", authRouter);
+app.use("/admin", controlAdminRouter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

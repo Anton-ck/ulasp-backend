@@ -19,12 +19,14 @@ dotenv.config();
 const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 
 const accessTokenExpires = "130m";
+const refreshTokenExpires = "7d";
+
 
 const signUpAdmin = async (req, res) => {
   const { login, password } = req.body;
-  const user = await Admin.findOne({ login });
+  const admin = await Admin.findOne({ login });
 
-  if (user) {
+  if (admin) {
     throw HttpError(409, "login in use");
   }
   const hashPassword = await bcrypt.hash(password, 10);
@@ -43,7 +45,7 @@ const signUpAdmin = async (req, res) => {
   });
 
   const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, {
-    expiresIn: "7d",
+    expiresIn: refreshTokenExpires,
   });
 
   await Admin.findByIdAndUpdate(newUser._id, { accessToken, refreshToken });
@@ -79,7 +81,7 @@ const adminSignIn = async (req, res) => {
   });
 
   const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, {
-    expiresIn: "7d",
+    expiresIn: refreshTokenExpires,
   });
   await Admin.findByIdAndUpdate(admin._id, { accessToken, refreshToken });
   res.json({
@@ -114,7 +116,7 @@ const getRefreshTokenAdmin = async (req, res, next) => {
     });
 
     const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, {
-      expiresIn: "7d",
+      expiresIn: refreshTokenExpires,
     });
 
     await Admin.findByIdAndUpdate(isExist._id, { accessToken, refreshToken });
