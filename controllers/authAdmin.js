@@ -21,7 +21,6 @@ const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 const accessTokenExpires = "130m";
 const refreshTokenExpires = "7d";
 
-
 const signUpAdmin = async (req, res) => {
   const { login, password } = req.body;
   const admin = await Admin.findOne({ login });
@@ -141,6 +140,7 @@ const getCurrentAdmin = async (req, res) => {
 
 const logoutAdmin = async (req, res) => {
   const { _id } = req.admin;
+  console.log("req.admin", req.admin);
   await Admin.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
   res.status(204).json();
 };
