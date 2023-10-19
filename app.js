@@ -9,6 +9,8 @@ import swaggerDocument from "./swagger.json" assert { type: "json" };
 import authRouter from "./routes/api/auth.js";
 import controlAdminRouter from "./routes/api/controlAdmin.js";
 
+import authUserRouter from "./routes/api/authUser.js";
+
 dotenv.config();
 
 const app = express();
@@ -22,6 +24,8 @@ app.use(express.static("public"));
 
 app.use("/admin", authRouter);
 app.use("/admin", controlAdminRouter);
+
+app.use("/user", authUserRouter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
