@@ -11,11 +11,12 @@ const userSchema = new Schema(
     name: {
       type: String,
       default: "",
+      required: true,
     },
     password: {
       type: String,
       minlength: 6,
-      required: [true, "Set password for admin"],
+      required: [true, "Set password for user"],
     },
     contractNumber: {
       type: String,

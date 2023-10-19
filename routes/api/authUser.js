@@ -6,7 +6,7 @@ import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
 
 import upload from "../../middlewares/upload.js";
-
+import { authenticatUser } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/authUser.js";
 
 const router = express.Router();
@@ -20,8 +20,8 @@ router.post(
 
 router.post("/create", validateBody(createUserSchema), controllers.createUser);
 
-router.get("/current", controllers.getCurrentUser);
+router.get("/current", authenticatUser, controllers.getCurrentUser);
 
-router.post("/logout", controllers.logoutUser);
+router.post("/logout", authenticatUser, controllers.logoutUser);
 
 export default router;
