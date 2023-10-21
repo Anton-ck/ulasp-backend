@@ -21,7 +21,6 @@ const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 const accessTokenExpires = "130m";
 const refreshTokenExpires = "7d";
 
-
 const signUpAdmin = async (req, res) => {
   const { login, password } = req.body;
   const admin = await Admin.findOne({ login });
@@ -84,17 +83,38 @@ const adminSignIn = async (req, res) => {
     expiresIn: refreshTokenExpires,
   });
   await Admin.findByIdAndUpdate(admin._id, { accessToken, refreshToken });
-  res.json({
-    accessToken,
-    refreshToken,
-    admin: {
-      name: admin.name,
-      login: admin.login,
-      avatarURL: admin.avatarURL,
-      adminRole: admin.adminRole,
-      editorRole: admin.editorRole,
-    },
-  });
+
+  if (admin.adminRole) {
+    res.json({
+      accessToken,
+      refreshToken,
+      admin: {
+        login,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        fatherName: admin.fatherName,
+        avatarURL: admin.avatarURL,
+        adminRole: admin.adminRole,
+      },
+    });
+  } else {
+    res.json({
+      accessToken,
+      refreshToken,
+      editor: {
+        login,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        fatherName: admin.fatherName,
+        avatarURL: admin.avatarURL,
+        editorRole: admin.editorRole,
+        taxCode: admin.taxCode,
+        dayOfBirthday: admin.dayOfBirthday,
+        telNumber: admin.telNumber,
+        email: admin.email,
+      },
+    });
+  }
 };
 
 const getRefreshTokenAdmin = async (req, res, next) => {
@@ -128,15 +148,47 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 };
 
 const getCurrentAdmin = async (req, res) => {
-  const { name, login, avatarURL, adminRole, editorRole } = req.admin;
-
-  res.json({
-    name,
+  const {
     login,
+    firstName,
+    lastName,
+    fatherName,
     avatarURL,
     adminRole,
     editorRole,
-  });
+    taxCode,
+    dayOfBirthday,
+    telNumber,
+    email,
+  } = req.admin;
+
+  if (adminRole) {
+    res.json({
+      admin: {
+        login,
+        firstName,
+        lastName,
+        fatherName,
+        avatarURL,
+        adminRole,
+      },
+    });
+  } else {
+    res.json({
+      editor: {
+        login,
+        firstName,
+        lastName,
+        fatherName,
+        avatarURL,
+        editorRole,
+        taxCode,
+        dayOfBirthday,
+        telNumber,
+        email,
+      },
+    });
+  }
 };
 
 const logoutAdmin = async (req, res) => {
@@ -145,14 +197,7 @@ const logoutAdmin = async (req, res) => {
   res.status(204).json();
 };
 
-const updateAdminName = async (req, res) => {
-  const { _id } = req.admin;
-  const result = await Admin.findByIdAndUpdate(_id, req.body, { new: true });
-  if (!result) {
-    throw HttpError(404, "Not found");
-  }
-  res.json({ name: result.name });
-};
+
 
 const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 const tempDirResize = path.join(__dirname, "../", "tmp", "resize");
@@ -195,6 +240,5 @@ export default {
   getRefreshTokenAdmin: ctrlWrapper(getRefreshTokenAdmin),
   getCurrentAdmin: ctrlWrapper(getCurrentAdmin),
   logoutAdmin: ctrlWrapper(logoutAdmin),
-  updateAdminName: ctrlWrapper(updateAdminName),
   updateAdminAvatar: ctrlWrapper(updateAdminAvatar),
 };

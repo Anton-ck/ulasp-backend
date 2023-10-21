@@ -2,7 +2,6 @@ import express from "express";
 
 import {
   adminLoginSchema,
-  updateAdminName,
   refreshSchema,
 } from "../../schemas/admin.js";
 
@@ -34,12 +33,6 @@ router.get("/current", authenticateAdmin, controllers.getCurrentAdmin);
 
 router.post("/logout", authenticateAdmin, controllers.logoutAdmin);
 
-router.patch(
-  "/",
-  authenticateAdmin,
-  validateBody(updateAdminName),
-  controllers.updateAdminName
-);
 
 router.patch(
   "/avatars",

@@ -18,4 +18,13 @@ router.post(
   controllers.createEditorRole
 );
 
+router.patch(
+  "/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isEmptyBody,
+  validateBody(createEditorSchema),
+  controllers.updateAdminInfo
+);
+
 export default router;
