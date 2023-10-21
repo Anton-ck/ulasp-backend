@@ -36,10 +36,34 @@ const createEditorRole = async (req, res) => {
   });
 };
 
+const getAllAdmin = async (req, res) => {
+  const result = await Admin.find(
+    { ...req.query },
+    "-createdAt -updatedAt -accessToken -refreshToken -password"
+  );
+
+  res.json(result);
+};
+
+const getAdminById = async (req, res) => {
+  const { adminID } = req.params;
+  const admin = await Admin.findById(
+    adminID,
+    "-createdAt -updatedAt -accessToken -refreshToken -password"
+  );
+
+  if (!admin) {
+    throw HttpError(404);
+  }
+
+  res.json(admin);
+};
+
 const updateAdminInfo = async (req, res) => {
-  console.log(req.params.id);
-  const { id } = req.params;
-  const result = await Admin.findByIdAndUpdate(id, req.body, { new: true });
+  const { adminID } = req.params;
+  const result = await Admin.findByIdAndUpdate(adminID, req.body, {
+    new: true,
+  });
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -57,8 +81,23 @@ const updateAdminInfo = async (req, res) => {
     email: result.email,
   });
 };
+const deleteAdmin = async (req, res) => {
+  const { adminID } = req.params;
+  const result = Admin.findByIdAndRemove(adminID);
+
+  if (!result) {
+    throw HttpError(404, "Not found!!!!");
+  }
+
+  res.status(200).json({
+    message: "Contact deleted",
+  });
+};
 
 export default {
   createEditorRole: ctrlWrapper(createEditorRole),
+  getAllAdmin: ctrlWrapper(getAllAdmin),
+  getAdminById: ctrlWrapper(getAdminById),
   updateAdminInfo: ctrlWrapper(updateAdminInfo),
+  deleteAdmin: ctrlWrapper(deleteAdmin),
 };

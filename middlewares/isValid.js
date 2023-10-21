@@ -2,9 +2,9 @@ import { isValidObjectId } from "mongoose";
 import HttpError from "../helpers/HttpError.js";
 
 const isValid = (req, res, next) => {
-  const { recipId, userId, id } = req.params;
-  if (!isValidObjectId(userId || id)) {
-    next(HttpError(400, `${userId || id} is not valid ID`));
+  const { adminID } = req.params;
+  if (!isValidObjectId(adminID)) {
+    next(HttpError(400, `${adminID} is not valid ID`));
   }
   next();
 };

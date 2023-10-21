@@ -6,6 +6,7 @@ import { authenticateAdmin } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlAdmin.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
 import { createEditorSchema } from "../../schemas/admin.js";
+import isValid from "../../middlewares/isValid.js";
 
 const router = express.Router();
 
@@ -18,13 +19,31 @@ router.post(
   controllers.createEditorRole
 );
 
-router.patch(
-  "/:id",
+router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllAdmin);
+
+router.get(
+  "/:adminID",
   authenticateAdmin,
   permisionsAdmin,
+  isValid,
+  controllers.getAdminById
+);
+router.patch(
+  "/:adminID",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
   isEmptyBody,
-  validateBody(createEditorSchema),
+  // validateBody(createEditorSchema),
   controllers.updateAdminInfo
+);
+
+router.delete(
+  "/:adminID",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.deleteAdmin
 );
 
 export default router;
