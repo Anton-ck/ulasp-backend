@@ -6,7 +6,7 @@ import Jimp from "jimp";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import User from "../models/userModel.js";
+import { User, Fop, Company } from "../models/userModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 
@@ -21,18 +21,28 @@ const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 const accessTokenExpires = "130m";
 
 const createUser = async (req, res) => {
-  const { contractNumber, password } = req.body;
+  const { contractNumber, password, userFop } = req.body;
   const user = await User.findOne({ contractNumber });
 
   if (user) {
     throw HttpError(409, "contractNumber in use");
   }
   const hashPassword = await bcrypt.hash(password, 10);
+  let newUser = {};
 
-  const newUser = await User.create({
-    ...req.body,
-    password: hashPassword,
-  });
+  console.log(userFop);
+
+  if (userFop === "true") {
+    newUser = await Fop.create({
+      ...req.body,
+      password: hashPassword,
+    });
+  } else {
+    newUser = await Company.create({
+      ...req.body,
+      password: hashPassword,
+    });
+  }
 
   const payload = {
     id: newUser._id,

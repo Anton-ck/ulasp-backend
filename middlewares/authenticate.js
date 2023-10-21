@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
 import Admin from "../models/admin.js";
-import User from "../models/userModel.js";
+import { User } from "../models/userModel.js";
 import HttpError from "../helpers/HttpError.js";
 
 dotenv.config();
@@ -21,8 +21,7 @@ export const authenticateAdmin = async (req, res, next) => {
   try {
     const { id } = jwt.verify(accessToken, ACCESS_SECRET_KEY);
     const admin = await Admin.findById(id);
-    console.log(admin.accessToken);
-    console.log(accessToken);
+
     if (!admin || !admin.accessToken || admin.accessToken !== accessToken) {
       next(HttpError(401));
     }

@@ -5,14 +5,13 @@ import {
   emailRegexp,
   nameRegexp,
   onlyNumberRegexp,
+  phoneNumberUaRegexp,
 } from "../helpers/regExp.js";
+
+//general Schema FOP and company
+
 const userSchema = new Schema(
   {
-    name: {
-      type: String,
-      default: "",
-      required: true,
-    },
     password: {
       type: String,
       minlength: 6,
@@ -23,21 +22,28 @@ const userSchema = new Schema(
       required: [true, "Login is required"],
       unique: true,
     },
+    accessToken: {
+      type: String,
+      default: "",
+    },
+    refreshToken: {
+      type: String,
+      default: "",
+    },
+    avatarURL: {
+      type: String,
+      default: null,
+    },
+    userFop: {
+      type: Boolean,
+      default: true,
+    },
 
-    idNumber: {
-      type: String,
-      required: true,
-      match: onlyNumberRegexp,
-      unique: true,
-    },
-    dayOfBirthday: {
-      type: String,
-      required: true,
-    },
     telNumber: {
       type: String,
       required: true,
       unique: true,
+      match: phoneNumberUaRegexp,
     },
     email: {
       type: String,
@@ -45,11 +51,13 @@ const userSchema = new Schema(
       match: emailRegexp,
       unique: true,
     },
+
     contactFace: {
       type: String,
       required: true,
     },
-    idContactFace: {
+    taxCodeContactFace: {
+      //ИНН контактного лица
       type: String,
       required: true,
       match: onlyNumberRegexp,
@@ -67,12 +75,19 @@ const userSchema = new Schema(
       unique: true,
     },
     status: {
+      //{on off}
       type: String,
       required: true,
+    },
+    dateOfAccess: {
+      type: String,
+      required: true,
+      default: 0,
     },
     lastPay: {
       type: String,
       required: true,
+      default: 0,
     },
     quantityPlaylists: {
       type: Number,
@@ -84,17 +99,54 @@ const userSchema = new Schema(
       required: true,
       default: 0,
     },
-    accessToken: {
+  },
+  { versionKey: false, timestamps: true, discriminatorKey: "kind" }
+);
+
+const fopSchema = new Schema(
+  {
+    firstName: {
       type: String,
-      default: "",
+      required: true,
+      match: nameRegexp,
     },
-    refreshToken: {
+    lastName: {
       type: String,
-      default: "",
+      required: true,
+      match: nameRegexp,
     },
-    avatarURL: {
+    fatherName: {
       type: String,
-      default: null,
+      match: nameRegexp,
+    },
+
+    taxCode: {
+      type: String,
+      required: true,
+      match: onlyNumberRegexp,
+      unique: true,
+    },
+    dayOfBirthday: {
+      type: String,
+      required: true,
+    },
+  },
+  { versionKey: false, timestamps: true }
+);
+
+const companySchema = new Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+    },
+
+    taxCode: {
+      type: String,
+      required: true,
+      length: 8,
+      match: onlyNumberRegexp,
+      unique: true,
     },
   },
   { versionKey: false, timestamps: true }
@@ -102,6 +154,6 @@ const userSchema = new Schema(
 
 userSchema.post("save", handleMongooseError);
 
-const User = model("user", userSchema);
-
-export default User;
+export const User = model("user", userSchema);
+export const Fop = User.discriminator("fop", fopSchema);
+export const Company = User.discriminator("company", companySchema);

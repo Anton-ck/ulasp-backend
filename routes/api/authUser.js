@@ -18,7 +18,7 @@ router.post(
   controllers.userSignIn
 );
 
-router.post("/create", validateBody(createUserSchema), controllers.createUser);
+router.post("/create", controllers.createUser);
 
 router.get("/current", authenticatUser, controllers.getCurrentUser);
 
