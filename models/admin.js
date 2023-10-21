@@ -7,6 +7,7 @@ import {
   loginAdminRegexp,
   nameRegexp,
   onlyNumberRegexp,
+  phoneNumberUaRegexp,
 } from "../helpers/regExp.js";
 const adminSchema = new Schema(
   {
@@ -22,7 +23,6 @@ const adminSchema = new Schema(
     },
     fatherName: {
       type: String,
-      default: "",
       match: nameRegexp,
     },
     login: {
@@ -56,12 +56,7 @@ const adminSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    passportDetails: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    idNubmer: {
+    taxCode: {
       type: String,
       required: true,
       match: onlyNumberRegexp,
@@ -75,6 +70,7 @@ const adminSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+      match: phoneNumberUaRegexp,
     },
     email: {
       type: String,
