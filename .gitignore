@@ -6,3 +6,4 @@ node_modules/
 *.jpg
 *.jpeg
 tasks.md
+.DS_Store
