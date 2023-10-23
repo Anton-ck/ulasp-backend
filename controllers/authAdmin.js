@@ -89,7 +89,7 @@ const adminSignIn = async (req, res) => {
       accessToken,
       refreshToken,
       admin: {
-        login,
+        login: admin.login,
         firstName: admin.firstName,
         lastName: admin.lastName,
         fatherName: admin.fatherName,
@@ -160,21 +160,28 @@ const getCurrentAdmin = async (req, res) => {
     dayOfBirthday,
     telNumber,
     email,
-  } = req.admin;
+  } = req.admin.admin;
+  const { accessToken } = req.admin;
 
   if (adminRole) {
     res.json({
+      accessToken,
       admin: {
         login,
         firstName,
         lastName,
         fatherName,
         avatarURL,
-        adminRole,
+        editorRole,
+        taxCode,
+        dayOfBirthday,
+        telNumber,
+        email,
       },
     });
   } else {
     res.json({
+      accessToken,
       editor: {
         login,
         firstName,
