@@ -148,6 +148,7 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 };
 
 const getCurrentAdmin = async (req, res) => {
+  // console.log("req", req.user);
   const {
     login,
     firstName,
@@ -160,8 +161,8 @@ const getCurrentAdmin = async (req, res) => {
     dayOfBirthday,
     telNumber,
     email,
-  } = req.admin.admin;
-  const { accessToken } = req.admin;
+  } = req.user.admin;
+  const { accessToken } = req.user;
 
   if (adminRole) {
     res.json({
@@ -199,20 +200,23 @@ const getCurrentAdmin = async (req, res) => {
 };
 
 const logoutAdmin = async (req, res) => {
-  const { _id } = req.admin;
-  console.log("req.admin", req.admin);
+  const { _id } = req.user.admin;
+  console.log("req.admin", req.user.admin);
   await Admin.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
   res.status(204).json();
 };
 
-const avatarsDir = path.join(__dirname, "../", "public", "avatars");
+// const avatarsDir = path.join(__dirname, "../", "public", "avatars");
 const tempDirResize = path.join(__dirname, "../", "tmp", "resize");
+const avatarsDir = path.resolve("public", "avatars");
 
 const updateAdminAvatar = async (req, res) => {
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
-  const { _id } = req.admin;
+
+  const { _id } = req.user.admin;
+  // console.log("_id  из аватара", _id);
   const { path: tempDir, originalname } = req.file;
 
   const sizeImg = "250x250_";
@@ -232,12 +236,17 @@ const updateAdminAvatar = async (req, res) => {
   await fs.rename(resizeResultUpload, resultUpload);
 
   const avatarURL = path.join("avatars", resizeFileName);
+  await Admin.findByIdAndUpdate(
+    _id,
+    {
+      avatarURL,
+    },
+    {
+      new: true,
+    }
+  );
 
-  await Admin.findByIdAndUpdate(_id, { avatarURL });
-
-  res.json({
-    avatarURL,
-  });
+  res.json({ avatarURL });
 };
 
 export default {

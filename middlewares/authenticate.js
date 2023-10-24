@@ -26,8 +26,8 @@ export const authenticateAdmin = async (req, res, next) => {
       next(HttpError(401));
     }
 
-    req.admin = { accessToken, admin };
-    console.log("req.admin", req.admin);
+    req.user = { accessToken, admin };
+    // console.log("req из авторизации", req.user);
     next();
   } catch (error) {
     console.log(error);
