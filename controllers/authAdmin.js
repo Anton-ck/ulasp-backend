@@ -6,7 +6,7 @@ import Jimp from "jimp";
 import path from "path";
 import { fileURLToPath } from "url";
 
-import Admin from "../models/admin.js";
+import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 

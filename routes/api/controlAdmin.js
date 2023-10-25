@@ -5,7 +5,11 @@ import isEmptyBody from "../../middlewares/isEmptyBody.js";
 import { authenticateAdmin } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlAdmin.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
-import { createEditorSchema } from "../../schemas/admin.js";
+import {
+  createEditorSchema,
+  updateAdminInfo,
+  updateAdminPassword
+} from "../../schemas/adminSchema.js";
 import isValid from "../../middlewares/isValid.js";
 
 const router = express.Router();
@@ -34,7 +38,7 @@ router.patch(
   permisionsAdmin,
   isValid,
   isEmptyBody,
-  // validateBody(createEditorSchema),
+  validateBody(updateAdminInfo),
   controllers.updateAdminInfo
 );
 
@@ -52,7 +56,7 @@ router.patch(
   permisionsAdmin,
   isValid,
   isEmptyBody,
-  // validateBody(createEditorSchema),
+  validateBody(updateAdminPassword),
   controllers.updateAdminPassword
 );
 

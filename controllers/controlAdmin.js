@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 
-import Admin from "../models/admin.js";
+import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 
@@ -63,10 +63,13 @@ const updateAdminInfo = async (req, res) => {
   const result = await Admin.findByIdAndUpdate(id, req.body, {
     new: true,
   });
+
+  console.log(result);
   if (!result) {
     throw HttpError(404, "Not found");
   }
   res.json({
+    id: result.id,
     login: result.login,
     firstName: result.firstName,
     lastName: result.lastName,
@@ -101,13 +104,15 @@ const updateAdminPassword = async (req, res) => {
   const { password } = req.body;
   const hashPassword = await bcrypt.hash(password, 10);
 
-  await Admin.findByIdAndUpdate(id, {
+  const result = await Admin.findByIdAndUpdate(id, {
     password: hashPassword,
   });
 
-  res.json({
-    password,
-  });
+   res.status(200).json({
+     message: `Password for ${result.editorRole ? "Editor" : "Admin"} '${
+       result.firstName
+     }' with ID ${result._id} has been changed`,
+   });
 };
 
 // const deleteAdmin = async (req, res) => {
