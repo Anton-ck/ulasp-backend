@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
-import Admin from "../models/admin.js";
+import Admin from "../models/adminModel.js";
 import { User } from "../models/userModel.js";
 import HttpError from "../helpers/HttpError.js";
 

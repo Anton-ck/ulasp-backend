@@ -8,6 +8,8 @@ const validateBody = (schema) => {
     if (error) {
       const requireFieldError = requireField.error.details[0].path[0];
       const errorContext = error.details[0].context;
+
+   console.log(errorContext);
       switch (error.details[0].type) {
         case "any.required":
           throw HttpError(400, `Missing required ${requireFieldError} field!`);

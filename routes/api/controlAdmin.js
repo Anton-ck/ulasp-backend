@@ -5,7 +5,11 @@ import isEmptyBody from "../../middlewares/isEmptyBody.js";
 import { authenticateAdmin } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlAdmin.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
-import { createEditorSchema } from "../../schemas/admin.js";
+import {
+  createEditorSchema,
+  updateAdminInfo,
+  updateAdminPassword
+} from "../../schemas/adminSchema.js";
 import isValid from "../../middlewares/isValid.js";
 
 const router = express.Router();
@@ -22,28 +26,38 @@ router.post(
 router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllAdmin);
 
 router.get(
-  "/:adminID",
+  "/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   controllers.getAdminById
 );
 router.patch(
-  "/:adminID",
+  "/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   isEmptyBody,
-  // validateBody(createEditorSchema),
+  validateBody(updateAdminInfo),
   controllers.updateAdminInfo
 );
 
 router.delete(
-  "/:adminID",
+  "/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   controllers.deleteAdmin
+);
+
+router.patch(
+  "/password/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  isEmptyBody,
+  validateBody(updateAdminPassword),
+  controllers.updateAdminPassword
 );
 
 export default router;

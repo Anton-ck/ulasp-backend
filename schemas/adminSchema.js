@@ -56,25 +56,27 @@ export const refreshSchema = Joi.object({
   refreshToken: Joi.string().required(),
 });
 
-// export const updateAdminName = Joi.object({
-//   firstName: Joi.string().min(5).max(30).pattern(nameRegexp).required(),
-//   lastName: Joi.string().min(5).max(30).pattern(nameRegexp).required(),
-//   fatherName: Joi.string().min(5).max(30).pattern(nameRegexp),
-//   login: Joi.string().min(3).max(10).pattern(loginAdminRegexp).required(),
-//   password: joiPassword
-//     .string()
-//     .min(6)
-//     .minOfLowercase(1)
-//     .minOfNumeric(1)
-//     .required(),
-//   editorRole: Joi.boolean(),
-//   passportDetails: Joi.string()
-//     .min(8)
-//     .max(8)
-//     .pattern(passportUaRegexp)
-//     .required(),
-//   taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp).required(),
-//   dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
-//   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
-//   email: Joi.string().pattern(emailRegexp).required(),
-// });
+export const updateAdminInfo = Joi.object({
+  firstName: Joi.string().min(5).max(30).pattern(nameRegexp).required(),
+  lastName: Joi.string().min(5).max(30).pattern(nameRegexp).required(),
+  fatherName: Joi.string().min(5).max(30).pattern(nameRegexp),
+  login: Joi.string()
+    .min(3)
+    .max(10)
+    .pattern(loginAdminRegexp)
+    .required(),
+  taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp).required(),
+  dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
+  telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
+  email: Joi.string().pattern(emailRegexp).required(),
+});
+
+
+export const updateAdminPassword = Joi.object({
+  password: joiPassword
+    .string()
+    .min(6)
+    .minOfLowercase(1)
+    .minOfNumeric(1)
+    .required(),
+});
