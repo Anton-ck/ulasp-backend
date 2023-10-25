@@ -1,6 +1,4 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
 
 import Admin from "../models/admin.js";
 import HttpError from "../helpers/HttpError.js";
@@ -46,9 +44,10 @@ const getAllAdmin = async (req, res) => {
 };
 
 const getAdminById = async (req, res) => {
-  const { adminID } = req.params;
+  const { id } = req.params;
+
   const admin = await Admin.findById(
-    adminID,
+    id,
     "-createdAt -updatedAt -accessToken -refreshToken -password"
   );
 
@@ -60,8 +59,8 @@ const getAdminById = async (req, res) => {
 };
 
 const updateAdminInfo = async (req, res) => {
-  const { adminID } = req.params;
-  const result = await Admin.findByIdAndUpdate(adminID, req.body, {
+  const { id } = req.params;
+  const result = await Admin.findByIdAndUpdate(id, req.body, {
     new: true,
   });
   if (!result) {
@@ -81,18 +80,49 @@ const updateAdminInfo = async (req, res) => {
     email: result.email,
   });
 };
-const deleteAdmin = async (req, res) => {
-  const { adminID } = req.params;
-  const result = Admin.findByIdAndRemove(adminID);
 
-  if (!result) {
-    throw HttpError(404, "Not found!!!!");
+const deleteAdmin = async (req, res) => {
+  const { id } = req.params;
+  const admin = await Admin.findById(id);
+  if (!admin) {
+    throw HttpError(404, "Not found");
   }
+  const result = await admin.deleteOne();
 
   res.status(200).json({
-    message: "Contact deleted",
+    message: `${result.editorRole ? "Editor" : "Admin"} '${
+      result.firstName
+    }' with ID ${result._id} was deleted`,
   });
 };
+
+const updateAdminPassword = async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+  const hashPassword = await bcrypt.hash(password, 10);
+
+  await Admin.findByIdAndUpdate(id, {
+    password: hashPassword,
+  });
+
+  res.json({
+    password,
+  });
+};
+
+// const deleteAdmin = async (req, res) => {
+//   const { id } = req.params;
+
+//   const result = Admin.findByIdAndDelete(id);
+//   console.log(result);
+//   if (!result) {
+//     throw HttpError(404, "Not found!!!!");
+//   }
+
+//   res.status(200).json({
+//     message: "Contact deleted",
+//   });
+// };
 
 export default {
   createEditorRole: ctrlWrapper(createEditorRole),
@@ -100,4 +130,5 @@ export default {
   getAdminById: ctrlWrapper(getAdminById),
   updateAdminInfo: ctrlWrapper(updateAdminInfo),
   deleteAdmin: ctrlWrapper(deleteAdmin),
+  updateAdminPassword: ctrlWrapper(updateAdminPassword),
 };

@@ -22,14 +22,14 @@ router.post(
 router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllAdmin);
 
 router.get(
-  "/:adminID",
+  "/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   controllers.getAdminById
 );
 router.patch(
-  "/:adminID",
+  "/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
@@ -39,11 +39,21 @@ router.patch(
 );
 
 router.delete(
-  "/:adminID",
+  "/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   controllers.deleteAdmin
+);
+
+router.patch(
+  "/password/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  isEmptyBody,
+  // validateBody(createEditorSchema),
+  controllers.updateAdminPassword
 );
 
 export default router;
