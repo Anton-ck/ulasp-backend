@@ -1,8 +1,9 @@
 import bcrypt from "bcrypt";
-
+import { User, Fop, Company } from "../models/userModel.js";
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
+import jwt from "jsonwebtoken";
 
 const createEditorRole = async (req, res) => {
   const { login, password } = req.body;
@@ -108,11 +109,54 @@ const updateAdminPassword = async (req, res) => {
     password: hashPassword,
   });
 
-   res.status(200).json({
-     message: `Password for ${result.editorRole ? "Editor" : "Admin"} '${
-       result.firstName
-     }' with ID ${result._id} has been changed`,
-   });
+  res.status(200).json({
+    message: `Password for ${result.editorRole ? "Editor" : "Admin"} '${
+      result.firstName
+    }' with ID ${result._id} has been changed`,
+  });
+};
+
+const createUser = async (req, res) => {
+  const { contractNumber, taxCode, userFop } = req.body;
+  const user = await User.findOne({ contractNumber });
+
+  if (user) {
+    throw HttpError(409, "contractNumber in use");
+  }
+  const hashtaxCode = await bcrypt.hash(taxCode, 10);
+
+  let newUser = {};
+  console.log("newUser", newUser);
+  if (userFop === "true") {
+    console.log("tut");
+    newUser = await Fop.create({
+      ...req.body,
+      taxCode: hashtaxCode,
+    });
+  } else {
+    newUser = await Company.create({
+      ...req.body,
+      taxCode: hashtaxCode,
+    });
+  }
+
+  // const payload = {
+  //   id: newUser._id,
+  // };
+
+  // const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
+  //   expiresIn: accessTokenExpires,
+  // });
+
+  // await User.findByIdAndUpdate(newUser._id, { accessToken });
+
+  res.status(201).json({
+    // accessToken,
+    user: {
+      id: newUser._id,
+      contractNumber: newUser.contractNumber,
+    },
+  });
 };
 
 // const deleteAdmin = async (req, res) => {
@@ -136,4 +180,5 @@ export default {
   updateAdminInfo: ctrlWrapper(updateAdminInfo),
   deleteAdmin: ctrlWrapper(deleteAdmin),
   updateAdminPassword: ctrlWrapper(updateAdminPassword),
+  createUser: ctrlWrapper(createUser),
 };

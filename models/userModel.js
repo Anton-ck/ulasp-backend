@@ -12,11 +12,11 @@ import {
 
 const userSchema = new Schema(
   {
-    password: {
-      type: String,
-      minlength: 6,
-      required: [true, "Set password for user"],
-    },
+    // password: {
+    //   type: String,
+    //   minlength: 6,
+    //   required: [true, "Set password for user"],
+    // },
     contractNumber: {
       type: String,
       required: [true, "Login is required"],
@@ -123,7 +123,7 @@ const fopSchema = new Schema(
     taxCode: {
       type: String,
       required: true,
-      match: onlyNumberRegexp,
+      // match: onlyNumberRegexp,
       unique: true,
     },
     dayOfBirthday: {

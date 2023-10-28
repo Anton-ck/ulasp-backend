@@ -12,7 +12,7 @@ const joiPassword = Joi.extend(joiPasswordExtendCore);
 
 export const loginUserSchema = Joi.object({
   contractNumber: Joi.string().min(5).max(30).required(),
-  password: joiPassword
+  taxCode: joiPassword
     .string()
     .min(6)
     .minOfLowercase(1)
@@ -20,24 +20,30 @@ export const loginUserSchema = Joi.object({
     .required(),
 });
 
-export const createUserSchema = Joi.object({
+export const createCommonUserSchema = Joi.object({
   contractNumber: Joi.string().min(5).max(30).required(),
   firstName: Joi.string().min(5).max(30).pattern(nameRegexp),
-  idNumber: Joi.string().min(10).max(10).pattern(onlyNumberRegexp),
-  password: joiPassword
-    .string()
-    .min(6)
-    .minOfLowercase(1)
-    .minOfNumeric(1)
-    .required(),
-
-  dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
+  userFop: Joi.boolean().default(true),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),
-  lastPay: Joi.string().pattern(regularDateRegexp).required(),
-  emailContactFace: Joi.string().pattern(emailRegexp).required(),
-  telNumberContactFace: Joi.string().pattern(phoneNumberUaRegexp).required(),
   contactFace: Joi.string().min(5).max(30),
-  idContactFace: Joi.string().min(10).max(10).pattern(onlyNumberRegexp),
-  status: Joi.string().min(3).max(30),
+  taxCodeContactFace: Joi.string().min(8).max(10).pattern(onlyNumberRegexp),
+  telNumberContactFace: Joi.string().pattern(phoneNumberUaRegexp).required(),
+  emailContactFace: Joi.string().pattern(emailRegexp).required(),
+  status: Joi.boolean(),
+  lastPay: Joi.string(),
+});
+
+export const createFopUserSchema = createCommonUserSchema.keys({
+  firstName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
+  lastName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
+  fatherName: Joi.string().min(5).max(30).pattern(nameRegexp),
+  dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
+  taxCode: joiPassword.string().min(10).max(10).pattern(onlyNumberRegexp),
+});
+
+export const createCompanyUserSchema = createCommonUserSchema.keys({
+  name: Joi.string().min(5).max(30).pattern(nameRegexp).required(),
+  // taxCode: joiPassword.string().min(8).max(8).pattern(onlyNumberRegexp),
+  // lastPay: Joi.string().pattern(regularDateRegexp).required(),
 });
