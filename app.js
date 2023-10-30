@@ -10,6 +10,7 @@ import authRouter from "./routes/api/auth.js";
 import controlAdminRouter from "./routes/api/controlAdmin.js";
 
 import authUserRouter from "./routes/api/authUser.js";
+import controlUserRouter from "./routes/api/controlUser.js";
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use("/admin", authRouter);
 app.use("/admin", controlAdminRouter);
 
 app.use("/user", authUserRouter);
+app.use("/user", controlUserRouter);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

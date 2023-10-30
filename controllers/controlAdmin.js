@@ -140,18 +140,7 @@ const createUser = async (req, res) => {
     });
   }
 
-  // const payload = {
-  //   id: newUser._id,
-  // };
-
-  // const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
-  //   expiresIn: accessTokenExpires,
-  // });
-
-  // await User.findByIdAndUpdate(newUser._id, { accessToken });
-
   res.status(201).json({
-    // accessToken,
     user: {
       id: newUser._id,
       contractNumber: newUser.contractNumber,
