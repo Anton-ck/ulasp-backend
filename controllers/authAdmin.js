@@ -236,6 +236,8 @@ const updateAdminAvatar = async (req, res) => {
   await fs.rename(resizeResultUpload, resultUpload);
 
   const avatarURL = path.join("avatars", resizeFileName);
+
+  console.log("avatarURL", avatarURL);
   await Admin.findByIdAndUpdate(
     _id,
     {

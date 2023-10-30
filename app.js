@@ -6,8 +6,10 @@ import swaggerUi from "swagger-ui-express";
 
 import swaggerDocument from "./swagger.json" assert { type: "json" };
 
-import authRouter from "./routes/api/auth.js";
+import authRouter from "./routes/api/authAdmin.js";
 import controlAdminRouter from "./routes/api/controlAdmin.js";
+
+import controlEditorRouter from "./routes/api/controlEditor.js";
 
 import authUserRouter from "./routes/api/authUser.js";
 import controlUserRouter from "./routes/api/controlUser.js";
@@ -25,6 +27,8 @@ app.use(express.static("public"));
 
 app.use("/admin", authRouter);
 app.use("/admin", controlAdminRouter);
+
+app.use("/editor", controlEditorRouter);
 
 app.use("/user", authUserRouter);
 app.use("/user", controlUserRouter);
