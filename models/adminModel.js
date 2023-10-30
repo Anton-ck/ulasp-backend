@@ -82,7 +82,7 @@ const adminSchema = new Schema(
   { versionKey: false, timestamps: true }
 );
 
-adminSchema.post("findOneAndUpdate", handleMongooseError)
+adminSchema.post("findOneAndUpdate", handleMongooseError);
 adminSchema.post("save", handleMongooseError);
 
 const Admin = model("admin", adminSchema);
