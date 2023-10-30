@@ -8,8 +8,13 @@ import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
 import {
   createEditorSchema,
   updateAdminInfo,
-  updateAdminPassword
+  updateAdminPassword,
 } from "../../schemas/adminSchema.js";
+
+import {
+  createFopUserSchema,
+  createCompanyUserSchema,
+} from "../../schemas/userSchema.js";
 import isValid from "../../middlewares/isValid.js";
 
 const router = express.Router();
@@ -58,6 +63,21 @@ router.patch(
   isEmptyBody,
   validateBody(updateAdminPassword),
   controllers.updateAdminPassword
+);
+
+router.post(
+  "/create-fop",
+  authenticateAdmin,
+  isEmptyBody,
+  validateBody(createFopUserSchema),
+  controllers.createUser
+);
+router.post(
+  "/create-company",
+  authenticateAdmin,
+  isEmptyBody,
+  validateBody(createCompanyUserSchema),
+  controllers.createUser
 );
 
 export default router;

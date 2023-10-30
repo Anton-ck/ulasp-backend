@@ -20,65 +20,65 @@ const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 
 const accessTokenExpires = "130m";
 
-const createUser = async (req, res) => {
-  const { contractNumber, password, userFop } = req.body;
-  const user = await User.findOne({ contractNumber });
+// const createUser = async (req, res) => {
+//   const { contractNumber, taxCode, userFop } = req.body;
+//   const user = await User.findOne({ contractNumber });
 
-  if (user) {
-    throw HttpError(409, "contractNumber in use");
-  }
-  const hashPassword = await bcrypt.hash(password, 10);
-  let newUser = {};
+//   if (user) {
+//     throw HttpError(409, "contractNumber in use");
+//   }
+//   const hashtaxCode = await bcrypt.hash(taxCode, 10);
+//   let newUser = {};
 
-  console.log(userFop);
+//   console.log(userFop);
 
-  if (userFop === "true") {
-    newUser = await Fop.create({
-      ...req.body,
-      password: hashPassword,
-    });
-  } else {
-    newUser = await Company.create({
-      ...req.body,
-      password: hashPassword,
-    });
-  }
+//   if (userFop === "true") {
+//     newUser = await Fop.create({
+//       ...req.body,
+//       taxCode: hashtaxCode,
+//     });
+//   } else {
+//     newUser = await Company.create({
+//       ...req.body,
+//       taxCode: hashtaxCode,
+//     });
+//   }
 
-  const payload = {
-    id: newUser._id,
-  };
+//   const payload = {
+//     id: newUser._id,
+//   };
 
-  const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
-    expiresIn: accessTokenExpires,
-  });
+//   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
+//     expiresIn: accessTokenExpires,
+//   });
 
-  await User.findByIdAndUpdate(newUser._id, { accessToken });
+//   await User.findByIdAndUpdate(newUser._id, { accessToken });
 
-  res.status(201).json({
-    accessToken,
-    user: {
-      id: newUser._id,
-      contractNumber: newUser.contractNumber,
-    },
-  });
-};
+//   res.status(201).json({
+//     accessToken,
+//     user: {
+//       id: newUser._id,
+//       contractNumber: newUser.contractNumber,
+//     },
+//   });
+// };
 
 const userSignIn = async (req, res) => {
-  const { contractNumber, password } = req.body;
+  const { contractNumber, taxCode } = req.body;
   console.log("first", req.body);
 
   const user = await User.findOne({ contractNumber });
-  const passwordCompare = await bcrypt.compare(password, user.password);
-  if (!user || !passwordCompare) {
-    throw HttpError(401, "Login  or password is wrong");
+  const taxCodeCompare = await bcrypt.compare(taxCode, user.taxCode);
+  if (!user || !taxCodeCompare) {
+    throw HttpError(401, "Login  or taxCode is wrong");
   }
 
   const payload = {
     id: user._id,
   };
 
-  if (!user || !passwordCompare) {
-    throw HttpError(401, "Login  or password is wrong");
+  if (!user || !taxCodeCompare) {
+    throw HttpError(401, "Login  or taxCode is wrong");
   }
 
   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
@@ -141,7 +141,7 @@ const logoutUser = async (req, res) => {
 
 export default {
   userSignIn: ctrlWrapper(userSignIn),
-  createUser: ctrlWrapper(createUser),
+
   logoutUser: ctrlWrapper(logoutUser),
   getCurrentUser: ctrlWrapper(getCurrentUser),
 };
