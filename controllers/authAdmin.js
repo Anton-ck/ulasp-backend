@@ -148,7 +148,7 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 };
 
 const getCurrentAdmin = async (req, res) => {
-  // console.log("req", req.user);
+  // console.log("req current", req.admin);
   const {
     login,
     firstName,
@@ -161,12 +161,10 @@ const getCurrentAdmin = async (req, res) => {
     dayOfBirthday,
     telNumber,
     email,
-  } = req.user.admin;
-  const { accessToken } = req.user;
+  } = req.admin;
 
   if (adminRole) {
     res.json({
-      accessToken,
       admin: {
         login,
         firstName,
@@ -182,7 +180,6 @@ const getCurrentAdmin = async (req, res) => {
     });
   } else {
     res.json({
-      accessToken,
       editor: {
         login,
         firstName,
@@ -200,8 +197,8 @@ const getCurrentAdmin = async (req, res) => {
 };
 
 const logoutAdmin = async (req, res) => {
-  const { _id } = req.user.admin;
-  console.log("req.admin", req.user.admin);
+  const { _id } = req.admin;
+  console.log("req.admin", req.admin);
   await Admin.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
   res.status(204).json();
 };
@@ -215,7 +212,7 @@ const updateAdminAvatar = async (req, res) => {
     throw HttpError(404, "File not found for upload");
   }
 
-  const { _id } = req.user.admin;
+  const { _id } = req.admin;
   // console.log("_id  из аватара", _id);
   const { path: tempDir, originalname } = req.file;
 
