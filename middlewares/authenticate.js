@@ -27,7 +27,7 @@ export const authenticateAdmin = async (req, res, next) => {
     }
     req.admin = admin;
     // req.user = { accessToken, admin }; iskra
-    // console.log("req из авторизации", req.user);
+    // console.log("req из авторизации", req.admin);
     next();
   } catch (error) {
     console.log(error);

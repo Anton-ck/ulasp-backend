@@ -148,7 +148,7 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 };
 
 const getCurrentAdmin = async (req, res) => {
-  // console.log("req", req.user);
+  // console.log("req current", req.admin);
   const {
     login,
     firstName,
@@ -171,7 +171,11 @@ const getCurrentAdmin = async (req, res) => {
         lastName,
         fatherName,
         avatarURL,
-        adminRole,
+        editorRole,
+        taxCode,
+        dayOfBirthday,
+        telNumber,
+        email,
       },
     });
   } else {
