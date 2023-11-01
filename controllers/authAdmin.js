@@ -163,7 +163,7 @@ const getCurrentAdmin = async (req, res) => {
         lastName,
         fatherName,
         avatarURL,
-        editorRole,
+        adminRole,
         taxCode,
         dayOfBirthday,
         telNumber,
