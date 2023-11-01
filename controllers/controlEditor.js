@@ -1,5 +1,3 @@
-import bcrypt from "bcrypt";
-
 import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
 import HttpError from "../helpers/HttpError.js";
@@ -10,22 +8,30 @@ import { resizePics } from "../helpers/resizePics.js";
 const createPlayList = async (req, res) => {
   const { playListName } = req.body;
   const { _id: owner } = req.admin;
+  let randomPicUrl;
+  let resizePicURL;
 
   const playlist = await PlayList.findOne({ playListName });
-
-  const allPics = await Pics.find();
-
-  const randomValue = Math.floor(Math.random() * allPics.length);
-
-  const randomPicUrl = allPics[randomValue].picsURL;
 
   if (playlist) {
     throw HttpError(409, "PlayList name in use");
   }
 
+  if (!req.file) {
+    const allPics = await Pics.find();
+
+    const randomValue = Math.floor(Math.random() * allPics.length);
+
+    randomPicUrl = allPics[randomValue].picsURL;
+  } else {
+    resizePicURL = await resizePics(req.file);
+  }
+
+  let picURL = !req.file ? randomPicUrl : resizePicURL;
+
   const newPlayList = await PlayList.create({
     ...req.body,
-    playListAvatarURL: randomPicUrl,
+    playListAvatarURL: picURL,
     owner,
   });
 
@@ -76,8 +82,27 @@ const deletePlaylist = async (req, res) => {
   });
 };
 
+const playlistsCount = async (req, res) => {
+  const countPlaylists = await PlayList.find().count();
+
+  res.json({ countPlaylists });
+};
+
+const latestPlaylists = async (req, res) => {
+  const latestPlaylists = await PlayList.find(
+    {},
+    "playListName playListAvatarURL"
+  ).sort({ createdAt : -1 });
+
+  res.json({
+    latestPlaylists,
+  });
+};
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
+  playlistsCount: ctrlWrapper(playlistsCount),
+  latestPlaylists: ctrlWrapper(latestPlaylists),
 };

@@ -6,7 +6,7 @@ const playListSchema = new Schema(
   {
     playListName: {
       type: String,
-      require: true,
+      required: true,
       unique: true,
     },
     playListAvatarURL: {

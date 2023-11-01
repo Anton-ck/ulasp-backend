@@ -5,11 +5,7 @@ import isEmptyBody from "../../middlewares/isEmptyBody.js";
 import { authenticateAdmin } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlEditor.js";
 import { permisionsEditor } from "../../middlewares/permitionsEditor.js";
-import {
-  createEditorSchema,
-  updateAdminInfo,
-  updateAdminPassword,
-} from "../../schemas/adminSchema.js";
+import { playListSchema } from "../../schemas/editorShema.js";
 import isValid from "../../middlewares/isValid.js";
 import upload from "../../middlewares/upload.js";
 
@@ -19,7 +15,8 @@ router.post(
   "/playlist/create",
   authenticateAdmin,
   permisionsEditor,
-  isEmptyBody,
+  upload.single("picsURL"),
+  validateBody(playListSchema),
   controllers.createPlayList
 );
 
@@ -38,4 +35,13 @@ router.delete(
   isValid,
   controllers.deletePlaylist
 );
+
+router.get(
+  "/playlist/count",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.playlistsCount
+);
+
+router.get("/playlist/latest", controllers.latestPlaylists);
 export default router;
