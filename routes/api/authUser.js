@@ -1,6 +1,10 @@
 import express from "express";
 
-import { loginUserSchema, createUserSchema } from "../../schemas/userSchema.js";
+import {
+  loginUserSchema,
+  createFopUserSchema,
+  createCompanyUserSchema,
+} from "../../schemas/userSchema.js";
 
 import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
@@ -19,7 +23,16 @@ router.post(
   controllers.userSignIn
 );
 
-router.post("/create", controllers.createUser);
+// router.post(
+//   "/createfop",
+//   validateBody(createFopUserSchema),
+//   controllers.createUser
+// );
+// router.post(
+//   "/createcompany",
+//   validateBody(createCompanyUserSchema),
+//   controllers.createUser
+// );
 
 router.get("/current", authenticatUser, controllers.getCurrentUser);
 
