@@ -4,6 +4,7 @@ import path from "path";
 
 const tempDirResize = path.resolve("tmp", "resize");
 const picsDir = path.resolve("public", "covers");
+const avatarsDir = path.resolve("public", "avatars");
 
 export const resizePics = async (file) => {
   const { path: tempDir, originalname, fieldname } = file;
@@ -27,6 +28,30 @@ export const resizePics = async (file) => {
 
   const picsURL = path.join("covers", resizeFileName);
 
-
   return picsURL;
+};
+
+export const resizeAvatar = async (file) => {
+  const { path: tempDir, originalname } = req.file;
+
+  const sizeImg = "250x250_";
+  const fileName = `${originalname}`;
+  const resizeFileName = `${sizeImg}${fileName}`;
+  const resultUpload = path.resolve(avatarsDir, resizeFileName);
+  const resizeResultUpload = path.resolve(tempDirResize, resizeFileName);
+
+  const reziseImg = await Jimp.read(tempDir);
+
+  reziseImg
+    .autocrop()
+    .cover(250, 250)
+    .quality(100)
+    .writeAsync(`${tempDirResize}/${resizeFileName}`);
+
+  await fs.unlink(tempDir);
+  await fs.rename(resizeResultUpload, resultUpload);
+
+  const avatarURL = path.join("avatars", resizeFileName);
+
+  return avatarURL;
 };
