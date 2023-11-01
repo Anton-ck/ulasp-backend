@@ -32,7 +32,7 @@ export const resizePics = async (file) => {
 };
 
 export const resizeAvatar = async (file) => {
-  const { path: tempDir, originalname } = req.file;
+  const { path: tempDir, originalname } = file;
 
   const sizeImg = "250x250_";
   const fileName = `${originalname}`;
