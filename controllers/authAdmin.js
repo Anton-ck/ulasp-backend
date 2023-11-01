@@ -1,18 +1,11 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import fs from "fs/promises";
-import Jimp from "jimp";
-import path from "path";
-import { fileURLToPath } from "url";
 
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
-
-const __filename = fileURLToPath(import.meta.url);
-
-const __dirname = path.dirname(__filename);
+import { resizeAvatar } from "../helpers/resizePics.js";
 
 dotenv.config();
 
@@ -206,36 +199,16 @@ const logoutAdmin = async (req, res) => {
   res.status(204).json();
 };
 
-// const avatarsDir = path.join(__dirname, "../", "public", "avatars");
-const tempDirResize = path.join(__dirname, "../", "tmp", "resize");
-const avatarsDir = path.resolve("public", "avatars");
-
 const updateAdminAvatar = async (req, res) => {
+
+  console.log(req.user);
+  console.log(req.admin);
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
-
   const { _id } = req.user.admin;
-  // console.log("_id  из аватара", _id);
-  const { path: tempDir, originalname } = req.file;
 
-  const sizeImg = "250x250_";
-  const fileName = `${_id}_${originalname}`;
-  const resizeFileName = `${sizeImg}${fileName}`;
-  const resultUpload = path.join(avatarsDir, resizeFileName);
-  const resizeResultUpload = path.join(tempDirResize, resizeFileName);
-
-  const reziseImg = await Jimp.read(tempDir);
-
-  reziseImg
-    .autocrop()
-    .cover(250, 250)
-    .writeAsync(`${tempDirResize}/${resizeFileName}`);
-
-  await fs.unlink(tempDir);
-  await fs.rename(resizeResultUpload, resultUpload);
-
-  const avatarURL = path.join("avatars", resizeFileName);
+  const avatarURL = await resizeAvatar(req.file);
 
   console.log("avatarURL", avatarURL);
   await Admin.findByIdAndUpdate(
