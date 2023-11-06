@@ -35,7 +35,7 @@ const userSchema = new Schema(
       default: null,
     },
     userFop: {
-      type: Boolean,
+      type: String,
       default: true,
     },
 
@@ -99,6 +99,11 @@ const userSchema = new Schema(
       required: true,
       default: 0,
     },
+    comment: {
+      type: String,
+      required: true,
+      default: "",
+    }
   },
   { versionKey: false, timestamps: true, discriminatorKey: "kind" }
 );

@@ -127,7 +127,7 @@ const createUser = async (req, res) => {
 
   let newUser = {};
   console.log("newUser", newUser);
-  if (userFop === "true") {
+  if (userFop === "fop") {
     console.log("tut");
     newUser = await Fop.create({
       ...req.body,

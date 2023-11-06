@@ -23,7 +23,7 @@ export const loginUserSchema = Joi.object({
 export const createCommonUserSchema = Joi.object({
   contractNumber: Joi.string().min(5).max(30).required(),
   firstName: Joi.string().min(5).max(30).pattern(nameRegexp),
-  userFop: Joi.boolean().default(true),
+  userFop: Joi.string().default(true),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),
   contactFace: Joi.string().min(5).max(30),
@@ -32,6 +32,8 @@ export const createCommonUserSchema = Joi.object({
   emailContactFace: Joi.string().pattern(emailRegexp).required(),
   status: Joi.boolean(),
   lastPay: Joi.string(),
+  comment:Joi.string(),
+  dateOfAccess:Joi.string(),
 });
 
 export const createFopUserSchema = createCommonUserSchema.keys({
