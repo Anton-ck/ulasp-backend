@@ -13,6 +13,6 @@ import {
 import isValid from "../../middlewares/isValid.js";
 
 const router = express.Router();
-router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllUsers);
+// router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllUsers);
 
 export default router;

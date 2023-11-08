@@ -1,31 +1,38 @@
-import bcrypt from "bcrypt";
-
 import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
+import Genre from "../models/genreModel.js";
+import Track from "../models/trackModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
+import path from "path";
 
 import { resizePics } from "../helpers/resizePics.js";
+import randomCover from "../helpers/randomCover.js";
+import getId3Tags from "../helpers/id3Tags.js";
 
 const createPlayList = async (req, res) => {
   const { playListName } = req.body;
-  const { _id: owner } = req.admin;
+  const { _id: owner } = req?.admin;
+  let randomPicUrl;
+  let resizePicURL;
 
-  const playlist = await PlayList.findOne({ playListName });
+  const isExistPlaylist = await PlayList.findOne({ playListName });
 
-  const allPics = await Pics.find();
-
-  const randomValue = Math.floor(Math.random() * allPics.length);
-
-  const randomPicUrl = allPics[randomValue].picsURL;
-
-  if (playlist) {
-    throw HttpError(409, "PlayList name in use");
+  if (isExistPlaylist) {
+    throw HttpError(409, `${playListName} name in use`);
   }
+
+  if (!req.file) {
+    randomPicUrl = await randomCover("playlist");
+  } else {
+    resizePicURL = await resizePics(req.file);
+  }
+
+  let picURL = !req.file ? randomPicUrl : resizePicURL;
 
   const newPlayList = await PlayList.create({
     ...req.body,
-    playListAvatarURL: randomPicUrl,
+    playListAvatarURL: picURL,
     owner,
   });
 
@@ -38,12 +45,60 @@ const createPlayList = async (req, res) => {
   });
 };
 
+const createPlayListByGenre = async (req, res) => {
+  const { playListName } = req.body;
+  const { _id: owner } = req?.admin;
+  const { id } = req?.params;
+
+  let randomPicUrl;
+  let resizePicURL;
+
+  const isExistPlaylist = await PlayList.findOne({ playListName });
+
+  if (isExistPlaylist) {
+    throw HttpError(409, `${playListName} name in use`);
+  }
+
+  if (!req.file) {
+    randomPicUrl = await randomCover("playlist");
+  } else {
+    resizePicURL = await resizePics(req.file);
+  }
+
+  let picURL = !req.file ? randomPicUrl : resizePicURL;
+
+  const newPlayList = await PlayList.create({
+    playListName,
+    playListAvatarURL: picURL,
+    owner,
+  });
+
+  await Genre.findByIdAndUpdate(
+    id,
+    {
+      $push: { childPlaylist: newPlayList.id },
+    },
+    { new: true }
+  );
+
+  res.status(201).json({
+    playlistId: newPlayList.id,
+    playListName: newPlayList.playListName,
+    typeOfShop: newPlayList.typeOfShop,
+    shopCategory: newPlayList.shopCategory,
+    owner: newPlayList.owner,
+    playListAvatarURL: newPlayList.playListAvatarURL,
+    published: newPlayList.published,
+  });
+};
+
 const uploadPics = async (req, res) => {
+  const { type } = req.body;
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
-  const picsURL = await resizePics(req.file);
-  const cover = await Pics.create({ picsURL });
+  const picsURL = await resizePics(req.file, type);
+  const cover = await Pics.create({ picsURL, ...req.body });
   res.json({
     cover,
   });
@@ -76,8 +131,103 @@ const deletePlaylist = async (req, res) => {
   });
 };
 
+const playlistsCount = async (req, res) => {
+  const countPlaylists = await PlayList.find().count();
+
+  res.json({ countPlaylists });
+};
+
+const latestPlaylists = async (req, res) => {
+  const latestPlaylists = await PlayList.find(
+    {},
+    "playListName playListAvatarURL"
+  ).sort({ createdAt: -1 });
+
+  res.json({
+    latestPlaylists,
+  });
+};
+
+const createGenre = async (req, res) => {
+  const { genre } = req.body;
+
+  const isExistGenre = await Genre.findOne({ genre });
+
+  if (isExistGenre) {
+    throw HttpError(409, `${genre} already in use`);
+  }
+
+  const randomPicUrl = await randomCover("genre");
+
+  const newGenre = await Genre.create({
+    ...req.body,
+    genreAvatarURL: randomPicUrl,
+  });
+
+  res.status(201).json({
+    newGenre,
+  });
+};
+
+const uploadTrack = async (req, res) => {
+  const playlistId = req?.params?.id;
+  const { originalname } = req.file;
+  console.log(req.file);
+  if (!req.file) {
+    throw HttpError(404, "File not found for upload");
+  }
+
+  const metadata = await getId3Tags(req.file);
+  const { artist, title, genre } = metadata.common;
+  const { duration } = metadata.format;
+  const isExistTrack = await Track.findOne(metadata.common);
+
+  if (isExistTrack) {
+    throw HttpError(409, `Track "${originalname}" already exist`);
+  }
+
+  const tracksDir = req.file.path.split("/").slice(-2)[0];
+  const trackURL = path.join(tracksDir, originalname);
+
+
+  const newTrack = await Track.create({
+    ...req.body,
+  });
+
+  const payload = {
+    id: newTrack._id,
+  };
+
+  const track = await Track.findByIdAndUpdate(
+    newTrack._id,
+    {
+      trackURL,
+      artist: artist,
+      trackName: title,
+      trackGenre: genre?.toString(),
+      trackDuration: duration,
+    },
+    { new: true }
+  );
+
+  if (playlistId) {
+    await PlayList.findByIdAndUpdate(playlistId, {
+      $push: { trackList: newTrack.id },
+    });
+  }
+
+  res.json({
+    track,
+  });
+};
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
+  createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
+  playlistsCount: ctrlWrapper(playlistsCount),
+  latestPlaylists: ctrlWrapper(latestPlaylists),
+  createGenre: ctrlWrapper(createGenre),
+  uploadTrack: ctrlWrapper(uploadTrack),
 };

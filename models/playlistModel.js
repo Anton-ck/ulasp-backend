@@ -6,7 +6,7 @@ const playListSchema = new Schema(
   {
     playListName: {
       type: String,
-      require: true,
+      required: true,
       unique: true,
     },
     playListAvatarURL: {
@@ -24,6 +24,10 @@ const playListSchema = new Schema(
     trackList: {
       type: Array,
       default: null,
+    },
+    published: {
+      type: Boolean,
+      default: false,
     },
     owner: {
       type: Schema.Types.ObjectId,

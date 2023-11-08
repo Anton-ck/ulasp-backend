@@ -6,12 +6,12 @@ const tempDirResize = path.resolve("tmp", "resize");
 const picsDir = path.resolve("public", "covers");
 const avatarsDir = path.resolve("public", "avatars");
 
-export const resizePics = async (file) => {
+export const resizePics = async (file, type) => {
   const { path: tempDir, originalname, fieldname } = file;
 
   const sizeImg = "60x40_";
   const fileName = `${originalname}`;
-  const resizeFileName = `${sizeImg}${fileName}`;
+  const resizeFileName = `${sizeImg}${type}_${fileName}`;
   const resultUpload = path.resolve(picsDir, resizeFileName);
   const resizeResultUpload = path.resolve(tempDirResize, resizeFileName);
 

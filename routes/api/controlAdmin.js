@@ -31,6 +31,13 @@ router.post(
 router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllAdmin);
 
 router.get(
+  "/users",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.getAllUsers
+);
+
+router.get(
   "/:id",
   authenticateAdmin,
   permisionsAdmin,
