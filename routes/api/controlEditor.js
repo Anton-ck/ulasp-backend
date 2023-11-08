@@ -8,6 +8,7 @@ import { permisionsEditor } from "../../middlewares/permitionsEditor.js";
 import { playListSchema } from "../../schemas/editorShema.js";
 import isValid from "../../middlewares/isValid.js";
 import upload from "../../middlewares/upload.js";
+import uploadTrack from "../../middlewares/uploadTrack.js";
 
 const router = express.Router();
 
@@ -54,5 +55,17 @@ router.post(
   isValid,
   isEmptyBody,
   controllers.createPlayListByGenre
+);
+
+router.post(
+  "/tracks/upload/:id",
+  uploadTrack.single("trackURL"),
+  controllers.uploadTrack
+);
+
+router.post(
+  "/tracks/upload",
+  uploadTrack.single("trackURL"),
+  controllers.uploadTrack
 );
 export default router;

@@ -1,14 +1,16 @@
 import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
 import Genre from "../models/genreModel.js";
+import Track from "../models/trackModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
+import path from "path";
 
 import { resizePics } from "../helpers/resizePics.js";
 import randomCover from "../helpers/randomCover.js";
+import getId3Tags from "../helpers/id3Tags.js";
 
 const createPlayList = async (req, res) => {
-  console.log(req.body);
   const { playListName } = req.body;
   const { _id: owner } = req?.admin;
   let randomPicUrl;
@@ -44,7 +46,6 @@ const createPlayList = async (req, res) => {
 };
 
 const createPlayListByGenre = async (req, res) => {
-  console.log(req.admin);
   const { playListName } = req.body;
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
@@ -81,11 +82,13 @@ const createPlayListByGenre = async (req, res) => {
   );
 
   res.status(201).json({
+    playlistId: newPlayList.id,
     playListName: newPlayList.playListName,
     typeOfShop: newPlayList.typeOfShop,
     shopCategory: newPlayList.shopCategory,
     owner: newPlayList.owner,
     playListAvatarURL: newPlayList.playListAvatarURL,
+    published: newPlayList.published,
   });
 };
 
@@ -166,8 +169,57 @@ const createGenre = async (req, res) => {
   });
 };
 
+const uploadTrack = async (req, res) => {
+  const playlistId = req?.params?.id;
+  const { originalname } = req.file;
+  console.log(req.file);
+  if (!req.file) {
+    throw HttpError(404, "File not found for upload");
+  }
+
+  const metadata = await getId3Tags(req.file);
+  const { artist, title, genre } = metadata.common;
+  const { duration } = metadata.format;
+  const isExistTrack = await Track.findOne(metadata.common);
+
+  if (isExistTrack) {
+    throw HttpError(409, `Track "${originalname}" already exist`);
+  }
+
+  const tracksDir = req.file.path.split("/").slice(-2)[0];
+  const trackURL = path.join(tracksDir, originalname);
 
 
+  const newTrack = await Track.create({
+    ...req.body,
+  });
+
+  const payload = {
+    id: newTrack._id,
+  };
+
+  const track = await Track.findByIdAndUpdate(
+    newTrack._id,
+    {
+      trackURL,
+      artist: artist,
+      trackName: title,
+      trackGenre: genre?.toString(),
+      trackDuration: duration,
+    },
+    { new: true }
+  );
+
+  if (playlistId) {
+    await PlayList.findByIdAndUpdate(playlistId, {
+      $push: { trackList: newTrack.id },
+    });
+  }
+
+  res.json({
+    track,
+  });
+};
 
 export default {
   createPlayList: ctrlWrapper(createPlayList),
@@ -177,4 +229,5 @@ export default {
   playlistsCount: ctrlWrapper(playlistsCount),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   createGenre: ctrlWrapper(createGenre),
+  uploadTrack: ctrlWrapper(uploadTrack),
 };

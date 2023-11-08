@@ -25,6 +25,10 @@ const playListSchema = new Schema(
       type: Array,
       default: null,
     },
+    published: {
+      type: Boolean,
+      default: false,
+    },
     owner: {
       type: Schema.Types.ObjectId,
       ref: "admin" || "user",
