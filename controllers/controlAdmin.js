@@ -148,6 +148,14 @@ const createUser = async (req, res) => {
   });
 };
 
+const getAllUsers = async (req, res) => {
+  const allUsers = await User.find({...req.body});
+
+  res.json({
+    allUsers,
+  });
+};
+
 // const deleteAdmin = async (req, res) => {
 //   const { id } = req.params;
 
@@ -170,4 +178,5 @@ export default {
   deleteAdmin: ctrlWrapper(deleteAdmin),
   updateAdminPassword: ctrlWrapper(updateAdminPassword),
   createUser: ctrlWrapper(createUser),
+  getAllUsers: ctrlWrapper(getAllUsers),
 };

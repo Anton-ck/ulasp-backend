@@ -8,7 +8,6 @@ const handleMongooseError = (error, data, next) => {
   error.status = status;
   error.message = `Field "${fieldModel}" with value "${valueModel}" already present in the database. Field "${fieldModel}" must be unique`;
 
-
   next();
 };
 

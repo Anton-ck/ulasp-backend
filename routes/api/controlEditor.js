@@ -44,4 +44,15 @@ router.get(
 );
 
 router.get("/playlist/latest", controllers.latestPlaylists);
+
+router.post("/genre/create", controllers.createGenre);
+
+router.post(
+  "/genre/playlist/create/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  isValid,
+  isEmptyBody,
+  controllers.createPlayListByGenre
+);
 export default router;

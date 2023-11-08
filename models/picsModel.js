@@ -8,6 +8,10 @@ const picsSchema = new Schema(
       type: String,
       require: true,
     },
+    type: {
+      type: String,
+      default: null,
+    },
   },
   { versionKey: false, timestamps: true }
 );
