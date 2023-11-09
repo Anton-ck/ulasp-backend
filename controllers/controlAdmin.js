@@ -117,7 +117,7 @@ const updateAdminPassword = async (req, res) => {
 };
 
 const createUser = async (req, res) => {
-  const { contractNumber, taxCode, userFop } = req.body;
+  const { contractNumber, taxCode, password, userFop } = req.body;
   const user = await User.findOne({ contractNumber });
 
   if (user) {
@@ -131,12 +131,13 @@ const createUser = async (req, res) => {
     console.log("tut");
     newUser = await Fop.create({
       ...req.body,
-      taxCode: hashtaxCode,
+      password: hashtaxCode
+      
     });
   } else {
     newUser = await Company.create({
       ...req.body,
-      taxCode: hashtaxCode,
+      password: hashtaxCode
     });
   }
 

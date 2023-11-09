@@ -12,11 +12,10 @@ import {
 
 const userSchema = new Schema(
   {
-    // password: {
-    //   type: String,
-    //   minlength: 6,
-    //   required: [true, "Set password for user"],
-    // },
+    password: {
+      type: String,
+     
+    },
     contractNumber: {
       type: String,
       required: [true, "Login is required"],
@@ -36,7 +35,7 @@ const userSchema = new Schema(
     },
     userFop: {
       type: String,
-      default: true,
+      // default: true,
     },
 
     telNumber: {
@@ -56,29 +55,37 @@ const userSchema = new Schema(
       type: String,
       required: true,
     },
-    taxCodeContactFace: {
+    contactFaceTaxCode: {
       //ИНН контактного лица
       type: String,
       required: true,
       match: onlyNumberRegexp,
       unique: true,
     },
-    telNumberContactFace: {
+    contactFaceTelNumber: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
     },
-    emailContactFace: {
+    contactFaceEmail: {
       type: String,
       required: true,
       match: emailRegexp,
       unique: true,
     },
     status: {
+      //{block unblock}
+      type: String,
+      required: true,
+      default: false,
+    },
+    acces: {
       //{on off}
       type: String,
       required: true,
+      default: false,
     },
+
     dateOfAccess: {
       type: String,
       required: true,
