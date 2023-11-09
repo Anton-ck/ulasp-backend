@@ -22,24 +22,25 @@ export const loginUserSchema = Joi.object({
 
 export const createCommonUserSchema = Joi.object({
   contractNumber: Joi.string().min(5).max(30).required(),
-  firstName: Joi.string().min(5).max(30).pattern(nameRegexp),
+  // firstName: Joi.string().min(5).max(30).pattern(nameRegexp),
   userFop: Joi.string().default(true),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),
   contactFace: Joi.string().min(5).max(30),
-  taxCodeContactFace: Joi.string().min(8).max(10).pattern(onlyNumberRegexp),
-  telNumberContactFace: Joi.string().pattern(phoneNumberUaRegexp).required(),
-  emailContactFace: Joi.string().pattern(emailRegexp).required(),
+  contactFaceTaxCode: Joi.string().min(8).max(10).pattern(onlyNumberRegexp),
+  contactFaceTelNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
+  contactFaceEmail: Joi.string().pattern(emailRegexp).required(),
   status: Joi.boolean(),
   lastPay: Joi.string(),
   comment:Joi.string(),
   dateOfAccess:Joi.string(),
+  acces: Joi.boolean(),
 });
 
 export const createFopUserSchema = createCommonUserSchema.keys({
   firstName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
   lastName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
-  fatherName: Joi.string().min(5).max(30).pattern(nameRegexp),
+  fatherName: Joi.string().min(3).max(30).pattern(nameRegexp),
   dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   taxCode: joiPassword.string().min(10).max(10).pattern(onlyNumberRegexp),
 });
