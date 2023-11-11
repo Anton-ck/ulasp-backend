@@ -157,6 +157,22 @@ const getAllUsers = async (req, res) => {
   });
 };
 
+const getUserById = async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(
+    id,
+    "-createdAt -updatedAt -accessToken -refreshToken -password"
+  );
+
+  if (!user) {
+    throw HttpError(404);
+  }
+
+  res.json(user);
+};
+
+
 // const deleteAdmin = async (req, res) => {
 //   const { id } = req.params;
 
@@ -180,4 +196,5 @@ export default {
   updateAdminPassword: ctrlWrapper(updateAdminPassword),
   createUser: ctrlWrapper(createUser),
   getAllUsers: ctrlWrapper(getAllUsers),
+  getUserById: ctrlWrapper(getUserById),
 };
