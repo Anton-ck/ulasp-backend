@@ -36,6 +36,12 @@ router.get(
   permisionsAdmin,
   controllers.getAllUsers
 );
+router.get(
+  "/users/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.getUserById
+);
 
 router.get(
   "/:id",
