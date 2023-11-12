@@ -41,7 +41,9 @@ const getAllAdmin = async (req, res) => {
     "-createdAt -updatedAt -accessToken -refreshToken -password"
   );
 
-  res.json(result);
+  res.json({
+    result
+  });
 };
 
 const getAdminById = async (req, res) => {
