@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, SchemaType, model } from "mongoose";
 
 import handleMongooseError from "../helpers/handleMongooseError.js";
 
@@ -22,8 +22,9 @@ const playListSchema = new Schema(
       default: null,
     },
     trackList: {
-      type: Array,
-      default: null,
+      type: Schema.Types.ObjectId,
+      ref: "track",
+      trackList: [],
     },
     published: {
       type: Boolean,

@@ -6,9 +6,11 @@ import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import path from "path";
 
-import { resizePics } from "../helpers/resizePics.js";
+import { resizePics, resizeTrackCover } from "../helpers/resizePics.js";
 import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
+
+import albumArt from "album-art";
 
 const createPlayList = async (req, res) => {
   const { playListName } = req.body;
@@ -134,7 +136,7 @@ const deletePlaylist = async (req, res) => {
 const playlistsCount = async (req, res) => {
   const countPlaylists = await PlayList.find().count();
 
-  res.json({ countPlaylists });
+  res.json({ countPlaylists: countPlaylists });
 };
 
 const latestPlaylists = async (req, res) => {
@@ -168,27 +170,36 @@ const createGenre = async (req, res) => {
     newGenre,
   });
 };
-
+//написать доки
 const uploadTrack = async (req, res) => {
   const playlistId = req?.params?.id;
   const { originalname } = req.file;
-  console.log(req.file);
+  const fileName = originalname.split(" ");
+  const defaultCoverURL = "trackCovers/55x36_trackCover_default.png";
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
 
   const metadata = await getId3Tags(req.file);
-  const { artist, title, genre } = metadata.common;
+  const { artist, title, genre, album } = metadata?.common;
   const { duration } = metadata.format;
-  const isExistTrack = await Track.findOne(metadata.common);
-
-  if (isExistTrack) {
+  const isExistTrack = await Track.find({ artist: artist, trackName: title });
+  if (isExistTrack.length !== 0) {
     throw HttpError(409, `Track "${originalname}" already exist`);
   }
 
   const tracksDir = req.file.path.split("/").slice(-2)[0];
   const trackURL = path.join(tracksDir, originalname);
+  let resizeTrackCoverURL;
 
+  if (artist) {
+    const trackPicture = await albumArt(artist, {
+      album: album,
+      size: "large",
+    });
+
+    resizeTrackCoverURL = await resizeTrackCover(trackPicture, "trackCover");
+  }
 
   const newTrack = await Track.create({
     ...req.body,
@@ -202,10 +213,13 @@ const uploadTrack = async (req, res) => {
     newTrack._id,
     {
       trackURL,
-      artist: artist,
-      trackName: title,
+      artist: artist ? artist : fileName[0],
+      trackName: title ? title : fileName[1],
       trackGenre: genre?.toString(),
-      trackDuration: duration,
+      trackDuration: duration ? duration : null,
+      trackPictureURL: resizeTrackCoverURL
+        ? resizeTrackCoverURL
+        : defaultCoverURL || null,
     },
     { new: true }
   );
@@ -214,11 +228,31 @@ const uploadTrack = async (req, res) => {
     await PlayList.findByIdAndUpdate(playlistId, {
       $push: { trackList: newTrack.id },
     });
+    await Track.findByIdAndUpdate(newTrack.id, {
+      $push: { playList: playlistId },
+    });
   }
 
   res.json({
     track,
   });
+};
+
+//написать доки
+const countTracks = async (req, res) => {
+  const countTracks = await Track.find().count();
+
+  res.json({ countTracks: countTracks });
+};
+//написать доки
+
+const latestTracks = async (req, res) => {
+  const latestTracks = await Track.find()
+    .sort({ createdAt: -1 })
+    .limit(9)
+    .populate("playList");
+
+  res.json(latestTracks);
 };
 
 export default {
@@ -230,4 +264,6 @@ export default {
   latestPlaylists: ctrlWrapper(latestPlaylists),
   createGenre: ctrlWrapper(createGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
+  countTracks: ctrlWrapper(countTracks),
+  latestTracks: ctrlWrapper(latestTracks),
 };
