@@ -68,4 +68,18 @@ router.post(
   uploadTrack.single("trackURL"),
   controllers.uploadTrack
 );
+
+router.get(
+  "/tracks/count",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.countTracks
+);
+
+router.get(
+  "/tracks/latestTracks",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.latestTracks
+);
 export default router;
