@@ -175,6 +175,25 @@ const getUserById = async (req, res) => {
 };
 
 
+const deleteUser = async (req, res) => {
+  
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+    
+  if (!user) {
+    throw HttpError(404);
+  }
+
+  const result = await User.findByIdAndDelete(id);
+
+  res.status(200).json({ message: 'User deleted ' });
+  if (!result) {
+    res.status(500).json({ message: 'An error occurred' });
+  }
+};
+
+
 // const deleteAdmin = async (req, res) => {
 //   const { id } = req.params;
 
@@ -199,4 +218,5 @@ export default {
   createUser: ctrlWrapper(createUser),
   getAllUsers: ctrlWrapper(getAllUsers),
   getUserById: ctrlWrapper(getUserById),
+  deleteUser:ctrlWrapper(deleteUser),
 };
