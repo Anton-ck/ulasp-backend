@@ -93,4 +93,12 @@ router.post(
   controllers.createUser
 );
 
+router.delete(
+  "/users/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.deleteUser
+);
+
 export default router;
