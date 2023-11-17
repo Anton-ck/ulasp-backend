@@ -75,13 +75,13 @@ const userSchema = new Schema(
     },
     status: {
       //{block unblock}
-      type: String,
+      type: Boolean,
       required: true,
       default: false,
     },
     access: {
       //{on off}
-      type: String,
+      type: Boolean,
       required: true,
       default: false,
     },
@@ -110,7 +110,14 @@ const userSchema = new Schema(
       type: String,
       required: true,
       default: "",
-    }
+    },
+    online: {
+      //{on off}
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+
   },
   { versionKey: false, timestamps: true, discriminatorKey: "kind" }
 );

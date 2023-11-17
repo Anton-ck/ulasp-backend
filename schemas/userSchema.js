@@ -35,6 +35,7 @@ export const createCommonUserSchema = Joi.object({
   comment:Joi.string(),
   dateOfAccess:Joi.string(),
   access: Joi.boolean(),
+  online:Joi.boolean(),
 });
 
 export const createFopUserSchema = createCommonUserSchema.keys({
