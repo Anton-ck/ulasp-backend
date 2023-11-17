@@ -50,7 +50,9 @@ export const createEditorSchema = Joi.object({
   dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),
-});
+  comment:Joi.string(),
+  
+ });
 
 export const refreshSchema = Joi.object({
   refreshToken: Joi.string().required(),

@@ -79,7 +79,7 @@ const userSchema = new Schema(
       required: true,
       default: false,
     },
-    acces: {
+    access: {
       //{on off}
       type: String,
       required: true,

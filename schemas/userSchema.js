@@ -34,7 +34,7 @@ export const createCommonUserSchema = Joi.object({
   lastPay: Joi.string(),
   comment:Joi.string(),
   dateOfAccess:Joi.string(),
-  acces: Joi.boolean(),
+  access: Joi.boolean(),
 });
 
 export const createFopUserSchema = createCommonUserSchema.keys({
