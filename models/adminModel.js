@@ -78,6 +78,10 @@ const adminSchema = new Schema(
       match: emailRegexp,
       unique: true,
     },
+    comment: {
+      type: String,
+      default: "",
+    }
   },
   { versionKey: false, timestamps: true }
 );
