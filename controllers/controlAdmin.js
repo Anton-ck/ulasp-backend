@@ -193,6 +193,23 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const toggleUserStatus = async (req, res) => {
+  const { id } = req.params;
+
+   const user = await User.findById(id);
+ 
+if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+   user.status = !user.status;
+    await user.save();
+
+  res.status(200).json({
+    message: `Status for user '${user.firstName} ${user.lastName}' with ID ${user._id} has been toggled`,
+    newStatus: user.status,
+  });
+};
 
 // const deleteAdmin = async (req, res) => {
 //   const { id } = req.params;
@@ -218,5 +235,6 @@ export default {
   createUser: ctrlWrapper(createUser),
   getAllUsers: ctrlWrapper(getAllUsers),
   getUserById: ctrlWrapper(getUserById),
-  deleteUser:ctrlWrapper(deleteUser),
+  deleteUser: ctrlWrapper(deleteUser),
+  toggleUserStatus:ctrlWrapper(toggleUserStatus),
 };

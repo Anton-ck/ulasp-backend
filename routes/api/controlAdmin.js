@@ -101,4 +101,12 @@ router.delete(
   controllers.deleteUser
 );
 
+router.patch(
+  "/users/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.toggleUserStatus
+);
+
 export default router;
