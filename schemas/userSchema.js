@@ -12,11 +12,11 @@ const joiPassword = Joi.extend(joiPasswordExtendCore);
 
 export const loginUserSchema = Joi.object({
   contractNumber: Joi.string().min(5).max(30).required(),
-  taxCode: joiPassword
+  password: joiPassword
     .string()
     .min(6)
-    .minOfLowercase(1)
-    .minOfNumeric(1)
+    // .minOfLowercase(1)
+    // .minOfNumeric(1)
     .required(),
 });
 

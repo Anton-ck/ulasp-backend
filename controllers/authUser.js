@@ -64,12 +64,12 @@ const accessTokenExpires = "130m";
 // };
 
 const userSignIn = async (req, res) => {
-  const { contractNumber, taxCode } = req.body;
+  const { contractNumber, password } = req.body;
   console.log("first", req.body);
 
   const user = await User.findOne({ contractNumber });
-  const taxCodeCompare = await bcrypt.compare(taxCode, user.taxCode);
-  if (!user || !taxCodeCompare) {
+  const passwordCompare = await bcrypt.compare(password, user.password);
+  if (!user || !passwordCompare) {
     throw HttpError(401, "Login  or taxCode is wrong");
   }
 
@@ -77,8 +77,8 @@ const userSignIn = async (req, res) => {
     id: user._id,
   };
 
-  if (!user || !taxCodeCompare) {
-    throw HttpError(401, "Login  or taxCode is wrong");
+  if (!user || !passwordCompare) {
+    throw HttpError(401, "Login  or password is wrong");
   }
 
   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
