@@ -211,6 +211,33 @@ if (!user) {
   });
 };
 
+const updateUserInfo = async (req, res) => {
+  const { id } = req.params;
+  const result = await User.findByIdAndUpdate(id, req.body, {
+    new: true,
+  });
+
+  console.log(result);
+  if (!result) {
+    throw HttpError(404, "Not found");
+  }
+  res.json({result
+
+    // id: result.id,
+    // login: result.login,
+    // firstName: result.firstName,
+    // lastName: result.lastName,
+    // fatherName: result.fatherName,
+    // avatarURL: result.avatarURL,
+    // adminRole: result.adminRole,
+    // editorRole: result.editorRole,
+    // taxCode: result.taxCode,
+    // dayOfBirthday: result.dayOfBirthday,
+    // telNumber: result.telNumber,
+    // email: result.email,
+  });
+};
+
 // const deleteAdmin = async (req, res) => {
 //   const { id } = req.params;
 
@@ -237,4 +264,5 @@ export default {
   getUserById: ctrlWrapper(getUserById),
   deleteUser: ctrlWrapper(deleteUser),
   toggleUserStatus:ctrlWrapper(toggleUserStatus),
+  updateUserInfo: ctrlWrapper(updateUserInfo),
 };

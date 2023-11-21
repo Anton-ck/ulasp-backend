@@ -102,11 +102,18 @@ router.delete(
 );
 
 router.patch(
-  "/users/:id",
+  "/users/status/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   controllers.toggleUserStatus
+);
+router.patch(
+  "/users/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.updateUserInfo
 );
 
 export default router;
