@@ -171,7 +171,9 @@ const companySchema = new Schema(
   { versionKey: false, timestamps: true }
 );
 
-userSchema.post("save", handleMongooseError);
+// userSchema.post("save", handleMongooseError);
+// fopSchema.post("save", handleMongooseError);
+// companySchema.post("save", handleMongooseError);
 
 export const User = model("user", userSchema);
 export const Fop = User.discriminator("fop", fopSchema);

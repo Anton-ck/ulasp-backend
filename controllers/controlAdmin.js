@@ -213,11 +213,16 @@ if (!user) {
 
 const updateUserInfo = async (req, res) => {
   const { id } = req.params;
-  const result = await User.findByIdAndUpdate(id, req.body, {
+  // console.log("req.body", req.body.userFop);
+  let result = {};
+  if( req.body.userFop === "fop") {
+     result = await Fop.findByIdAndUpdate(id, req.body, {
+      new: true,
+    })} else {  result = await Company.findByIdAndUpdate(id, req.body, {
     new: true,
-  });
+  })}
+ 
 
-  console.log(result);
   if (!result) {
     throw HttpError(404, "Not found");
   }
@@ -229,8 +234,7 @@ const updateUserInfo = async (req, res) => {
     // lastName: result.lastName,
     // fatherName: result.fatherName,
     // avatarURL: result.avatarURL,
-    // adminRole: result.adminRole,
-    // editorRole: result.editorRole,
+    
     // taxCode: result.taxCode,
     // dayOfBirthday: result.dayOfBirthday,
     // telNumber: result.telNumber,
