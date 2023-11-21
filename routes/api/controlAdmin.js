@@ -50,6 +50,7 @@ router.get(
   isValid,
   controllers.getAdminById
 );
+
 router.patch(
   "/:id",
   authenticateAdmin,
@@ -59,7 +60,13 @@ router.patch(
   validateBody(updateAdminInfo),
   controllers.updateAdminInfo
 );
-
+router.patch(
+  "/users/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  // isValid,
+  controllers.updateUserInfo
+);
 router.delete(
   "/:id",
   authenticateAdmin,
@@ -108,12 +115,6 @@ router.patch(
   isValid,
   controllers.toggleUserStatus
 );
-router.patch(
-  "/users/:id",
-  authenticateAdmin,
-  permisionsAdmin,
-  isValid,
-  controllers.updateUserInfo
-);
+
 
 export default router;
