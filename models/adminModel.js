@@ -81,7 +81,13 @@ const adminSchema = new Schema(
     comment: {
       type: String,
       default: "",
-    }
+    },
+    status: {
+      //{block unblock}
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   { versionKey: false, timestamps: true }
 );
