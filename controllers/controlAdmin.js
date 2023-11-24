@@ -213,7 +213,9 @@ if (!user) {
 
 const updateUserInfo = async (req, res) => {
   const { id } = req.params;
-  // console.log("req.body", req.body.userFop);
+  console.log("id", id);
+  console.log("req.body", req.body);
+
   let result = {};
   if( req.body.userFop === "fop") {
      result = await Fop.findByIdAndUpdate(id, req.body, {
