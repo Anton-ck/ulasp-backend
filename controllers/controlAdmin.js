@@ -89,6 +89,7 @@ const updateAdminInfo = async (req, res) => {
 
 const deleteAdmin = async (req, res) => {
   const { id } = req.params;
+  
   const admin = await Admin.findById(id);
   if (!admin) {
     throw HttpError(404, "Not found");
