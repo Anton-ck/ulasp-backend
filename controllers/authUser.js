@@ -68,8 +68,8 @@ const userSignIn = async (req, res) => {
   console.log("first", req.body);
 
   const user = await User.findOne({ contractNumber });
-  const passwordCompare = await bcrypt.compare(password, user.password);
-  if (!user || !passwordCompare) {
+
+  if (!user) {
     throw HttpError(401, "Login  or taxCode is wrong");
   }
 
@@ -77,7 +77,8 @@ const userSignIn = async (req, res) => {
     id: user._id,
   };
 
-  if (!user || !passwordCompare) {
+  const passwordCompare = await bcrypt.compare(password, user.password);
+  if (!passwordCompare) {
     throw HttpError(401, "Login  or password is wrong");
   }
 
