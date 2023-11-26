@@ -64,10 +64,6 @@ const adminSignIn = async (req, res) => {
     id: admin._id,
   };
 
-  if (!admin || !passwordCompare) {
-    throw HttpError(401, "Login  or password is wrong");
-  }
-
   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
     expiresIn: accessTokenExpires,
   });
