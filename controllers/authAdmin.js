@@ -185,6 +185,8 @@ const getCurrentAdmin = async (req, res) => {
 };
 
 const logoutAdmin = async (req, res) => {
+
+
   const { _id } = req.admin;
   await Admin.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
   res.status(204).json();
