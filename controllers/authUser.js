@@ -90,6 +90,12 @@ const userSignIn = async (req, res) => {
 
     user: {
       contractNumber: user.contractNumber,
+         firstName: user.firstName,
+        lastName: user.lastName,
+        fatherName: user.fatherName,
+      name:user.name,
+      avatarURL: user.avatarURL,
+  
     },
   });
 };
