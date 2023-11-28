@@ -101,13 +101,27 @@ const userSignIn = async (req, res) => {
   });
 };
 const getCurrentUser = async (req, res) => {
-  console.log("req.user", req.user);
-  const { name, contractNumber } = req.user;
-  console.log("req.user", req.user);
-  res.json({
+  const { firstName,
+    lastName,
+    fatherName,
     name,
-    contractNumber,
-  });
+    avatarURL,
+    taxCode,
+    dayOfBirthday,
+    telNumber,
+    email, contractNumber } = req.user;
+  res.json({
+    user: {
+      firstName,
+      lastName,
+      fatherName,
+      name,
+      avatarURL,
+      taxCode,
+      dayOfBirthday,
+      telNumber,
+      email,
+    }});
 };
 
 const logoutUser = async (req, res) => {
