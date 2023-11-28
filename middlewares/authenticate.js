@@ -38,7 +38,7 @@ export const authenticateAdmin = async (req, res, next) => {
 export const authenticatUser = async (req, res, next) => {
   const { authorization = "" } = req.headers;
   const [bearer, accessToken] = authorization.split(" ");
-
+console.log('c.lf pfikb')
   if (bearer !== "Bearer") {
     next(HttpError(401));
     return;

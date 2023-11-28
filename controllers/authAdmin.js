@@ -64,10 +64,6 @@ const adminSignIn = async (req, res) => {
     id: admin._id,
   };
 
-  if (!admin || !passwordCompare) {
-    throw HttpError(401, "Login  or password is wrong");
-  }
-
   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
     expiresIn: accessTokenExpires,
   });
@@ -189,8 +185,6 @@ const getCurrentAdmin = async (req, res) => {
 };
 
 const logoutAdmin = async (req, res) => {
-
-
   const { _id } = req.admin;
   await Admin.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
   res.status(204).json();
