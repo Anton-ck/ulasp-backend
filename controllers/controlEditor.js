@@ -145,9 +145,7 @@ const latestPlaylists = async (req, res) => {
     "playListName playListAvatarURL"
   ).sort({ createdAt: -1 });
 
-  res.json({
-    latestPlaylists,
-  });
+  res.json(latestPlaylists);
 };
 
 const createGenre = async (req, res) => {
@@ -169,6 +167,12 @@ const createGenre = async (req, res) => {
   res.status(201).json({
     newGenre,
   });
+};
+
+const allGenres = async (req, res) => {
+  const allGenres = await Genre.find();
+
+  res.json(allGenres);
 };
 //написать доки
 const uploadTrack = async (req, res) => {
@@ -263,6 +267,7 @@ export default {
   playlistsCount: ctrlWrapper(playlistsCount),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   createGenre: ctrlWrapper(createGenre),
+  allGenres: ctrlWrapper(allGenres),
   uploadTrack: ctrlWrapper(uploadTrack),
   countTracks: ctrlWrapper(countTracks),
   latestTracks: ctrlWrapper(latestTracks),
