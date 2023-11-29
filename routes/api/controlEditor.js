@@ -46,7 +46,14 @@ router.get(
 
 router.get("/playlist/latest", controllers.latestPlaylists);
 
-router.post("/genre/create", controllers.createGenre);
+router.post("/genres/create", controllers.createGenre);
+
+router.get(
+  "/genres/all",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.allGenres
+);
 
 router.post(
   "/genre/playlist/create/:id",
