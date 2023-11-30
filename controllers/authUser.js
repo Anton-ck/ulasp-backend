@@ -91,17 +91,25 @@ const userSignIn = async (req, res) => {
 
     user: {
       contractNumber: user.contractNumber,
-         firstName: user.firstName,
-        lastName: user.lastName,
-        fatherName: user.fatherName,
-      name:user.name,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fatherName: user.fatherName,
+      name: user.name,
       avatarURL: user.avatarURL,
-  
+
+      taxCode: user.taxCode,
+      dayOfBirthday: user.dayOfBirthday,
+      telNumber: user.telNumber,
+      email: user.email,
+      lastPay: user.lastPay,
+      dateOfAccess: user.dateOfAccess,
     },
   });
 };
 const getCurrentUser = async (req, res) => {
-  const { firstName,
+  console.log("getCurrentUser", req.user);
+  const {
+    firstName,
     lastName,
     fatherName,
     name,
@@ -109,7 +117,11 @@ const getCurrentUser = async (req, res) => {
     taxCode,
     dayOfBirthday,
     telNumber,
-    email, contractNumber } = req.user;
+    email,
+    contractNumber,
+    dateOfAccess,
+    lastPay
+  } = req.user;
   res.json({
     user: {
       firstName,
@@ -121,7 +133,11 @@ const getCurrentUser = async (req, res) => {
       dayOfBirthday,
       telNumber,
       email,
-    }});
+      lastPay,
+      contractNumber,
+      dateOfAccess,
+    },
+  });
 };
 
 const logoutUser = async (req, res) => {

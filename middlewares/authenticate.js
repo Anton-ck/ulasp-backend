@@ -38,6 +38,8 @@ export const authenticateAdmin = async (req, res, next) => {
 export const authenticatUser = async (req, res, next) => {
   const { authorization = "" } = req.headers;
   const [bearer, accessToken] = authorization.split(" ");
+  console.log('accessToken', accessToken)
+
   if (bearer !== "Bearer") {
     next(HttpError(401));
     return;
@@ -47,11 +49,13 @@ export const authenticatUser = async (req, res, next) => {
     const { id } = jwt.verify(accessToken, ACCESS_SECRET_KEY);
     console.log('id', id)
     const user = await User.findById(id);
+    console.log('user id', user)
     if (!user || !user.accessToken || user.accessToken !== accessToken) {
       next(HttpError(401));
     }
 
     req.user = user;
+  
     next();
   } catch (error) {
     next(HttpError(401));
