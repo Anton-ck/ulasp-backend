@@ -2,7 +2,10 @@ import express from "express";
 
 import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
-import { authenticatUser, authenticateAdmin } from "../../middlewares/authenticate.js";
+import {
+  authenticatUser,
+  authenticateAdmin,
+} from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlUser.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
 
@@ -17,18 +20,13 @@ const router = express.Router();
 
 router.get("/playlist/latest", controllers.latestPlaylists);
 
-// router.get(
-//   "/genres/all",
-//   authenticatUser,
-//   authenticateAdmin,
-//   controllers.allGenres
-// );
+router.get(
+  "/genres/all",
+  authenticatUser,
 
-// router.get(
-//   "/tracks/latestTracks",
-//   authenticatUser,
-//   authenticateAdmin,
-//   controllers.latestTracks
-// );
+  controllers.allGenres
+);
+
+router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
 
 export default router;
