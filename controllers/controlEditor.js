@@ -151,7 +151,9 @@ const latestPlaylists = async (req, res) => {
 const createGenre = async (req, res) => {
   const { genre } = req.body;
   const isExistGenre = await Genre.findOne({ genre });
-
+  if (genre === "") {
+    throw HttpError(404, `genre is empty`);
+  }
   if (isExistGenre) {
     throw HttpError(409, `${genre} already in use`);
   }
