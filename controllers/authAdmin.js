@@ -84,6 +84,7 @@ const adminSignIn = async (req, res) => {
         fatherName: admin.fatherName,
         avatarURL: admin.avatarURL,
         adminRole: admin.adminRole,
+        editorRole: admin.editorRole,
       },
     });
   } else {
@@ -97,6 +98,7 @@ const adminSignIn = async (req, res) => {
         fatherName: admin.fatherName,
         avatarURL: admin.avatarURL,
         editorRole: admin.editorRole,
+        adminRole: admin.adminRole,
         taxCode: admin.taxCode,
         dayOfBirthday: admin.dayOfBirthday,
         telNumber: admin.telNumber,
@@ -137,6 +139,7 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 };
 
 const getCurrentAdmin = async (req, res) => {
+  console.log('getCurrentAdmin', req.admin)
   const {
     login,
     firstName,
@@ -160,6 +163,7 @@ const getCurrentAdmin = async (req, res) => {
         fatherName,
         avatarURL,
         adminRole,
+        editorRole,
         taxCode,
         dayOfBirthday,
         telNumber,
@@ -175,6 +179,7 @@ const getCurrentAdmin = async (req, res) => {
         fatherName,
         avatarURL,
         editorRole,
+        adminRole,
         taxCode,
         dayOfBirthday,
         telNumber,
