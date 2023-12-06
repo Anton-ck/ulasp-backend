@@ -1,5 +1,7 @@
 import { User, Fop, Company } from "../models/userModel.js";
 import PlayList from "../models/playlistModel.js";
+import Track from "../models/trackModel.js";
+import Genre from "../models/genreModel.js";
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
@@ -32,10 +34,34 @@ const createPlayList = async (req, res) => {
   });
 };
 
+const latestPlaylists = async (req, res) => {
+  const latestPlaylists = await PlayList.find(
+    { published: true },
+    "playListName playListAvatarURL"
+  ).sort({ createdAt: -1 });
+
+  res.json(latestPlaylists);
+};
+
+const allGenres = async (req, res) => {
+  const allGenres = await Genre.find();
+
+  res.json(allGenres);
+};
+
+const latestTracks = async (req, res) => {
+  const latestTracks = await Track.find()
+    .sort({ createdAt: -1 })
+    .limit(9)
+    .populate("playList");
+
+  res.json(latestTracks);
+};
+
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
-    createPlayList: ctrlWrapper(createPlayList),
+  createPlayList: ctrlWrapper(createPlayList),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
-latestTracks: ctrlWrapper(latestTracks),
+  latestTracks: ctrlWrapper(latestTracks),
 };
