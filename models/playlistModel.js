@@ -37,6 +37,10 @@ const playListSchema = new Schema(
       ref: "admin" || "user",
       required: true,
     },
+    favorite: {
+      type: Boolean,
+      default: false,
+    },
   },
 
   { versionKey: false, timestamps: true }
