@@ -60,8 +60,10 @@ const latestTracks = async (req, res) => {
 
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
+
     createPlayList: ctrlWrapper(createPlayList),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
 latestTracks: ctrlWrapper(latestTracks),
+
 };

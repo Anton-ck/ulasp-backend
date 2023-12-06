@@ -13,10 +13,14 @@ const genreSchema = new Schema(
       type: String,
       default: null,
     },
-    childPlaylist: {
-      type: Array,
-      default: null,
-    },
+    playList: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "playlist",
+        playList: [],
+        default: null,
+      },
+    ],
   },
   { versionKey: false, timestamps: true }
 );

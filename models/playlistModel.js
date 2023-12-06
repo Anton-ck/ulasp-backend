@@ -21,11 +21,13 @@ const playListSchema = new Schema(
       type: Array,
       default: null,
     },
-    trackList: {
-      type: Schema.Types.ObjectId,
-      ref: "track",
-      trackList: [],
-    },
+    trackList: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "track",
+        trackList: [],
+      },
+    ],
     published: {
       type: Boolean,
       default: false,

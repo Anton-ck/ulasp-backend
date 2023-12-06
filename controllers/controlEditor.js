@@ -48,9 +48,11 @@ const createPlayList = async (req, res) => {
 };
 
 const createPlayListByGenre = async (req, res) => {
-  const { playListName } = req.body;
+  const { playListName, type } = req.body;
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
+
+  console.log(req.body);
 
   let randomPicUrl;
   let resizePicURL;
@@ -64,7 +66,7 @@ const createPlayListByGenre = async (req, res) => {
   if (!req.file) {
     randomPicUrl = await randomCover("playlist");
   } else {
-    resizePicURL = await resizePics(req.file);
+    resizePicURL = await resizePics(req.file, type);
   }
 
   let picURL = !req.file ? randomPicUrl : resizePicURL;
@@ -78,7 +80,7 @@ const createPlayListByGenre = async (req, res) => {
   await Genre.findByIdAndUpdate(
     id,
     {
-      $push: { childPlaylist: newPlayList.id },
+      $push: { playList: newPlayList.id },
     },
     { new: true }
   );
@@ -92,6 +94,18 @@ const createPlayListByGenre = async (req, res) => {
     playListAvatarURL: newPlayList.playListAvatarURL,
     published: newPlayList.published,
   });
+};
+
+const findPlayListById = async (req, res) => {
+  const { id } = req.params;
+
+  const playlist = await PlayList.findById(id).populate("trackList");
+
+  if (!playlist) {
+    throw HttpError(404);
+  }
+
+  res.json(playlist);
 };
 
 const uploadPics = async (req, res) => {
@@ -112,19 +126,32 @@ const deletePlaylist = async (req, res) => {
   const { id } = req.params;
   const { _id: admin } = req.admin;
 
-  console.log(id);
   const playlist = await PlayList.findById(id);
+
+  const idPlayListInGenre = await Genre.find({
+    playList: { $in: [id] },
+  });
+
+  if (idPlayListInGenre) {
+    idPlayListInGenre.map(
+      async (playlist) =>
+        await Genre.updateOne(
+          { _id: playlist._id },
+          { $pull: { playList: id } }
+        )
+    );
+  }
 
   if (!playlist) {
     throw HttpError(404, `Playlist with ${id} not found`);
   }
 
-  if (playlist.owner.toString() !== admin.toString()) {
-    throw HttpError(
-      403,
-      "You can't delete this playlist, because you don't owner"
-    );
-  }
+  // if (playlist.owner.toString() !== admin.toString()) {
+  //   throw HttpError(
+  //     403,
+  //     "You can't delete this playlist, because you don't owner"
+  //   );
+  // }
 
   await PlayList.findByIdAndDelete(id);
 
@@ -140,18 +167,23 @@ const playlistsCount = async (req, res) => {
 };
 
 const latestPlaylists = async (req, res) => {
-  const latestPlaylists = await PlayList.find(
-    {},
-    "playListName playListAvatarURL"
-  ).sort({ createdAt: -1 });
+  const latestPlaylists = await PlayList.find().sort({ createdAt: -1 });
 
   res.json(latestPlaylists);
+};
+
+const allGenres = async (req, res) => {
+  const allGenres = await Genre.find().populate("playList");
+
+  res.json(allGenres);
 };
 
 const createGenre = async (req, res) => {
   const { genre } = req.body;
   const isExistGenre = await Genre.findOne({ genre });
-
+  if (genre === "") {
+    throw HttpError(404, `genre is empty`);
+  }
   if (isExistGenre) {
     throw HttpError(409, `${genre} already in use`);
   }
@@ -168,11 +200,35 @@ const createGenre = async (req, res) => {
   });
 };
 
-const allGenres = async (req, res) => {
-  const allGenres = await Genre.find();
+const findGenreById = async (req, res) => {
+  const { id } = req.params;
 
-  res.json(allGenres);
+  const genre = await Genre.findById(id).populate("playList");
+
+  if (!genre) {
+    throw HttpError(404);
+  }
+
+  res.json(genre);
 };
+
+const deleteGenre = async (req, res) => {
+  const { id } = req.params;
+  const { _id: admin } = req.admin;
+
+  const genre = await Genre.findById(id);
+
+  if (!genre) {
+    throw HttpError(404, `Genre with ${id} not found`);
+  }
+
+  await Genre.findByIdAndDelete(id);
+
+  res.json({
+    message: `Genre ${genre.genre} was deleted`,
+  });
+};
+
 //написать доки
 const uploadTrack = async (req, res) => {
   const playlistId = req?.params?.id;
@@ -261,12 +317,15 @@ const latestTracks = async (req, res) => {
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
+  findPlayListById: ctrlWrapper(findPlayListById),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
   playlistsCount: ctrlWrapper(playlistsCount),
   latestPlaylists: ctrlWrapper(latestPlaylists),
-  createGenre: ctrlWrapper(createGenre),
   allGenres: ctrlWrapper(allGenres),
+  createGenre: ctrlWrapper(createGenre),
+  findGenreById: ctrlWrapper(findGenreById),
+  deleteGenre: ctrlWrapper(deleteGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
   countTracks: ctrlWrapper(countTracks),
   latestTracks: ctrlWrapper(latestTracks),

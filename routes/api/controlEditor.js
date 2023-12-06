@@ -21,6 +21,23 @@ router.post(
   controllers.createPlayList
 );
 
+router.get("/playlist/latest", controllers.latestPlaylists);
+
+router.get(
+  "/playlist/count",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.playlistsCount
+);
+
+router.get(
+  "/playlist/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  isValid,
+  controllers.findPlayListById
+);
+
 router.post(
   "/pics/create",
   authenticateAdmin,
@@ -37,16 +54,7 @@ router.delete(
   controllers.deletePlaylist
 );
 
-router.get(
-  "/playlist/count",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.playlistsCount
-);
 
-router.get("/playlist/latest", controllers.latestPlaylists);
-
-router.post("/genres/create", controllers.createGenre);
 
 router.get(
   "/genres/all",
@@ -55,12 +63,29 @@ router.get(
   controllers.allGenres
 );
 
+router.post("/genres/create", controllers.createGenre);
+
+router.get(
+  "/genres/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.findGenreById
+);
+
+router.delete(
+  "/genres/delete/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deleteGenre
+);
+
 router.post(
   "/genre/playlist/create/:id",
   authenticateAdmin,
   permisionsEditor,
   isValid,
-  isEmptyBody,
+  upload.single("picsURL"),
+  validateBody(playListSchema),
   controllers.createPlayListByGenre
 );
 
