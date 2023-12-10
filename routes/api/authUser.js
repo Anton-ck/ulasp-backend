@@ -43,5 +43,11 @@ router.post(
   authenticatUser,
   controllersUser.createPlayList
 );
+router.patch(
+  "/avatars",
+  authenticatUser,
+  upload.single("avatarURL"),
+  controllers.updateUserAvatar
+);
 
 export default router;
