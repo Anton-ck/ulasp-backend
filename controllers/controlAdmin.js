@@ -212,6 +212,25 @@ if (!user) {
   });
 };
 
+
+const toggleUserAccess = async (req, res) => {
+  const { id } = req.params;
+
+   const user = await User.findById(id);
+ 
+if (!user) {
+    return res.status(404).json({ error: "User not found" });
+  }
+
+   user.access = !user.access;
+    await user.save();
+
+  res.status(200).json({
+    message: `Access for user '${user.firstName} ${user.lastName}' with ID ${user._id} has been toggled`,
+    newAccess: user.access,
+  });
+};
+
 const updateUserInfo = async (req, res) => {
   const { id } = req.params;
   console.log("id", id);
@@ -271,5 +290,6 @@ export default {
   getUserById: ctrlWrapper(getUserById),
   deleteUser: ctrlWrapper(deleteUser),
   toggleUserStatus:ctrlWrapper(toggleUserStatus),
+  toggleUserAccess: ctrlWrapper(toggleUserAccess),
   updateUserInfo: ctrlWrapper(updateUserInfo),
 };

@@ -115,6 +115,13 @@ router.patch(
   isValid,
   controllers.toggleUserStatus
 );
+router.patch(
+  "/users/access/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.toggleUserAccess
+);
 
 
 export default router;
