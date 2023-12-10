@@ -9,7 +9,7 @@ import { fileURLToPath } from "url";
 import { User, Fop, Company } from "../models/userModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
-
+import { resizeAvatar } from "../helpers/resizePics.js";
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
@@ -145,7 +145,17 @@ const logoutUser = async (req, res) => {
   await User.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
   res.status(204).json();
 };
+const updateUserAvatar = async (req, res) => {
+  const { _id } = req.user;
+  if (!req.file) {
+    throw HttpError(404, "File not found for upload");
+  }
+  const avatarURL = await resizeAvatar(req.file);
 
+  await User.findByIdAndUpdate(_id, { avatarURL }, { new: true });
+
+  res.json({ avatarURL });
+};
 // const getRefreshTokenAdmin = async (req, res, next) => {
 //   const { refreshToken: token } = req.body;
 //   try {
@@ -178,7 +188,7 @@ const logoutUser = async (req, res) => {
 
 export default {
   userSignIn: ctrlWrapper(userSignIn),
-
+  updateUserAvatar: ctrlWrapper(updateUserAvatar),
   logoutUser: ctrlWrapper(logoutUser),
   getCurrentUser: ctrlWrapper(getCurrentUser),
 };
