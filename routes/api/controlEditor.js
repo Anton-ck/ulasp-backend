@@ -54,8 +54,6 @@ router.delete(
   controllers.deletePlaylist
 );
 
-
-
 router.get(
   "/genres/all",
   authenticateAdmin,
@@ -113,5 +111,24 @@ router.get(
   authenticateAdmin,
   permisionsEditor,
   controllers.latestTracks
+);
+
+router.get(
+  "/shops/all",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.allShops
+);
+router.post(
+  "/shops/create",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.createShop
+);
+router.delete(
+  "/shops/delete/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deleteShop
 );
 export default router;

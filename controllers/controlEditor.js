@@ -2,6 +2,7 @@ import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
 import Genre from "../models/genreModel.js";
 import Track from "../models/trackModel.js";
+import Shop from "../models/shopModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import path from "path";
@@ -235,7 +236,6 @@ const findGenreById = async (req, res) => {
 
 const deleteGenre = async (req, res) => {
   const { id } = req.params;
-  const { _id: admin } = req.admin;
 
   const genre = await Genre.findById(id);
 
@@ -344,6 +344,55 @@ const latestTracks = async (req, res) => {
   res.json(latestTracks);
 };
 
+const allShops = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const allShops = await Shop.find({ ...req.query }, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).sort({ createdAt: -1 });
+
+  res.json(allShops);
+};
+
+const createShop = async (req, res) => {
+  console.log(req.body);
+  const { shopCategoryName } = req.body;
+  const isExistShop = await Shop.findOne({ shopCategoryName });
+  if (shopCategoryName === "") {
+    throw HttpError(404, `shop is empty`);
+  }
+  if (isExistShop) {
+    throw HttpError(409, `${shopCategoryName} already in use`);
+  }
+  const randomPicUrl = await randomCover("shop");
+
+  const newShop = await Shop.create({
+    ...req.body,
+    shopAvatarURL: randomPicUrl,
+  });
+
+  res.status(201).json({
+    newShop,
+  });
+};
+
+const deleteShop = async (req, res) => {
+  const { id } = req.params;
+
+  const shop = await Shop.findById(id);
+
+  if (!shop) {
+    throw HttpError(404, `Genre with ${id} not found`);
+  }
+
+  await Shop.findByIdAndDelete(id);
+
+  res.json({
+    message: `Shop ${shop.shopCategoryName} was deleted`,
+  });
+};
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
@@ -359,4 +408,7 @@ export default {
   uploadTrack: ctrlWrapper(uploadTrack),
   countTracks: ctrlWrapper(countTracks),
   latestTracks: ctrlWrapper(latestTracks),
+  allShops: ctrlWrapper(allShops),
+  createShop: ctrlWrapper(createShop),
+  deleteShop: ctrlWrapper(deleteShop),
 };
