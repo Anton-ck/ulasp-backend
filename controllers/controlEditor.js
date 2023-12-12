@@ -52,8 +52,6 @@ const createPlayListByGenre = async (req, res) => {
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
 
-  console.log(req.body);
-
   let randomPicUrl;
   let resizePicURL;
 
@@ -167,13 +165,36 @@ const playlistsCount = async (req, res) => {
 };
 
 const latestPlaylists = async (req, res) => {
-  const latestPlaylists = await PlayList.find().sort({ createdAt: -1 });
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+
+  const latestPlaylists = await PlayList.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  ).sort({ createdAt: -1 });
+
+  const totalHits = await PlayList.countDocuments();
 
   res.json(latestPlaylists);
 };
 
 const allGenres = async (req, res) => {
-  const allGenres = await Genre.find().populate("playList");
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const allGenres = await Genre.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  )
+    .populate("playList")
+    .sort({ createdAt: -1 });
 
   res.json(allGenres);
 };
@@ -306,9 +327,18 @@ const countTracks = async (req, res) => {
 //написать доки
 
 const latestTracks = async (req, res) => {
-  const latestTracks = await Track.find()
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const latestTracks = await Track.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  )
     .sort({ createdAt: -1 })
-    .limit(9)
+
     .populate("playList");
 
   res.json(latestTracks);
