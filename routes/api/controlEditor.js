@@ -96,6 +96,7 @@ router.post(
 router.post(
   "/tracks/upload",
   uploadTrack.single("trackURL"),
+
   controllers.uploadTrack
 );
 

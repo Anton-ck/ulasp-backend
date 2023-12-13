@@ -6,7 +6,7 @@ import Shop from "../models/shopModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import path from "path";
-
+import * as fs from "fs";
 import { resizePics, resizeTrackCover } from "../helpers/resizePics.js";
 import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
@@ -252,10 +252,17 @@ const deleteGenre = async (req, res) => {
 
 //написать доки
 const uploadTrack = async (req, res) => {
+  console.log("FILE", req.file);
+
+  // if (fs.existsSync(req.file.path)) {
+  //   throw HttpError(400, `Track "${req.file.originalname}" already exist`);
+  // }
   const playlistId = req?.params?.id;
-  const { originalname } = req.file;
-  const fileName = originalname.split(" ");
-  const defaultCoverURL = "trackCovers/55x36_trackCover_default.png";
+  const { originalname, filename } = req.file;
+
+  const fileName = path.parse(filename).name.split("-");
+
+  const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
@@ -269,7 +276,7 @@ const uploadTrack = async (req, res) => {
   }
 
   const tracksDir = req.file.path.split("/").slice(-2)[0];
-  const trackURL = path.join(tracksDir, originalname);
+  const trackURL = path.join(tracksDir, filename);
   let resizeTrackCoverURL;
 
   if (artist) {
@@ -285,16 +292,16 @@ const uploadTrack = async (req, res) => {
     ...req.body,
   });
 
-  const payload = {
-    id: newTrack._id,
-  };
-
   const track = await Track.findByIdAndUpdate(
     newTrack._id,
     {
       trackURL,
-      artist: artist ? artist : fileName[0],
-      trackName: title ? title : fileName[1],
+      artist: artist
+        ? artist
+        : `${fileName[0] ? fileName[0] : ""}${" "}${
+            fileName[1] ? fileName[1] : ""
+          }`,
+      trackName: title ? title : `${fileName[2] ? fileName[2] : ""}`,
       trackGenre: genre?.toString(),
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
