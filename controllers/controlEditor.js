@@ -260,7 +260,7 @@ const uploadTrack = async (req, res) => {
   const playlistId = req?.params?.id;
   const { originalname, filename } = req.file;
 
-  const fileName = path.parse(filename).name.split("-");
+  const fileName = path.parse(filename).name.split("__");
 
   const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
   if (!req.file) {
@@ -301,7 +301,11 @@ const uploadTrack = async (req, res) => {
         : `${fileName[0] ? fileName[0] : ""}${" "}${
             fileName[1] ? fileName[1] : ""
           }`,
-      trackName: title ? title : `${fileName[2] ? fileName[2] : ""}`,
+      trackName: title
+        ? title
+        : `${fileName[2] ? fileName[2] : ""}${" "}${
+            fileName[3] ? fileName[3] : ""
+          }`,
       trackGenre: genre?.toString(),
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
