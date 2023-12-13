@@ -2,10 +2,11 @@ import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
 import Genre from "../models/genreModel.js";
 import Track from "../models/trackModel.js";
+import Shop from "../models/shopModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import path from "path";
-
+import * as fs from "fs";
 import { resizePics, resizeTrackCover } from "../helpers/resizePics.js";
 import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
@@ -51,8 +52,6 @@ const createPlayListByGenre = async (req, res) => {
   const { playListName, type } = req.body;
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
-
-  console.log(req.body);
 
   let randomPicUrl;
   let resizePicURL;
@@ -167,13 +166,36 @@ const playlistsCount = async (req, res) => {
 };
 
 const latestPlaylists = async (req, res) => {
-  const latestPlaylists = await PlayList.find().sort({ createdAt: -1 });
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+
+  const latestPlaylists = await PlayList.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  ).sort({ createdAt: -1 });
+
+  const totalHits = await PlayList.countDocuments();
 
   res.json(latestPlaylists);
 };
 
 const allGenres = async (req, res) => {
-  const allGenres = await Genre.find().populate("playList");
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const allGenres = await Genre.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  )
+    .populate("playList")
+    .sort({ createdAt: -1 });
 
   res.json(allGenres);
 };
@@ -214,7 +236,6 @@ const findGenreById = async (req, res) => {
 
 const deleteGenre = async (req, res) => {
   const { id } = req.params;
-  const { _id: admin } = req.admin;
 
   const genre = await Genre.findById(id);
 
@@ -231,10 +252,17 @@ const deleteGenre = async (req, res) => {
 
 //написать доки
 const uploadTrack = async (req, res) => {
+  console.log("FILE", req.file);
+
+  // if (fs.existsSync(req.file.path)) {
+  //   throw HttpError(400, `Track "${req.file.originalname}" already exist`);
+  // }
   const playlistId = req?.params?.id;
-  const { originalname } = req.file;
-  const fileName = originalname.split(" ");
-  const defaultCoverURL = "trackCovers/55x36_trackCover_default.png";
+  const { originalname, filename } = req.file;
+
+  const fileName = path.parse(filename).name.split("-");
+
+  const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
@@ -248,7 +276,7 @@ const uploadTrack = async (req, res) => {
   }
 
   const tracksDir = req.file.path.split("/").slice(-2)[0];
-  const trackURL = path.join(tracksDir, originalname);
+  const trackURL = path.join(tracksDir, filename);
   let resizeTrackCoverURL;
 
   if (artist) {
@@ -264,16 +292,16 @@ const uploadTrack = async (req, res) => {
     ...req.body,
   });
 
-  const payload = {
-    id: newTrack._id,
-  };
-
   const track = await Track.findByIdAndUpdate(
     newTrack._id,
     {
       trackURL,
-      artist: artist ? artist : fileName[0],
-      trackName: title ? title : fileName[1],
+      artist: artist
+        ? artist
+        : `${fileName[0] ? fileName[0] : ""}${" "}${
+            fileName[1] ? fileName[1] : ""
+          }`,
+      trackName: title ? title : `${fileName[2] ? fileName[2] : ""}`,
       trackGenre: genre?.toString(),
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
@@ -306,12 +334,70 @@ const countTracks = async (req, res) => {
 //написать доки
 
 const latestTracks = async (req, res) => {
-  const latestTracks = await Track.find()
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const latestTracks = await Track.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  )
     .sort({ createdAt: -1 })
-    .limit(9)
+
     .populate("playList");
 
   res.json(latestTracks);
+};
+
+const allShops = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const allShops = await Shop.find({ ...req.query }, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).sort({ createdAt: -1 });
+
+  res.json(allShops);
+};
+
+const createShop = async (req, res) => {
+  console.log(req.body);
+  const { shopCategoryName } = req.body;
+  const isExistShop = await Shop.findOne({ shopCategoryName });
+  if (shopCategoryName === "") {
+    throw HttpError(404, `shop is empty`);
+  }
+  if (isExistShop) {
+    throw HttpError(409, `${shopCategoryName} already in use`);
+  }
+  const randomPicUrl = await randomCover("shop");
+
+  const newShop = await Shop.create({
+    ...req.body,
+    shopAvatarURL: randomPicUrl,
+  });
+
+  res.status(201).json({
+    newShop,
+  });
+};
+
+const deleteShop = async (req, res) => {
+  const { id } = req.params;
+
+  const shop = await Shop.findById(id);
+
+  if (!shop) {
+    throw HttpError(404, `Genre with ${id} not found`);
+  }
+
+  await Shop.findByIdAndDelete(id);
+
+  res.json({
+    message: `Shop ${shop.shopCategoryName} was deleted`,
+  });
 };
 
 export default {
@@ -329,4 +415,7 @@ export default {
   uploadTrack: ctrlWrapper(uploadTrack),
   countTracks: ctrlWrapper(countTracks),
   latestTracks: ctrlWrapper(latestTracks),
+  allShops: ctrlWrapper(allShops),
+  createShop: ctrlWrapper(createShop),
+  deleteShop: ctrlWrapper(deleteShop),
 };

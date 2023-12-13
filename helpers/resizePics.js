@@ -7,6 +7,7 @@ const picsDir = path.resolve("public", "covers");
 const avatarsDir = path.resolve("public", "avatars");
 const trackCovers = path.resolve("public", "trackCovers");
 const genreCovers = path.resolve("public", "genreCovers");
+const shopCovers = path.resolve("public", "shopCovers");
 
 export const resizePics = async (file, type) => {
   const { path: tempDir, originalname, fieldname } = file;
@@ -24,6 +25,10 @@ export const resizePics = async (file, type) => {
 
     case "playlist":
       picsFolder = picsDir;
+      break;
+
+    case "shop":
+      picsFolder = shopCovers;
       break;
 
     default:
