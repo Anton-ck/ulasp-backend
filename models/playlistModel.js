@@ -37,10 +37,14 @@ const playListSchema = new Schema(
       ref: "admin" || "user",
       required: true,
     },
-    favorite: {
-      type: Boolean,
-      default: false,
+    favoriteByUsers: {
+      type:  Array,
+    
     },
+    addByUsers: {
+      type:  Array,
+       },
+
   },
 
   { versionKey: false, timestamps: true }

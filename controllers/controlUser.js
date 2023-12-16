@@ -58,9 +58,101 @@ const latestTracks = async (req, res) => {
   res.json(latestTracks);
 };
 
+// const addPlaylist = async (req, res) => {
+//   const { _id: userId  } = req.user;
+//   const playlistId = req.params.playlistId;
+
+//   const playList = await PlayList.findById(playlistId);
+//   if (playlistId.favoriteByUsers.includes(userId)) {
+//     return res.status(409).json({ message: "Favorite added early" });
+//   }
+//   await PlayList.findByIdAndUpdate(
+//     playlistId,
+//     { $push: { favoriteByUsers: userId.toString() } },
+//     {
+//       new: true,
+//     }
+//   );
+//   const totalPlayLists = await PlayList.countDocuments({ favoriteByUsers: userId });
+
+//   delete playList._doc.favoriteByUsers;
+//   res.json({
+//     totalPlayLists,
+//     ...playList._doc,
+//   });
+// };
+
+// const deleteFavoritePlayList = async (req, res) => {
+//   const { _id: userId } = req.user;
+//   const playlistId = req.params.playlistId;
+
+//   const playList = await PlayList.findById(playlistId);
+
+//   if (!playList.favoriteByUsers.includes(userId)) {
+//     return res.status(409).json({ message: "Favorite deleted early" });
+//   }
+
+//   await PlayList.findByIdAndUpdate(
+//     playlistId,
+//     { $pull: { favoriteByUsers: userId.toString() } },
+
+//     {
+//       new: true,
+//     }
+//   );
+//   const totalPlayLists = await PlayList.countDocuments({ favoriteByUsers: userId });
+//   delete playList._doc.favoriteByUsers;
+//   res.json({ totalPlayLists, ...playList._doc });
+// };
+
+const updateFavoritesPlaylists = async (req, res) => {
+  const { playlistId: id} = req.params;
+  const { _id: user } = req.user;
+  console.log(' id',  id)
+
+  const playlist = await PlayList.findById(id);
+
+  if (!playlist) {
+    return res.status(404).json({ error: "Playlist with such id is not found" });
+  }
+
+ 
+
+  const isFavorite = playlist.favoriteByUsers.includes(user);
+
+  if (isFavorite) {
+    await PlayList.findByIdAndUpdate(playlist._id, { $pull: { favoriteByUsers: user } });
+    res.status(200).json({ message: `Removed ${playlist.playListName} from favorites` });
+  } else {
+    await PlayList.findByIdAndUpdate(playlist._id, { $push: { favoriteByUsers: user } });
+    res.status(200).json({ message: `Added ${playlist.playListName} to favorites` });
+  }
+};
+const getFavoritePlaylists = async (req, res) => {
+  const { page = 1, limit = 8 } = req.query;
+  const { _id: user } = req.user;
+
+  const skip = (page - 1) * limit;
+
+  const favorites = await PlayList.find({ favoriteByUsers: user })
+    .skip(skip)
+    .limit(limit);
+
+  if (!favorites || favorites.length === 0) {
+    return res.status(404).json({ error: "No favorite playlists" });
+  }
+
+  const totalPlayLists = await PlayList.countDocuments({ favoriteByUsers: user });
+  // delete favorites._doc.favoriteByUsers;
+  res.json({ totalPlayLists, favorites});
+};
+
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
-
+  // addFavoritePlaylist: ctrlWrapper(addFavoritePlaylist),
+  // deleteFavoritePlayList:  ctrlWrapper(deleteFavoritePlayList),
+  getFavoritePlaylists: ctrlWrapper(getFavoritePlaylists),
+  updateFavoritesPlaylists:  ctrlWrapper(updateFavoritesPlaylists),
     createPlayList: ctrlWrapper(createPlayList),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
