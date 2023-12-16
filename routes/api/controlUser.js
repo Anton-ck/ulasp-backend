@@ -26,7 +26,19 @@ router.get(
 
   controllers.allGenres
 );
+router.get(
+  "/favorites/",
+  authenticatUser,
+
+  controllers.getFavoritePlaylists
+);
+
 
 router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
+
+router.patch("/favorites/:playlistId", authenticatUser,  controllers.updateFavoritesPlaylists);
+// router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
+
+// router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);
 
 export default router;
