@@ -26,6 +26,13 @@ router.get(
 
   controllers.allGenres
 );
+
+router.get(
+  "/shops/all",
+  authenticatUser,
+   controllers.allShops
+);
+
 router.get(
   "/favorites/",
   authenticatUser,

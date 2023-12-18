@@ -2,6 +2,7 @@ import { User, Fop, Company } from "../models/userModel.js";
 import PlayList from "../models/playlistModel.js";
 import Track from "../models/trackModel.js";
 import Genre from "../models/genreModel.js";
+import Shop from "../models/shopModel.js";
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
