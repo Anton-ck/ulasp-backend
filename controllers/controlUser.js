@@ -2,6 +2,7 @@ import { User, Fop, Company } from "../models/userModel.js";
 import PlayList from "../models/playlistModel.js";
 import Track from "../models/trackModel.js";
 import Genre from "../models/genreModel.js";
+import Shop from "../models/shopModel.js";
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
@@ -58,12 +59,23 @@ const latestTracks = async (req, res) => {
   res.json(latestTracks);
 };
 
+const allShops = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const allShops = await Shop.find({ ...req.query }, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).sort({ createdAt: -1 });
+
+  res.json(allShops);
+};
+
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
-
     createPlayList: ctrlWrapper(createPlayList),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
-latestTracks: ctrlWrapper(latestTracks),
+  latestTracks: ctrlWrapper(latestTracks),
+allShops: ctrlWrapper(allShops),
 
 };

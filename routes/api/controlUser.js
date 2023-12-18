@@ -29,4 +29,10 @@ router.get(
 
 router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
 
+router.get(
+  "/shops/all",
+  authenticatUser,
+   controllers.allShops
+);
+
 export default router;
