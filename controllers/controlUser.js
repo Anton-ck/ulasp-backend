@@ -58,6 +58,17 @@ const latestTracks = async (req, res) => {
   res.json(latestTracks);
 };
 
+const allShops = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const allShops = await Shop.find({ ...req.query }, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  }).sort({ createdAt: -1 });
+
+  res.json(allShops);
+};
+
 // const addPlaylist = async (req, res) => {
 //   const { _id: userId  } = req.user;
 //   const playlistId = req.params.playlistId;
