@@ -168,5 +168,5 @@ export default {
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
 latestTracks: ctrlWrapper(latestTracks),
-
+allShops: ctrlWrapper(allShops),
 };
