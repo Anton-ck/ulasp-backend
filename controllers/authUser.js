@@ -65,7 +65,6 @@ const accessTokenExpires = "130m";
 
 const userSignIn = async (req, res) => {
   const { contractNumber, password } = req.body;
-  console.log("first", req.body);
 
   const user = await User.findOne({ contractNumber });
 
@@ -85,7 +84,7 @@ const userSignIn = async (req, res) => {
   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
     expiresIn: accessTokenExpires,
   });
-  await User.findByIdAndUpdate(user._id, { accessToken });
+  await User.findByIdAndUpdate(user._id, {  accessToken, online: true });
   res.json({
     accessToken,
 
@@ -96,7 +95,7 @@ const userSignIn = async (req, res) => {
       fatherName: user.fatherName,
       name: user.name,
       avatarURL: user.avatarURL,
-
+      online: user.online,
       taxCode: user.taxCode,
       dayOfBirthday: user.dayOfBirthday,
       telNumber: user.telNumber,
@@ -142,7 +141,7 @@ const getCurrentUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   const { _id } = req.user;
-  await User.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
+  await User.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "", online: false });
   res.status(204).json();
 };
 const updateUserAvatar = async (req, res) => {
