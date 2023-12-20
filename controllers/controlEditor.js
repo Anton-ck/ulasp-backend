@@ -104,7 +104,17 @@ const findPlayListById = async (req, res) => {
     throw HttpError(404);
   }
 
-  res.json(playlist);
+  // const totalTracks = await PlayList.findById(id, {
+  //   $in: { trackList },
+  // });
+
+  // const totalTracks = await PlayList.find([{ $count: trackList }]);
+
+  const totalTracks = playlist.trackList.length;
+
+  // Cocktail.countDocuments({ usersFavorite: userId });
+
+  res.json({ playlist, totalTracks });
 };
 
 const uploadPics = async (req, res) => {
