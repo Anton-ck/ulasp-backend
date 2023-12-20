@@ -36,24 +36,52 @@ const createPlayList = async (req, res) => {
 };
 
 const latestPlaylists = async (req, res) => {
+   const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
   const latestPlaylists = await PlayList.find(
+  //  { ...req.query },
     { published: true },
-    "playListName playListAvatarURL"
+     "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
   ).sort({ createdAt: -1 });
 
   res.json(latestPlaylists);
 };
 
+
 const allGenres = async (req, res) => {
-  const allGenres = await Genre.find();
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const allGenres = await Genre.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  )
+    .populate("playList")
+    .sort({ createdAt: -1 });
 
   res.json(allGenres);
 };
 
 const latestTracks = async (req, res) => {
-  const latestTracks = await Track.find()
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const latestTracks = await Track.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  )
     .sort({ createdAt: -1 })
-    .limit(9)
+
     .populate("playList");
 
   res.json(latestTracks);
