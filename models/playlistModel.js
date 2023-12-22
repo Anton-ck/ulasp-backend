@@ -41,6 +41,12 @@ const playListSchema = new Schema(
       type:  Array,
     
     },
+    
+    //   favoriteByUsers:[
+    //     {
+    //     type: Schema.Types.ObjectId,
+    //         },
+    // ],
     addByUsers: {
       type:  Array,
        },

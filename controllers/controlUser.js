@@ -146,7 +146,9 @@ const allShops = async (req, res) => {
 // };
 
 const updateFavoritesPlaylists = async (req, res) => {
+
   const { playlistId: id} = req.params;
+  console.log('playlistId', req.params)
   const { _id: user } = req.user;
   console.log(' id',  id)
 
