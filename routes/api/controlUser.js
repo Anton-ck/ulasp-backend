@@ -43,7 +43,19 @@ router.get(
 
 router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
 
-router.patch("/favorites/:playlistId", authenticatUser,  controllers.updateFavoritesPlaylists);
+router.get(
+  "/genres/:id",
+  authenticatUser,
+  controllers.findGenreById
+);
+
+router.get(
+  "/shops/:id",
+  authenticatUser,
+  controllers.findShopById
+);
+
+router.patch("/playlist/favorites/:id", authenticatUser,  controllers.updateFavoritesPlaylists);
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);

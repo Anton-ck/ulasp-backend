@@ -37,6 +37,7 @@ const playListSchema = new Schema(
       ref: "admin" || "user",
       required: true,
     },
+
     favoriteByUsers: {
       type:  Array,
     
@@ -47,6 +48,7 @@ const playListSchema = new Schema(
     //     type: Schema.Types.ObjectId,
     //         },
     // ],
+
     addByUsers: {
       type:  Array,
        },
