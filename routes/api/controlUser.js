@@ -29,13 +29,13 @@ router.get(
 
 router.get(
   "/shops/all",
-  authenticatUser,
+  // authenticatUser,
    controllers.allShops
 );
 
 router.get(
   "/favorites/",
-  authenticatUser,
+  // authenticatUser,
 
   controllers.getFavoritePlaylists
 );
@@ -51,11 +51,13 @@ router.get(
 
 router.get(
   "/shops/:id",
-  authenticatUser,
+  // authenticatUser,
   controllers.findShopById
 );
 
-router.patch("/playlist/favorites/:id", authenticatUser,  controllers.updateFavoritesPlaylists);
+router.patch("/playlist/favorites/:id", 
+authenticatUser, 
+ controllers.updateFavoritesPlaylists);
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);

@@ -38,10 +38,11 @@ const playListSchema = new Schema(
       required: true,
     },
 
-    favoriteByUsers: {
-      type:  Array,
+    // favoriteByUsers: {
+    //   type:  Array,
     
-    },
+    // },
+    favoriteByUsers: [String],
     
     //   favoriteByUsers:[
     //     {
