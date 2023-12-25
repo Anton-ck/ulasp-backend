@@ -208,7 +208,7 @@ const getFavoritePlaylists = async (req, res) => {
   const favorites = await PlayList.find({ favoriteByUsers: user })
     .skip(skip)
     .limit(limit);
-
+console.log('favorites', favorites)
   if (!favorites || favorites.length === 0) {
     return res.status(404).json({ error: "No favorite playlists" });
   }
@@ -217,6 +217,9 @@ const getFavoritePlaylists = async (req, res) => {
   // delete favorites._doc.favoriteByUsers;
   res.json({ totalPlayLists, favorites});
 };
+
+
+
 
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
@@ -231,4 +234,5 @@ latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   findGenreById: ctrlWrapper(findGenreById),
 findShopById: ctrlWrapper(findShopById),
+
 };

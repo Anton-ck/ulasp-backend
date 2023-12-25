@@ -34,8 +34,8 @@ router.get(
 );
 
 router.get(
-  "/favorites/",
-  // authenticatUser,
+  "/playlist/favorites/",
+  authenticatUser,
 
   controllers.getFavoritePlaylists
 );

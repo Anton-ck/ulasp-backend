@@ -42,13 +42,13 @@ const playListSchema = new Schema(
     //   type:  Array,
     
     // },
-    favoriteByUsers: [String],
+    // favoriteByUsers: [String],
     
-    //   favoriteByUsers:[
-    //     {
-    //     type: Schema.Types.ObjectId,
-    //         },
-    // ],
+      favoriteByUsers:[
+        {
+        type: Schema.Types.ObjectId,
+            },
+    ],
 
     addByUsers: {
       type:  Array,

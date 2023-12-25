@@ -36,6 +36,33 @@ router.get(
   permisionsAdmin,
   controllers.getAllUsers
 );
+// router.get(
+//   "/tracks/count",
+//   authenticateAdmin,
+//   permisionsAdmin,
+//   controllers.countTracks
+// );
+router.get(
+  "/newclients/count",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countNewClients
+);
+router.get(
+  "/onlineclients/count",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countOnlineClients
+);
+
+router.get(
+  "/newclientsbymonth/count",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countNewClientsByMonth
+);
+
+
 router.get(
   "/users/:id",
   authenticateAdmin,
