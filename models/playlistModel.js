@@ -37,12 +37,18 @@ const playListSchema = new Schema(
       ref: "admin" || "user",
       required: true,
     },
-    favoriteByUsers:
-    [
-      {
-        type: Schema.Types.ObjectId,
-            },
-    ],
+
+    favoriteByUsers: {
+      type:  Array,
+    
+    },
+    
+    //   favoriteByUsers:[
+    //     {
+    //     type: Schema.Types.ObjectId,
+    //         },
+    // ],
+
     addByUsers: {
       type:  Array,
        },
