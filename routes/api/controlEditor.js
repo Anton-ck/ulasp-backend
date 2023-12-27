@@ -103,7 +103,7 @@ router.post(
 router.get(
   "/tracks/count",
   authenticateAdmin,
-  permisionsEditor,
+  // permisionsEditor,
   controllers.countTracks
 );
 
