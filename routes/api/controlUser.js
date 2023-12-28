@@ -27,10 +27,16 @@ router.get(
   controllers.allGenres
 );
 
+
 router.get(
   "/shops/all",
-  // authenticatUser,
+  authenticatUser,
    controllers.allShops
+);
+router.get(
+  "/shops/:id",
+  authenticatUser,
+  controllers.findShopById
 );
 
 router.get(
@@ -49,11 +55,7 @@ router.get(
   controllers.findGenreById
 );
 
-router.get(
-  "/shops/:id",
-  // authenticatUser,
-  controllers.findShopById
-);
+
 
 router.patch("/playlist/favorites/:id", 
 authenticatUser, 
