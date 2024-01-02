@@ -53,6 +53,9 @@ const createPlayListByGenre = async (req, res) => {
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
 
+  console.log("BODY", req.body);
+  console.log("FILE", req.file);
+
   let randomPicUrl;
   let resizePicURL;
 
@@ -244,6 +247,33 @@ const findGenreById = async (req, res) => {
   res.json(genre);
 };
 
+const updateGenreById = async (req, res) => {
+  const { id } = req.params;
+  const { genre, type } = req.body;
+  const isExistGenre = await Genre.findOne({ genre });
+  if (genre === "") {
+    throw HttpError(404, `genre is empty`);
+  }
+  if (isExistGenre) {
+    throw HttpError(409, `${genre} already in use`);
+  }
+
+  let resizePicURL;
+
+  if (req.file) {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  const newGenre = await Genre.findByIdAndUpdate(
+    id,
+    { ...req.body, genreAvatarURL: resizePicURL },
+    {
+      new: true,
+    }
+  );
+  res.json(newGenre);
+};
+
 const deleteGenre = async (req, res) => {
   const { id } = req.params;
 
@@ -377,7 +407,6 @@ const allShops = async (req, res) => {
 };
 
 const createShop = async (req, res) => {
-  console.log(req.body);
   const { shopCategoryName } = req.body;
   const isExistShop = await Shop.findOne({ shopCategoryName });
   if (shopCategoryName === "") {
@@ -425,6 +454,7 @@ export default {
   allGenres: ctrlWrapper(allGenres),
   createGenre: ctrlWrapper(createGenre),
   findGenreById: ctrlWrapper(findGenreById),
+  updateGenreById: ctrlWrapper(updateGenreById),
   deleteGenre: ctrlWrapper(deleteGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
   countTracks: ctrlWrapper(countTracks),

@@ -42,8 +42,6 @@ export const resizePics = async (file, type) => {
   const resultUpload = path.resolve(picsFolder, resizeFileName);
   const resizeResultUpload = path.resolve(tempDirResize, resizeFileName);
 
-  console.log("RESULT UPLOAD", resultUpload);
-
   const resizeImg = await Jimp.read(tempDir);
 
   await resizeImg

@@ -70,6 +70,15 @@ router.get(
   controllers.findGenreById
 );
 
+router.patch(
+  "/genres/update/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  upload.single("picsURL"),
+
+  controllers.updateGenreById
+);
+
 router.delete(
   "/genres/delete/:id",
   authenticateAdmin,
