@@ -42,7 +42,7 @@ const getAllAdmin = async (req, res) => {
   );
 
   res.json({
-    result
+    result,
   });
 };
 
@@ -89,7 +89,7 @@ const updateAdminInfo = async (req, res) => {
 
 const deleteAdmin = async (req, res) => {
   const { id } = req.params;
-  
+
   const admin = await Admin.findById(id);
   if (!admin) {
     throw HttpError(404, "Not found");
@@ -134,13 +134,12 @@ const createUser = async (req, res) => {
     console.log("tut");
     newUser = await Fop.create({
       ...req.body,
-      password: hashtaxCode
-      
+      password: hashtaxCode,
     });
   } else {
     newUser = await Company.create({
       ...req.body,
-      password: hashtaxCode
+      password: hashtaxCode,
     });
   }
 
@@ -153,7 +152,7 @@ const createUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-  const allUsers = await User.find({...req.body});
+  const allUsers = await User.find({ ...req.body });
 
   res.json({
     allUsers,
@@ -175,36 +174,34 @@ const getUserById = async (req, res) => {
   res.json(user);
 };
 
-
 const deleteUser = async (req, res) => {
-  
   const { id } = req.params;
 
   const user = await User.findById(id);
-    
+
   if (!user) {
     throw HttpError(404);
   }
 
   const result = await User.findByIdAndDelete(id);
 
-  res.status(200).json({ message: 'User deleted ' });
+  res.status(200).json({ message: "User deleted " });
   if (!result) {
-    res.status(500).json({ message: 'An error occurred' });
+    res.status(500).json({ message: "An error occurred" });
   }
 };
 
 const toggleUserStatus = async (req, res) => {
   const { id } = req.params;
 
-   const user = await User.findById(id);
- 
-if (!user) {
+  const user = await User.findById(id);
+
+  if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
-   user.status = !user.status;
-    await user.save();
+  user.status = !user.status;
+  await user.save();
 
   res.status(200).json({
     message: `Status for user '${user.firstName} ${user.lastName}' with ID ${user._id} has been toggled`,
@@ -212,18 +209,17 @@ if (!user) {
   });
 };
 
-
 const toggleUserAccess = async (req, res) => {
   const { id } = req.params;
 
-   const user = await User.findById(id);
- 
-if (!user) {
+  const user = await User.findById(id);
+
+  if (!user) {
     return res.status(404).json({ error: "User not found" });
   }
 
-   user.access = !user.access;
-    await user.save();
+  user.access = !user.access;
+  await user.save();
 
   res.status(200).json({
     message: `Access for user '${user.firstName} ${user.lastName}' with ID ${user._id} has been toggled`,
@@ -237,18 +233,21 @@ const updateUserInfo = async (req, res) => {
   console.log("req.body", req.body);
 
   let result = {};
-  if( req.body.userFop === "fop") {
-     result = await Fop.findByIdAndUpdate(id, req.body, {
+  if (req.body.userFop === "fop") {
+    result = await Fop.findByIdAndUpdate(id, req.body, {
       new: true,
-    })} else {  result = await Company.findByIdAndUpdate(id, req.body, {
-    new: true,
-  })}
- 
+    });
+  } else {
+    result = await Company.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+  }
 
   if (!result) {
     throw HttpError(404, "Not found");
   }
-  res.json({result
+  res.json({
+    result,
 
     // id: result.id,
     // login: result.login,
@@ -256,7 +255,7 @@ const updateUserInfo = async (req, res) => {
     // lastName: result.lastName,
     // fatherName: result.fatherName,
     // avatarURL: result.avatarURL,
-    
+
     // taxCode: result.taxCode,
     // dayOfBirthday: result.dayOfBirthday,
     // telNumber: result.telNumber,
@@ -278,6 +277,44 @@ const updateUserInfo = async (req, res) => {
 //   });
 // };
 
+//счетчик песен
+
+const countNewClients = async (req, res) => {
+  const countNewClients = await User.countDocuments({ status: false });
+
+  res.json({ countNewClients: countNewClients });
+};
+
+//счетчик онлайн пользователей
+const countOnlineClients = async (req, res) => {
+  const countOnlineClients = await User.countDocuments({ online: true });
+
+  res.json({ countOnlineClients: countOnlineClients });
+};
+
+const countNewClientsByMonth = async (req, res) => {
+  const currentDate = new Date();
+  const startOfMonth = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth(),
+    1
+  );
+  const endOfMonth = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    0
+  );
+
+  const countNewClientsByMonth = await User.countDocuments({
+    createdate: {
+      $gte: startOfMonth,
+      $lt: endOfMonth,
+    },
+  });
+
+  res.json({ countNewClientsByMonth: countNewClientsByMonth });
+};
+
 export default {
   createEditorRole: ctrlWrapper(createEditorRole),
   getAllAdmin: ctrlWrapper(getAllAdmin),
@@ -289,7 +326,10 @@ export default {
   getAllUsers: ctrlWrapper(getAllUsers),
   getUserById: ctrlWrapper(getUserById),
   deleteUser: ctrlWrapper(deleteUser),
-  toggleUserStatus:ctrlWrapper(toggleUserStatus),
+  toggleUserStatus: ctrlWrapper(toggleUserStatus),
   toggleUserAccess: ctrlWrapper(toggleUserAccess),
   updateUserInfo: ctrlWrapper(updateUserInfo),
+  countNewClients: ctrlWrapper(countNewClients),
+  countOnlineClients: ctrlWrapper(countOnlineClients),
+  countNewClientsByMonth: ctrlWrapper(countNewClientsByMonth),
 };

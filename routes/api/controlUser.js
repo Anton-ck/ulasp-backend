@@ -40,15 +40,24 @@ router.get(
   controllers.allGenres
 );
 
+
 router.get(
   "/shops/all",
   // authenticatUser,
    controllers.allShops
 );
+router.get(
+  "/shops/:id",
+  authenticatUser,
+  controllers.findShopById
+);
 
 router.get(
-  "/favorites/",
-  // authenticatUser,
+
+
+  "/playlist/favorites/",
+  authenticatUser,
+
 
   controllers.getFavoritePlaylists
 );
@@ -62,13 +71,12 @@ router.get(
   controllers.findGenreById
 );
 
-router.get(
-  "/shops/:id",
-  // authenticatUser,
-  controllers.findShopById
-);
 
-router.patch("/playlist/favorites/:id", authenticatUser,  controllers.updateFavoritesPlaylists);
+
+
+router.patch("/playlist/favorites/:id", 
+authenticatUser, 
+ controllers.updateFavoritesPlaylists);
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);

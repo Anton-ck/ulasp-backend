@@ -188,7 +188,7 @@ const updateFavoritesPlaylists = async (req, res) => {
   const {  id} = req.params;
   console.log('playlistId', req.params.id)
   const { _id: user } = req.user;
-  console.log(' id',  id)
+  console.log(' id',  user)
 
   const playlist = await PlayList.findById(id);
 
@@ -199,6 +199,8 @@ const updateFavoritesPlaylists = async (req, res) => {
  
 
   const isFavorite = playlist.favoriteByUsers.includes(user);
+  console.log('isFavorite', isFavorite)
+  console.log('playlist', playlist)
 
   if (isFavorite) {
     await PlayList.findByIdAndUpdate(playlist._id, { $pull: { favoriteByUsers: user } });
@@ -208,6 +210,9 @@ const updateFavoritesPlaylists = async (req, res) => {
     res.status(200).json({ message: `Added ${playlist.playListName} to favorites` });
   }
 };
+
+
+
 const getFavoritePlaylists = async (req, res) => {
   const { page = 1, limit = 8 } = req.query;
   const { _id: user } = req.user;
@@ -217,7 +222,7 @@ const getFavoritePlaylists = async (req, res) => {
   const favorites = await PlayList.find({ favoriteByUsers: user })
     .skip(skip)
     .limit(limit);
-
+console.log('favorites', favorites)
   if (!favorites || favorites.length === 0) {
     return res.status(404).json({ error: "No favorite playlists" });
   }
@@ -226,6 +231,9 @@ const getFavoritePlaylists = async (req, res) => {
   // delete favorites._doc.favoriteByUsers;
   res.json({ totalPlayLists, favorites});
 };
+
+
+
 
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
@@ -239,6 +247,8 @@ export default {
 latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   findGenreById: ctrlWrapper(findGenreById),
+
   findShopById: ctrlWrapper(findShopById),
 findPlayListById: ctrlWrapper(findPlayListById),
+
 };
