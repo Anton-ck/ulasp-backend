@@ -51,6 +51,20 @@ const latestPlaylists = async (req, res) => {
   res.json(latestPlaylists);
 };
 
+const findPlayListById = async (req, res) => {
+  const { id } = req.params;
+
+  const playlist = await PlayList.findById(id).populate("trackList");
+
+  if (!playlist) {
+    throw HttpError(404);
+  }
+
+    const totalTracks = playlist.trackList.length;
+
+    res.json({ playlist, totalTracks });
+};
+
 
 const allGenres = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
@@ -233,6 +247,8 @@ export default {
 latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   findGenreById: ctrlWrapper(findGenreById),
-findShopById: ctrlWrapper(findShopById),
+
+  findShopById: ctrlWrapper(findShopById),
+findPlayListById: ctrlWrapper(findPlayListById),
 
 };
