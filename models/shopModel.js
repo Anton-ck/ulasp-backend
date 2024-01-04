@@ -12,6 +12,14 @@ const shopSchema = new Schema(
       type: String,
       default: null,
     },
+    playList: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "playlist",
+        playList: [],
+        default: null,
+      },
+    ],
   },
   { versionKey: false, timestamps: true }
 );

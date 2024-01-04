@@ -20,6 +20,19 @@ const router = express.Router();
 
 router.get("/playlist/latest", controllers.latestPlaylists);
 
+// router.get(
+//   "/playlist/count",
+//   authenticatUser,
+//   controllers.playlistsCount
+// );
+
+router.get(
+  "/playlist/:id",
+  authenticatUser,
+   isValid,
+  controllers.findPlayListById
+);
+
 router.get(
   "/genres/all",
   authenticatUser,
@@ -29,13 +42,13 @@ router.get(
 
 router.get(
   "/shops/all",
-  authenticatUser,
+  // authenticatUser,
    controllers.allShops
 );
 
 router.get(
   "/favorites/",
-  authenticatUser,
+  // authenticatUser,
 
   controllers.getFavoritePlaylists
 );
@@ -45,13 +58,13 @@ router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
 
 router.get(
   "/genres/:id",
-  authenticatUser,
+  // authenticatUser,
   controllers.findGenreById
 );
 
 router.get(
   "/shops/:id",
-  authenticatUser,
+  // authenticatUser,
   controllers.findShopById
 );
 
