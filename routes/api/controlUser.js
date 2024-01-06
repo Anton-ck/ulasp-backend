@@ -25,6 +25,15 @@ router.get("/playlist/latest", controllers.latestPlaylists);
 //   authenticatUser,
 //   controllers.playlistsCount
 // );
+router.get(
+
+
+  "/playlist/favorites",
+  authenticatUser,
+
+
+  controllers.getFavoritePlaylists
+);
 
 router.get(
   "/playlist/:id",
@@ -52,15 +61,7 @@ router.get(
   controllers.findShopById
 );
 
-router.get(
 
-
-  "/playlist/favorites/",
-  authenticatUser,
-
-
-  controllers.getFavoritePlaylists
-);
 
 
 router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
