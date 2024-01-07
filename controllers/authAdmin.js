@@ -11,7 +11,7 @@ dotenv.config();
 
 const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 
-const accessTokenExpires = "330m";
+const accessTokenExpires = "7d";
 const refreshTokenExpires = "7d";
 
 const signUpAdmin = async (req, res) => {

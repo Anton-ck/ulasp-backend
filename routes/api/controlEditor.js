@@ -102,6 +102,13 @@ router.post(
   controllers.uploadTrack
 );
 
+router.delete(
+  "/tracks/delete/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deleteTrack
+);
+
 router.post(
   "/tracks/upload",
   uploadTrack.single("trackURL"),
