@@ -46,6 +46,14 @@ router.post(
   controllers.uploadPics
 );
 
+router.patch(
+  "/playlist/update/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  isValid,
+  controllers.updatePlaylistById
+);
+
 router.delete(
   "/playlist/delete/:id",
   authenticateAdmin,

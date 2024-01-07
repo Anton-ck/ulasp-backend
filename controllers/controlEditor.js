@@ -128,7 +128,33 @@ const uploadPics = async (req, res) => {
 };
 
 const updatePlaylistById = async (req, res) => {
-  
+  const { id } = req.params;
+  const isExistPlaylist = await PlayList.findById(id);
+
+  if (isExistPlaylist === null) {
+    res.status(404).json({
+      message: `ID ${id} doesn't found`,
+      code: "4041",
+      object: `${id}`,
+    });
+  }
+  // if (isExistPlaylist) {
+  //   res.status(409).json({
+  //     message: `${isExistPlaylist.playListName} already in use`,
+  //     code: "4091",
+  //     object: `${isExistPlaylist.playListName}`,
+  //   });
+  // }
+
+  const updatedPlaylist = await PlayList.findByIdAndUpdate(
+    id,
+    { ...req.body },
+    {
+      new: true,
+    }
+  );
+
+  res.json(updatedPlaylist);
 };
 
 const deletePlaylist = async (req, res) => {
@@ -488,6 +514,7 @@ export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
   findPlayListById: ctrlWrapper(findPlayListById),
+  updatePlaylistById: ctrlWrapper(updatePlaylistById),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
   playlistsCount: ctrlWrapper(playlistsCount),
