@@ -36,6 +36,16 @@ router.get(
 );
 
 router.get(
+
+
+  "/playlist/add",
+  authenticatUser,
+
+
+  controllers.getAddPlaylists
+);
+
+router.get(
   "/playlist/:id",
   authenticatUser,
    isValid,
@@ -77,7 +87,11 @@ router.get(
 
 router.patch("/playlist/favorites/:id", 
 authenticatUser, 
- controllers.updateFavoritesPlaylists);
+  controllers.updateFavoritesPlaylists);
+ 
+  router.patch("/playlist/add/:id", 
+authenticatUser, 
+ controllers.updateAddPlaylists);
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);
