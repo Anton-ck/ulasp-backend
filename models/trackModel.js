@@ -20,8 +20,13 @@ const trackSchema = new Schema(
       type: String,
       default: null,
     },
+    // trackGenre: {
+    //   type: String,
+    //   default: null,
+    // },
     trackGenre: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "genre",
       default: null,
     },
     trackURL: {

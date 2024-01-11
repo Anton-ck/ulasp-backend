@@ -104,7 +104,7 @@ const findPlayListById = async (req, res) => {
   const { id } = req.params;
   const playlist = await PlayList.findById(id).populate({
     path: "trackList",
-    options: { sort: { createdAt: -1 } },
+    options: { sort: { createdAt: -1 }, populate: "trackGenre" },
   });
 
   if (!playlist) {
@@ -342,6 +342,7 @@ const uploadTrack = async (req, res) => {
   const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
 
   const metadata = await getId3Tags(req.file);
+
   const { artist, title, genre, album } = metadata?.common;
   const { duration } = metadata.format;
   const isExistTrack = await Track.find({ artist: artist, trackName: title });
@@ -380,7 +381,8 @@ const uploadTrack = async (req, res) => {
         : `${fileName[2] ? fileName[2] : ""}${" "}${
             fileName[3] ? fileName[3] : ""
           }`,
-      trackGenre: genre?.toString(),
+      // trackGenre: genre?.toString(),
+      trackGenre: null,
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
         ? resizeTrackCoverURL
@@ -393,9 +395,23 @@ const uploadTrack = async (req, res) => {
     await PlayList.findByIdAndUpdate(playlistId, {
       $push: { trackList: newTrack.id },
     });
-    await Track.findByIdAndUpdate(newTrack.id, {
-      $push: { playList: playlistId },
+
+    const playlistInGenre = await Genre.find({
+      playList: { $in: [playlistId] },
     });
+
+    if (playlistInGenre.length !== 0) {
+      console.log("playlistInGenre", playlistInGenre[0]._id);
+      await Track.findByIdAndUpdate(newTrack.id, {
+        $push: { playList: playlistId },
+        trackGenre: playlistInGenre[0]._id,
+      });
+    } else {
+      console.log("Плейлиста в жанре нету");
+      await Track.findByIdAndUpdate(newTrack.id, {
+        $push: { playList: playlistId },
+      });
+    }
   }
 
   res.json({
@@ -457,7 +473,8 @@ const latestTracks = async (req, res) => {
   )
     .sort({ createdAt: -1 })
 
-    .populate("playList");
+    .populate("playList")
+    .populate("trackGenre");
 
   res.json(latestTracks);
 };
