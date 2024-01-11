@@ -36,12 +36,12 @@ const createPlayList = async (req, res) => {
 };
 
 const latestPlaylists = async (req, res) => {
-   const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
   const skip = (page - 1) * limit;
   const latestPlaylists = await PlayList.find(
-  //  { ...req.query },
+    //  { ...req.query },
     { published: true },
-     "-createdAt -updatedAt",
+    "-favoriteByUsers -createdAt -updatedAt",
     {
       skip,
       limit,
@@ -51,6 +51,19 @@ const latestPlaylists = async (req, res) => {
   res.json(latestPlaylists);
 };
 
+const findPlayListById = async (req, res) => {
+  const { id } = req.params;
+
+  const playlist = await PlayList.findById(id).populate("trackList");
+
+  if (!playlist) {
+    throw HttpError(404);
+  }
+
+  const totalTracks = playlist.trackList.length;
+
+  res.json({ playlist, totalTracks });
+};
 
 const allGenres = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
@@ -170,34 +183,39 @@ const findShopById = async (req, res) => {
 // };
 
 const updateFavoritesPlaylists = async (req, res) => {
-
-  const {  id} = req.params;
-  console.log('playlistId', req.params.id)
+  const { id } = req.params;
+  console.log("playlistId", req.params.id);
   const { _id: user } = req.user;
-  console.log(' id',  user)
+  console.log(" id", user);
 
   const playlist = await PlayList.findById(id);
 
   if (!playlist) {
-    return res.status(404).json({ error: "Playlist with such id is not found" });
+    return res
+      .status(404)
+      .json({ error: "Playlist with such id is not found" });
   }
-
- 
 
   const isFavorite = playlist.favoriteByUsers.includes(user);
-  console.log('isFavorite', isFavorite)
-  console.log('playlist', playlist)
+  console.log("isFavorite", isFavorite);
+  console.log("playlist", playlist);
 
   if (isFavorite) {
-    await PlayList.findByIdAndUpdate(playlist._id, { $pull: { favoriteByUsers: user } });
-    res.status(200).json({ message: `Removed ${playlist.playListName} from favorites` });
+    await PlayList.findByIdAndUpdate(playlist._id, {
+      $pull: { favoriteByUsers: user },
+    });
+    res
+      .status(200)
+      .json({ message: `Removed ${playlist.playListName} from favorites` });
   } else {
-    await PlayList.findByIdAndUpdate(playlist._id, { $push: { favoriteByUsers: user } });
-    res.status(200).json({ message: `Added ${playlist.playListName} to favorites` });
+    await PlayList.findByIdAndUpdate(playlist._id, {
+      $push: { favoriteByUsers: user },
+    });
+    res
+      .status(200)
+      .json({ message: `Added ${playlist.playListName} to favorites` });
   }
 };
-
-
 
 const getFavoritePlaylists = async (req, res) => {
   const { page = 1, limit = 8 } = req.query;
@@ -205,34 +223,37 @@ const getFavoritePlaylists = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  const favorites = await PlayList.find({ favoriteByUsers: user })
+  const favorites = await PlayList.find(
+    { favoriteByUsers: user },
+    "-favoriteByUsers -createdAt -updatedAt"
+  )
     .skip(skip)
     .limit(limit);
-console.log('favorites', favorites)
+  console.log("favorites", favorites);
   if (!favorites || favorites.length === 0) {
     return res.status(404).json({ error: "No favorite playlists" });
   }
 
-  const totalPlayLists = await PlayList.countDocuments({ favoriteByUsers: user });
+  const totalPlayLists = await PlayList.countDocuments({
+    favoriteByUsers: user,
+  });
   // delete favorites._doc.favoriteByUsers;
-  res.json({ totalPlayLists, favorites});
+  res.json({ totalPlayLists, favorites });
 };
-
-
-
 
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
   // addFavoritePlaylist: ctrlWrapper(addFavoritePlaylist),
   // deleteFavoritePlayList:  ctrlWrapper(deleteFavoritePlayList),
   getFavoritePlaylists: ctrlWrapper(getFavoritePlaylists),
-  updateFavoritesPlaylists:  ctrlWrapper(updateFavoritesPlaylists),
-    createPlayList: ctrlWrapper(createPlayList),
+  updateFavoritesPlaylists: ctrlWrapper(updateFavoritesPlaylists),
+  createPlayList: ctrlWrapper(createPlayList),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
-latestTracks: ctrlWrapper(latestTracks),
+  latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   findGenreById: ctrlWrapper(findGenreById),
-findShopById: ctrlWrapper(findShopById),
 
+  findShopById: ctrlWrapper(findShopById),
+  findPlayListById: ctrlWrapper(findPlayListById),
 };
