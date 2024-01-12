@@ -300,6 +300,26 @@ const getAddPlaylists = async (req, res) => {
   res.json({ totalPlayLists, add });
 };
 
+const getTracksByGenreId = async (req, res) => {
+  const { id } = req.params;
+
+  // Найти все плейлисты данного жанра
+  const playlists = await PlayList.find({ genre: id });
+
+  // Получить все треки из этих плейлистов
+  const tracksPromises = playlists.map(async (playlist) => {
+    const tracks = await Track.find({ playList: playlist._id });
+    return tracks;
+  });
+
+  // Дождаться завершения всех запросов и объединить результаты
+  const tracks = await Promise.all(tracksPromises).then((results) => {
+    return results.flat();
+  });
+
+  res.json(tracks);
+};
+
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
   // addFavoritePlaylist: ctrlWrapper(addFavoritePlaylist),
@@ -316,4 +336,5 @@ export default {
   findPlayListById: ctrlWrapper(findPlayListById),
   getAddPlaylists: ctrlWrapper(getAddPlaylists),
   updateAddPlaylists: ctrlWrapper(updateAddPlaylists),
+  getTracksByGenreId: ctrlWrapper(getTracksByGenreId),
 };
