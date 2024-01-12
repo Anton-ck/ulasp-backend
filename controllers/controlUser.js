@@ -241,6 +241,65 @@ const getFavoritePlaylists = async (req, res) => {
   res.json({ totalPlayLists, favorites });
 };
 
+const updateAddPlaylists = async (req, res) => {
+  const { id } = req.params;
+  console.log("playlistId", req.params.id);
+  const { _id: user } = req.user;
+  console.log(" id", user);
+
+  const playlist = await PlayList.findById(id);
+
+  if (!playlist) {
+    return res
+      .status(404)
+      .json({ error: "Playlist with such id is not found" });
+  }
+
+  const isAdd = playlist.addByUsers.includes(user);
+  console.log("isAdd", isAdd);
+  console.log("playlist", playlist);
+
+  if (isAdd) {
+    await PlayList.findByIdAndUpdate(playlist._id, {
+      $pull: { addByUsers: user },
+    });
+    res
+      .status(200)
+      .json({ message: `Removed ${playlist.playListName} from add` });
+  } else {
+    await PlayList.findByIdAndUpdate(playlist._id, {
+      $push: { addByUsers: user },
+    });
+    res
+      .status(200)
+      .json({ message: `Added ${playlist.playListName} to add` });
+  }
+};
+
+const getAddPlaylists = async (req, res) => {
+  const { page = 1, limit = 8 } = req.query;
+  const { _id: user } = req.user;
+
+  const skip = (page - 1) * limit;
+
+  const add = await PlayList.find(
+    { addByUsers: user },
+    "-addByUsers -createdAt -updatedAt"
+  )
+    .skip(skip)
+    .limit(limit);
+  console.log("add", add);
+  if (!add || add.length === 0) {
+    return res.status(404).json({ error: "No add playlists" });
+  }
+
+  const totalPlayLists = await PlayList.countDocuments({
+    addByUsers: user,
+  });
+ 
+  res.json({ totalPlayLists, add });
+};
+
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
   // addFavoritePlaylist: ctrlWrapper(addFavoritePlaylist),
@@ -253,7 +312,8 @@ export default {
   latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   findGenreById: ctrlWrapper(findGenreById),
-
   findShopById: ctrlWrapper(findShopById),
   findPlayListById: ctrlWrapper(findPlayListById),
+  getAddPlaylists: ctrlWrapper(getAddPlaylists),
+  updateAddPlaylists: ctrlWrapper(updateAddPlaylists),
 };
