@@ -10,6 +10,7 @@ import isValid from "../../middlewares/isValid.js";
 import upload from "../../middlewares/upload.js";
 import uploadTrack from "../../middlewares/uploadTrack.js";
 
+
 const router = express.Router();
 
 router.post(
@@ -94,6 +95,12 @@ router.delete(
   controllers.deleteGenre
 );
 
+// router.get(
+//   "/genre/:id/tracks",
+
+//   controllers.getTracksInGenre
+// );
+
 router.post(
   "/genre/playlist/create/:id",
   authenticateAdmin,
@@ -106,6 +113,7 @@ router.post(
 
 router.post(
   "/tracks/upload/:id",
+
   uploadTrack.single("trackURL"),
   controllers.uploadTrack
 );
@@ -119,6 +127,7 @@ router.delete(
 
 router.post(
   "/tracks/upload",
+
   uploadTrack.single("trackURL"),
 
   controllers.uploadTrack

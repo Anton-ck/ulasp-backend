@@ -323,12 +323,18 @@ const deleteGenre = async (req, res) => {
 
 //написать доки
 const uploadTrack = async (req, res) => {
-  console.log("FILE", req.file);
+  // console.log("FILE", req.file);
+  // console.log(req.translatedFileName);
+  
+  const translatedFileName = req.translatedFileName;
 
-  // if (fs.existsSync(req.file.path)) {
-  //   throw HttpError(400, `Track "${req.file.originalname}" already exist`);
+  if (req.existFileError === "Error") {
+    throw HttpError(409, `Track "${req.file.filename}" already exist`);
+  }
 
-  // }
+  if (req.extError === "Error") {
+    throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
+  }
 
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
@@ -337,7 +343,7 @@ const uploadTrack = async (req, res) => {
   const playlistId = req?.params?.id;
   const { originalname, filename } = req.file;
 
-  const fileName = path.parse(filename).name.split("__");
+  const fileName = path.parse(translatedFileName).name.split("__");
 
   const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
 
@@ -346,9 +352,9 @@ const uploadTrack = async (req, res) => {
   const { artist, title, genre, album } = metadata?.common;
   const { duration } = metadata.format;
   const isExistTrack = await Track.find({ artist: artist, trackName: title });
-  if (isExistTrack.length !== 0) {
-    throw HttpError(409, `Track "${originalname}" already exist`);
-  }
+  // if (isExistTrack.length !== 0) {
+  //   throw HttpError(409, `Track "${originalname}" already exist`);
+  // }
 
   const tracksDir = req.file.path.split("/").slice(-2)[0];
   const trackURL = path.join(tracksDir, filename);
@@ -527,6 +533,36 @@ const deleteShop = async (req, res) => {
   });
 };
 
+// const getTracksInGenre = async (req, res) => {
+//   const { id } = req.params;
+//   const allTracks = [];
+
+//   const genre = await Genre.findById(id).populate({
+//     path: "playList",
+//     options: { populate: "trackList" },
+//   });
+
+//   genre.playList.map((playlist) => allTracks.push(playlist.trackList));
+
+//   res.json(allTracks.flat());
+
+//  const { id } = req.params;
+
+//  const genre = await Genre.findById(id).populate("playList");
+
+//  const tracksPromises = genre.playList.map(async (playlist) => {
+//    const tracks = await Track.find({ playList: playlist._id });
+
+//    return tracks;
+//  });
+
+//  const tracks = await Promise.all(tracksPromises).then((results) => {
+//    return results.flat();
+//  });
+
+//  res.json(tracks);
+// };
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
@@ -548,4 +584,5 @@ export default {
   allShops: ctrlWrapper(allShops),
   createShop: ctrlWrapper(createShop),
   deleteShop: ctrlWrapper(deleteShop),
+  // getTracksInGenre: ctrlWrapper(getTracksInGenre),
 };
