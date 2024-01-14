@@ -325,7 +325,7 @@ const deleteGenre = async (req, res) => {
 const uploadTrack = async (req, res) => {
   // console.log("FILE", req.file);
   // console.log(req.translatedFileName);
-  
+
   const translatedFileName = req.translatedFileName;
 
   if (req.existFileError === "Error") {
@@ -351,10 +351,6 @@ const uploadTrack = async (req, res) => {
 
   const { artist, title, genre, album } = metadata?.common;
   const { duration } = metadata.format;
-  const isExistTrack = await Track.find({ artist: artist, trackName: title });
-  // if (isExistTrack.length !== 0) {
-  //   throw HttpError(409, `Track "${originalname}" already exist`);
-  // }
 
   const tracksDir = req.file.path.split("/").slice(-2)[0];
   const trackURL = path.join(tracksDir, filename);

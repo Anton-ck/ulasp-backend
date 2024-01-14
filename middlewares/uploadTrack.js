@@ -1,7 +1,6 @@
 import multer from "multer";
 import path from "path";
 import * as fs from "fs";
-import HttpError from "../helpers/HttpError.js";
 import generateLatinTranslation from "../helpers/translateToLatin.js";
 const trackDir = path.resolve("public/tracks");
 
@@ -10,26 +9,6 @@ const isExistDestinationDir = (trackDir) => {
     fs.mkdirSync(trackDir, { recursive: true });
   }
   return trackDir;
-};
-
-const uploadProgress = (req) => {
-  let progress = 0;
-  console.log(req.headers);
-
-  let fileSize = req.headers["content-length"]
-    ? parseInt(req.headers["content-length"])
-    : 0;
-  req.on("data", (chunk) => {
-    progress += chunk.length;
-    console.log("progress", chunk.length);
-    req.progress += progress;
-    // res.write(`${Math.floor((progress * 100) / fileSize)} `);
-    if (progress === fileSize) {
-      console.log("Finished", progress, fileSize);
-    }
-  });
-
-  // next();
 };
 
 const FileNameToUtf8 = (file) => {
@@ -50,7 +29,6 @@ const multerConfig = multer.diskStorage({
 
   filename: (req, file, cb) => {
     const fileName = FileNameToUtf8(file);
-    // console.log(fileName.fileName);
     cb(null, fileName.translatedFileName);
   },
 });
@@ -75,8 +53,6 @@ const uploadTrack = multer({
       cb(
         null,
         true,
-        // (file.originalname = fileName.translatedFileName),
-        // (file.filename = fileName.fileName)
         (req.translatedFileName = fileName.fileName)
       );
     }
