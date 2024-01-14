@@ -230,9 +230,9 @@ const getFavoritePlaylists = async (req, res) => {
     .skip(skip)
     .limit(limit);
   console.log("favorites", favorites);
-  if (!favorites || favorites.length === 0) {
-    return res.status(404).json({ error: "No favorite playlists" });
-  }
+  // if (!favorites || favorites.length === 0) {
+  //   return res.status(404).json({ error: "No favorite playlists" });
+  // }
 
   const totalPlayLists = await PlayList.countDocuments({
     favoriteByUsers: user,
@@ -289,9 +289,9 @@ const getAddPlaylists = async (req, res) => {
     .skip(skip)
     .limit(limit);
   console.log("add", add);
-  if (!add || add.length === 0) {
-    return res.status(404).json({ error: "No add playlists" });
-  }
+  // if (!add || add.length === 0) {
+  //   return res.status(404).json({ error: "No add playlists" });
+  // }
 
   const totalPlayLists = await PlayList.countDocuments({
     addByUsers: user,
