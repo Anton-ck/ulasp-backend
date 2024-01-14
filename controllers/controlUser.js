@@ -300,25 +300,42 @@ const getAddPlaylists = async (req, res) => {
   res.json({ totalPlayLists, add });
 };
 
+// const getTracksByGenreId = async (req, res) => {
+//   const { id } = req.params;
+
+  
+//   const genre = await Genre.findById(id).populate("playList");
+
+//   // Получить все треки из этих плейлистов
+//   const tracksPromises = genre.playList.map(async (playlist) => {
+//     const tracks = await Track.find({ playList: playlist._id });
+//     return tracks;
+//   });
+
+//   // Дождаться завершения всех запросов и объединить результаты
+//   const tracks = await Promise.all(tracksPromises).then((results) => {
+//     return results.flat();
+//   });
+
+//   res.json(tracks);
+// };
+
 const getTracksByGenreId = async (req, res) => {
   const { id } = req.params;
+  const allTracks = [];
 
-  // Найти все плейлисты данного жанра
-  const playlists = await PlayList.find({ genre: id });
+  const genre = await Genre.findById(id).populate({
+    path: "playList",
+    options: { populate: "trackList" },
+  }
+  );
+  
+  genre.playList.map(async (playlist) => allTracks.push(playlist.trackList));
 
-  // Получить все треки из этих плейлистов
-  const tracksPromises = playlists.map(async (playlist) => {
-    const tracks = await Track.find({ playList: playlist._id });
-    return tracks;
-  });
-
-  // Дождаться завершения всех запросов и объединить результаты
-  const tracks = await Promise.all(tracksPromises).then((results) => {
-    return results.flat();
-  });
-
-  res.json(tracks);
+  res.json(allTracks.flat());
 };
+  
+
 
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
