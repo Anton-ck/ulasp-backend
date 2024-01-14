@@ -82,7 +82,9 @@ router.get(
   controllers.findGenreById
 );
 
-
+router.get('/genre/:id/tracks',
+  // authenticatUser,
+  controllers.getTracksByGenreId);
 
 
 router.patch("/playlist/favorites/:id", 
