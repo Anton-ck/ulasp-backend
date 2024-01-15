@@ -13,6 +13,8 @@ import getId3Tags from "../helpers/id3Tags.js";
 
 import albumArt from "album-art";
 
+const publicDir = path.resolve("public/");
+
 const createPlayList = async (req, res) => {
   const { playListName } = req.body;
   const { _id: owner } = req?.admin;
@@ -52,6 +54,9 @@ const createPlayListByGenre = async (req, res) => {
   const { playListName, type } = req.body;
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
+
+  console.log("BODY", req.body);
+  console.log("FILE", req.file);
 
   let randomPicUrl;
   let resizePicURL;
@@ -97,22 +102,15 @@ const createPlayListByGenre = async (req, res) => {
 
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
-
-  const playlist = await PlayList.findById(id).populate("trackList");
+  const playlist = await PlayList.findById(id).populate({
+    path: "trackList",
+    options: { sort: { createdAt: -1 }, populate: "trackGenre" },
+  });
 
   if (!playlist) {
-    throw HttpError(404);
+    throw HttpError(404, `Playlist not found`);
   }
-
-  // const totalTracks = await PlayList.findById(id, {
-  //   $in: { trackList },
-  // });
-
-  // const totalTracks = await PlayList.find([{ $count: trackList }]);
-
   const totalTracks = playlist.trackList.length;
-
-  // Cocktail.countDocuments({ usersFavorite: userId });
 
   res.json({ playlist, totalTracks });
 };
@@ -129,7 +127,35 @@ const uploadPics = async (req, res) => {
   });
 };
 
-const updatePlaylist = async (req, res) => {};
+const updatePlaylistById = async (req, res) => {
+  const { id } = req.params;
+  const isExistPlaylist = await PlayList.findById(id);
+
+  if (isExistPlaylist === null) {
+    res.status(404).json({
+      message: `ID ${id} doesn't found`,
+      code: "4041",
+      object: `${id}`,
+    });
+  }
+  // if (isExistPlaylist) {
+  //   res.status(409).json({
+  //     message: `${isExistPlaylist.playListName} already in use`,
+  //     code: "4091",
+  //     object: `${isExistPlaylist.playListName}`,
+  //   });
+  // }
+
+  const updatedPlaylist = await PlayList.findByIdAndUpdate(
+    id,
+    { ...req.body },
+    {
+      new: true,
+    }
+  );
+
+  res.json(updatedPlaylist);
+};
 
 const deletePlaylist = async (req, res) => {
   const { id } = req.params;
@@ -244,6 +270,41 @@ const findGenreById = async (req, res) => {
   res.json(genre);
 };
 
+const updateGenreById = async (req, res) => {
+  const { id } = req.params;
+  const { genre, type } = req.body;
+  const isExistGenre = await Genre.findOne({ genre });
+  if (genre === "") {
+    throw HttpError(404, `genre is empty`);
+  }
+  // if (isExistGenre) {
+  //   throw HttpError(409, `${genre} already in use`);
+  // }
+
+  if (isExistGenre) {
+    res.status(409).json({
+      message: `${genre} already in use`,
+      code: "4091",
+      object: `${genre}`,
+    });
+  }
+
+  let resizePicURL;
+
+  if (req.file) {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  const newGenre = await Genre.findByIdAndUpdate(
+    id,
+    { ...req.body, genreAvatarURL: resizePicURL },
+    {
+      new: true,
+    }
+  );
+  res.json(newGenre);
+};
+
 const deleteGenre = async (req, res) => {
   const { id } = req.params;
 
@@ -262,28 +323,34 @@ const deleteGenre = async (req, res) => {
 
 //написать доки
 const uploadTrack = async (req, res) => {
-  console.log("FILE", req.file);
+  // console.log("FILE", req.file);
+  // console.log(req.translatedFileName);
 
-  // if (fs.existsSync(req.file.path)) {
-  //   throw HttpError(400, `Track "${req.file.originalname}" already exist`);
-  // }
-  const playlistId = req?.params?.id;
-  const { originalname, filename } = req.file;
+  const translatedFileName = req.translatedFileName;
 
-  const fileName = path.parse(filename).name.split("__");
+  if (req.existFileError === "Error") {
+    throw HttpError(409, `Track "${req.file.filename}" already exist`);
+  }
 
-  const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
+  if (req.extError === "Error") {
+    throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
+  }
+
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
 
+  const playlistId = req?.params?.id;
+  const { originalname, filename } = req.file;
+
+  const fileName = path.parse(translatedFileName).name.split("__");
+
+  const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
+
   const metadata = await getId3Tags(req.file);
+
   const { artist, title, genre, album } = metadata?.common;
   const { duration } = metadata.format;
-  const isExistTrack = await Track.find({ artist: artist, trackName: title });
-  if (isExistTrack.length !== 0) {
-    throw HttpError(409, `Track "${originalname}" already exist`);
-  }
 
   const tracksDir = req.file.path.split("/").slice(-2)[0];
   const trackURL = path.join(tracksDir, filename);
@@ -316,7 +383,8 @@ const uploadTrack = async (req, res) => {
         : `${fileName[2] ? fileName[2] : ""}${" "}${
             fileName[3] ? fileName[3] : ""
           }`,
-      trackGenre: genre?.toString(),
+      // trackGenre: genre?.toString(),
+      trackGenre: null,
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
         ? resizeTrackCoverURL
@@ -329,13 +397,60 @@ const uploadTrack = async (req, res) => {
     await PlayList.findByIdAndUpdate(playlistId, {
       $push: { trackList: newTrack.id },
     });
-    await Track.findByIdAndUpdate(newTrack.id, {
-      $push: { playList: playlistId },
+
+    const playlistInGenre = await Genre.find({
+      playList: { $in: [playlistId] },
     });
+
+    if (playlistInGenre.length !== 0) {
+      console.log("playlistInGenre", playlistInGenre[0]._id);
+      await Track.findByIdAndUpdate(newTrack.id, {
+        $push: { playList: playlistId },
+        trackGenre: playlistInGenre[0]._id,
+      });
+    } else {
+      console.log("Плейлиста в жанре нету");
+      await Track.findByIdAndUpdate(newTrack.id, {
+        $push: { playList: playlistId },
+      });
+    }
   }
 
   res.json({
     track,
+  });
+};
+
+const deleteTrack = async (req, res) => {
+  const { id } = req.params;
+  const track = await Track.findById(id);
+  if (!track) {
+    throw HttpError(404, `Track with ${id} not found`);
+  }
+  const trackPath = publicDir + "/" + track?.trackURL;
+
+  await Track.findByIdAndDelete(id);
+
+  if (fs.existsSync(trackPath)) {
+    fs.unlinkSync(trackPath);
+  }
+
+  const idTrackInPlaylist = await PlayList.find({
+    trackList: { $in: [id] },
+  });
+
+  if (idTrackInPlaylist) {
+    idTrackInPlaylist.map(
+      async (track) =>
+        await PlayList.updateOne(
+          { _id: track._id },
+          { $pull: { trackList: id } }
+        )
+    );
+  }
+
+  res.json({
+    message: `Track ${track.trackName} was deleted`,
   });
 };
 
@@ -360,7 +475,8 @@ const latestTracks = async (req, res) => {
   )
     .sort({ createdAt: -1 })
 
-    .populate("playList");
+    .populate("playList")
+    .populate("trackGenre");
 
   res.json(latestTracks);
 };
@@ -377,7 +493,6 @@ const allShops = async (req, res) => {
 };
 
 const createShop = async (req, res) => {
-  console.log(req.body);
   const { shopCategoryName } = req.body;
   const isExistShop = await Shop.findOne({ shopCategoryName });
   if (shopCategoryName === "") {
@@ -414,10 +529,41 @@ const deleteShop = async (req, res) => {
   });
 };
 
+// const getTracksInGenre = async (req, res) => {
+//   const { id } = req.params;
+//   const allTracks = [];
+
+//   const genre = await Genre.findById(id).populate({
+//     path: "playList",
+//     options: { populate: "trackList" },
+//   });
+
+//   genre.playList.map((playlist) => allTracks.push(playlist.trackList));
+
+//   res.json(allTracks.flat());
+
+//  const { id } = req.params;
+
+//  const genre = await Genre.findById(id).populate("playList");
+
+//  const tracksPromises = genre.playList.map(async (playlist) => {
+//    const tracks = await Track.find({ playList: playlist._id });
+
+//    return tracks;
+//  });
+
+//  const tracks = await Promise.all(tracksPromises).then((results) => {
+//    return results.flat();
+//  });
+
+//  res.json(tracks);
+// };
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
   findPlayListById: ctrlWrapper(findPlayListById),
+  updatePlaylistById: ctrlWrapper(updatePlaylistById),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
   playlistsCount: ctrlWrapper(playlistsCount),
@@ -425,11 +571,14 @@ export default {
   allGenres: ctrlWrapper(allGenres),
   createGenre: ctrlWrapper(createGenre),
   findGenreById: ctrlWrapper(findGenreById),
+  updateGenreById: ctrlWrapper(updateGenreById),
   deleteGenre: ctrlWrapper(deleteGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
+  deleteTrack: ctrlWrapper(deleteTrack),
   countTracks: ctrlWrapper(countTracks),
   latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   createShop: ctrlWrapper(createShop),
   deleteShop: ctrlWrapper(deleteShop),
+  // getTracksInGenre: ctrlWrapper(getTracksInGenre),
 };

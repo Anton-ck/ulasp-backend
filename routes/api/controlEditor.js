@@ -10,6 +10,7 @@ import isValid from "../../middlewares/isValid.js";
 import upload from "../../middlewares/upload.js";
 import uploadTrack from "../../middlewares/uploadTrack.js";
 
+
 const router = express.Router();
 
 router.post(
@@ -46,6 +47,14 @@ router.post(
   controllers.uploadPics
 );
 
+router.patch(
+  "/playlist/update/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  isValid,
+  controllers.updatePlaylistById
+);
+
 router.delete(
   "/playlist/delete/:id",
   authenticateAdmin,
@@ -70,12 +79,27 @@ router.get(
   controllers.findGenreById
 );
 
+router.patch(
+  "/genres/update/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  upload.single("picsURL"),
+
+  controllers.updateGenreById
+);
+
 router.delete(
   "/genres/delete/:id",
   authenticateAdmin,
   permisionsEditor,
   controllers.deleteGenre
 );
+
+// router.get(
+//   "/genre/:id/tracks",
+
+//   controllers.getTracksInGenre
+// );
 
 router.post(
   "/genre/playlist/create/:id",
@@ -89,12 +113,21 @@ router.post(
 
 router.post(
   "/tracks/upload/:id",
+
   uploadTrack.single("trackURL"),
   controllers.uploadTrack
 );
 
+router.delete(
+  "/tracks/delete/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deleteTrack
+);
+
 router.post(
   "/tracks/upload",
+
   uploadTrack.single("trackURL"),
 
   controllers.uploadTrack

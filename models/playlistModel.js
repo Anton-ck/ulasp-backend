@@ -40,20 +40,19 @@ const playListSchema = new Schema(
 
     // favoriteByUsers: {
     //   type:  Array,
-    
+
     // },
     // favoriteByUsers: [String],
-    
-      favoriteByUsers:[
-        {
+
+    favoriteByUsers: [
+      {
         type: Schema.Types.ObjectId,
-            },
+      },
     ],
 
     addByUsers: {
-      type:  Array,
-       },
-
+      type: Array,
+    },
   },
 
   { versionKey: false, timestamps: true }
