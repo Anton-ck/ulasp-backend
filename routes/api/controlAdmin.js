@@ -36,12 +36,19 @@ router.get(
   permisionsAdmin,
   controllers.getAllUsers
 );
-// router.get(
-//   "/tracks/count",
-//   authenticateAdmin,
-//   permisionsAdmin,
-//   controllers.countTracks
-// );
+router.get(
+  "/tracks/count",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countTracks
+);
+router.get(
+  "/users/count",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countClients
+);
+
 router.get(
   "/newclients/count",
   authenticateAdmin,

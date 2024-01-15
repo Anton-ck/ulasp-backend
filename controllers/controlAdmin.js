@@ -1,5 +1,6 @@
 import bcrypt from "bcrypt";
 import { User, Fop, Company } from "../models/userModel.js";
+import Track from "../models/trackModel.js";
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
@@ -131,7 +132,7 @@ const createUser = async (req, res) => {
   let newUser = {};
   console.log("newUser", newUser);
   if (userFop === "fop") {
-    console.log("tut");
+
     newUser = await Fop.create({
       ...req.body,
       password: hashtaxCode,
@@ -278,11 +279,24 @@ const updateUserInfo = async (req, res) => {
 // };
 
 //счетчик песен
+const countTracks = async (req, res) => {
+  const countTracks = await Track.find().count();
+
+  res.json({ countTracks: countTracks });
+};
+
+//счетчик новых клиентов
 
 const countNewClients = async (req, res) => {
   const countNewClients = await User.countDocuments({ status: false });
 
   res.json({ countNewClients: countNewClients });
+};
+//счетчик всех клиентов
+const countClients = async (req, res) => {
+  const countClients = await User.countDocuments();
+
+  res.json({ countClients: countClients });
 };
 
 //счетчик онлайн пользователей
@@ -294,6 +308,7 @@ const countOnlineClients = async (req, res) => {
 
 const countNewClientsByMonth = async (req, res) => {
   const currentDate = new Date();
+  
   const startOfMonth = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
@@ -306,7 +321,7 @@ const countNewClientsByMonth = async (req, res) => {
   );
 
   const countNewClientsByMonth = await User.countDocuments({
-    createdate: {
+    createdAt: {
       $gte: startOfMonth,
       $lt: endOfMonth,
     },
@@ -332,4 +347,6 @@ export default {
   countNewClients: ctrlWrapper(countNewClients),
   countOnlineClients: ctrlWrapper(countOnlineClients),
   countNewClientsByMonth: ctrlWrapper(countNewClientsByMonth),
+  countClients: ctrlWrapper(countClients),
+  countTracks: ctrlWrapper(countTracks),
 };
