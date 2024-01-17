@@ -320,46 +320,55 @@ const getAddPlaylists = async (req, res) => {
 //   res.json(tracks);
 // };
 
-const getTracksByGenreId = async (req, res) => {
+// const getTracksByGenreId = async (req, res) => {
   
-  const { id } = req.params;
+//   const { id } = req.params;
 
-  const genre = await Genre.findById(id).populate("playList");
+//   const genre = await Genre.findById(id).populate("playList");
 
   // Use a Set to keep track of unique track IDs
-  const uniqueTrackIds = new Set();
+  // const uniqueTrackIds = new Set();
 
-  // Retrieve tracks from each playlist and add them to the Set
-  for (const playlist of genre.playList) {
-    const tracks = await Track.find({ playList: playlist._id });
-    tracks.forEach((track) => {
-      uniqueTrackIds.add(track._id.toString());
-    });
-  }
+  // // Retrieve tracks from each playlist and add them to the Set
+  // for (const playlist of genre.playList) {
+  //   const tracks = await Track.find({ playList: playlist._id });
+  //   tracks.forEach((track) => {
+  //     uniqueTrackIds.add(track._id.toString());
+  //   });
+  // }
 
-  // Convert the Set back to an array
-  const uniqueTracksArray = Array.from(uniqueTrackIds);
+  // // Convert the Set back to an array
+  // const uniqueTracksArray = Array.from(uniqueTrackIds);
 
   // Fetch all unique tracks using the array of unique IDs
-  const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
+//   const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
 
-  res.json(tracks);
-};
-
-// const getTracksByGenreId = async (req, res) => {
-//   const { id } = req.params;
-//   const allTracks = [];
-
-//   const genre = await Genre.findById(id).populate({
-//     path: "playList",
-//     options: { populate: "trackList" },
-//   }
-//   );
-  
-//   genre.playList.map(async (playlist) => allTracks.push(playlist.trackList));
-
-//   res.json(allTracks.flat());
+//   res.json(tracks);
 // };
+
+const getTracksByGenreId = async (req, res) => {
+  const { id } = req.params;
+ const allTracks=[];
+
+  const genreTracks = await Genre.findById(id).populate({
+    path: "playList",
+    options: { populate: "trackList" },
+  }
+  );
+
+genreTracks.playList.map(async (playlist) => allTracks.push(playlist.trackList));
+const tracksArray = allTracks.flat().map(el => el._id.toString());
+// console.log('tracksArray', tracksArray)
+
+ const uniqueTracksArray=tracksArray.filter((track, index, array) => array.indexOf(track)=== index);
+// console.log('uniqueTracksArray', uniqueTracksArray);
+
+const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
+
+res.json(tracks);
+
+
+};
   
 
 
