@@ -484,6 +484,8 @@ const deleteTrack = async (req, res) => {
           { $pull: { trackList: id } }
         )
     );
+  }
+
   res.json({
     message: `Track ${track.trackName} was deleted`,
   });
