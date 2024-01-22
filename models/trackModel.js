@@ -33,11 +33,13 @@ const trackSchema = new Schema(
       type: String,
       default: null,
     },
-    playList: {
-      type: Schema.Types.ObjectId,
-      ref: "playlist",
-      playList: [],
-    },
+    playList: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "playlist",
+        playList: [],
+      },
+    ],
   },
   { versionKey: false, timestamps: true }
 );

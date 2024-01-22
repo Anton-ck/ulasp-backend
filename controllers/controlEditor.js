@@ -1,3 +1,6 @@
+import path from "path";
+import * as fs from "fs";
+
 import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
 import Genre from "../models/genreModel.js";
@@ -5,11 +8,11 @@ import Track from "../models/trackModel.js";
 import Shop from "../models/shopModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
-import path from "path";
-import * as fs from "fs";
+
 import { resizePics, resizeTrackCover } from "../helpers/resizePics.js";
 import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
+import decodeFromIso8859 from "../helpers/decode8859-1.js";
 
 import albumArt from "album-art";
 
@@ -195,12 +198,6 @@ const deletePlaylist = async (req, res) => {
   });
 };
 
-const playlistsCount = async (req, res) => {
-  const countPlaylists = await PlayList.find().count();
-
-  res.json({ countPlaylists: countPlaylists });
-};
-
 const latestPlaylists = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
   const skip = (page - 1) * limit;
@@ -322,25 +319,63 @@ const deleteGenre = async (req, res) => {
 };
 
 //написать доки
+
 const uploadTrack = async (req, res) => {
   // console.log("FILE", req.file);
   // console.log(req.translatedFileName);
 
-  const translatedFileName = req.translatedFileName;
+  const { existFileError, existFileName, translatedFileName } = req.uploadTrack;
 
-  if (req.existFileError === "Error") {
-    throw HttpError(409, `Track "${req.file.filename}" already exist`);
+  const wrongExt = req?.extError;
+
+  if (wrongExt) {
+    throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
   }
 
-  if (req.extError === "Error") {
-    throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
+  const playlistId = req?.params?.id;
+  ///////// Запись трека в базу данных, если он в плейлисте и файл на сервере существует
+  if (playlistId && existFileError) {
+    const trackExist = await Track.findOne({
+      trackURL: `tracks/${translatedFileName}`,
+    });
+
+    // console.log(trackExist.id);
+    // console.log("Попали в блок проверки плейлиста и existFileError");
+
+    // если ли трек в плейлисте
+
+    // console.log("playlistId", playlistId);
+    const playList = await PlayList.findById(playlistId);
+
+    const isExistTrackInPlaylist = playList.trackList.includes(trackExist.id);
+
+    // console.log("isExistTrackInPlaylist", isExistTrackInPlaylist);
+
+    if (isExistTrackInPlaylist) {
+      throw HttpError(409);
+    } else {
+      await PlayList.findByIdAndUpdate(playlistId, {
+        $push: { trackList: trackExist.id },
+      });
+      await Track.findByIdAndUpdate(trackExist.id, {
+        $push: { playList: playlistId },
+      });
+    }
+    res.status(201).json({
+      message: `Track successfully wrote to ${playList.playListName}`,
+    });
+    return;
+  }
+  /////////////
+
+  if (existFileError) {
+    throw HttpError(409, `Track "${translatedFileName}" already exist`);
   }
 
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
 
-  const playlistId = req?.params?.id;
   const { originalname, filename } = req.file;
 
   const fileName = path.parse(translatedFileName).name.split("__");
@@ -352,16 +387,18 @@ const uploadTrack = async (req, res) => {
   const { artist, title, genre, album } = metadata?.common;
   const { duration } = metadata.format;
 
+  const resArtist = decodeFromIso8859(artist);
+  const resTitle = decodeFromIso8859(title);
+
   const tracksDir = req.file.path.split("/").slice(-2)[0];
   const trackURL = path.join(tracksDir, filename);
   let resizeTrackCoverURL;
 
-  if (artist) {
-    const trackPicture = await albumArt(artist, {
+  if (resArtist) {
+    const trackPicture = await albumArt(resArtist, {
       album: album,
       size: "large",
     });
-
     resizeTrackCoverURL = await resizeTrackCover(trackPicture, "trackCover");
   }
 
@@ -374,12 +411,12 @@ const uploadTrack = async (req, res) => {
     {
       trackURL,
       artist: artist
-        ? artist
+        ? resArtist
         : `${fileName[0] ? fileName[0] : ""}${" "}${
             fileName[1] ? fileName[1] : ""
           }`,
       trackName: title
-        ? title
+        ? resTitle
         : `${fileName[2] ? fileName[2] : ""}${" "}${
             fileName[3] ? fileName[3] : ""
           }`,
@@ -447,19 +484,43 @@ const deleteTrack = async (req, res) => {
           { $pull: { trackList: id } }
         )
     );
-  }
-
   res.json({
     message: `Track ${track.trackName} was deleted`,
   });
 };
 
-//написать доки
-const countTracks = async (req, res) => {
-  const countTracks = await Track.find().count();
+const deleteTrackInPlaylist = async (req, res) => {
+  const { trackId, playlistId } = req.params;
 
-  res.json({ countTracks: countTracks });
+  const track = await Track.findById(trackId);
+  const playList = await PlayList.findById(playlistId);
+  if (!track) {
+    throw HttpError(404, `Track with ${trackId} not found`);
+  }
+  if (!playList) {
+    throw HttpError(404, `Track with ${playlistId} not found`);
+  }
+  const isExistTracksInPlaylist = playList.trackList.includes(trackId);
+
+  if (isExistTracksInPlaylist) {
+    await PlayList.findByIdAndUpdate(playlistId, {
+      $pull: { trackList: trackId },
+    });
+
+    await Track.findByIdAndUpdate(trackId, {
+      $pull: { playList: playlistId },
+    });
+  } else {
+    throw HttpError(
+      404,
+      `Track ${track.artist} ${track.trackName} not found in ${playList.playListName} playlist`
+    );
+  }
+  res.json({
+    message: `Track ${track.artist} ${track.trackName} was deleted ${playList.playListName} playlist`,
+  });
 };
+
 //написать доки
 
 const latestTracks = async (req, res) => {
@@ -478,7 +539,11 @@ const latestTracks = async (req, res) => {
     .populate("playList")
     .populate("trackGenre");
 
-  res.json(latestTracks);
+  const totalTracks = latestTracks.length;
+
+  const totalPlaylists = (await PlayList.find()).length;
+
+  res.json({ latestTracks, totalTracks, totalPlaylists });
 };
 
 const allShops = async (req, res) => {
@@ -495,7 +560,7 @@ const allShops = async (req, res) => {
 const createShop = async (req, res) => {
   const { shopCategoryName } = req.body;
   const isExistShop = await Shop.findOne({ shopCategoryName });
-  if (shopCategoryName === "") {
+  if (shopCategoryName === " ") {
     throw HttpError(404, `shop is empty`);
   }
   if (isExistShop) {
@@ -513,6 +578,18 @@ const createShop = async (req, res) => {
   });
 };
 
+const getShopById = async (req, res) => {
+  const { id } = req.params;
+
+  const shop = await Shop.findById(id);
+
+  if (!shop) {
+    throw HttpError(404, `Genre with ${id} not found`);
+  }
+
+  res.json({ shop });
+};
+
 const deleteShop = async (req, res) => {
   const { id } = req.params;
 
@@ -526,6 +603,16 @@ const deleteShop = async (req, res) => {
 
   res.json({
     message: `Shop ${shop.shopCategoryName} was deleted`,
+  });
+};
+
+const test = (req, res) => {
+  const { message } = req.body;
+
+  const result = decodeFromIso8859(message);
+
+  res.json({
+    result,
   });
 };
 
@@ -566,7 +653,6 @@ export default {
   updatePlaylistById: ctrlWrapper(updatePlaylistById),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
-  playlistsCount: ctrlWrapper(playlistsCount),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
   createGenre: ctrlWrapper(createGenre),
@@ -574,11 +660,13 @@ export default {
   updateGenreById: ctrlWrapper(updateGenreById),
   deleteGenre: ctrlWrapper(deleteGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
+  deleteTrackInPlaylist: ctrlWrapper(deleteTrackInPlaylist),
   deleteTrack: ctrlWrapper(deleteTrack),
-  countTracks: ctrlWrapper(countTracks),
   latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   createShop: ctrlWrapper(createShop),
+  getShopById: ctrlWrapper(getShopById),
   deleteShop: ctrlWrapper(deleteShop),
+  test: ctrlWrapper(test),
   // getTracksInGenre: ctrlWrapper(getTracksInGenre),
 };
