@@ -28,6 +28,12 @@ const playListSchema = new Schema(
         trackList: [],
       },
     ],
+    playlistGenre: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "genre",
+      },
+    ],
     published: {
       type: Boolean,
       default: false,

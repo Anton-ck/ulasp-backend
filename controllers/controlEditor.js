@@ -58,9 +58,6 @@ const createPlayListByGenre = async (req, res) => {
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
 
-  console.log("BODY", req.body);
-  console.log("FILE", req.file);
-
   let randomPicUrl;
   let resizePicURL;
 
@@ -92,6 +89,10 @@ const createPlayListByGenre = async (req, res) => {
     { new: true }
   );
 
+  await PlayList.findByIdAndUpdate(newPlayList.id, {
+    $push: { playlistGenre: id },
+  });
+
   res.status(201).json({
     playlistId: newPlayList.id,
     playListName: newPlayList.playListName,
@@ -105,10 +106,12 @@ const createPlayListByGenre = async (req, res) => {
 
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
-  const playlist = await PlayList.findById(id).populate({
-    path: "trackList",
-    options: { sort: { createdAt: -1 }, populate: "trackGenre" },
-  });
+  const playlist = await PlayList.findById(id)
+    .populate({
+      path: "trackList",
+      options: { sort: { createdAt: -1 } },
+    })
+    .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
@@ -162,14 +165,13 @@ const updatePlaylistById = async (req, res) => {
 
 const deletePlaylist = async (req, res) => {
   const { id } = req.params;
-  const { _id: admin } = req.admin;
 
   const playlist = await PlayList.findById(id);
 
   const idPlayListInGenre = await Genre.find({
     playList: { $in: [id] },
   });
-
+  //не правильно названны переменные
   if (idPlayListInGenre) {
     idPlayListInGenre.map(
       async (playlist) =>
@@ -210,9 +212,6 @@ const latestPlaylists = async (req, res) => {
       limit,
     }
   ).sort({ createdAt: -1 });
-
-  const totalHits = await PlayList.countDocuments();
-
   res.json(latestPlaylists);
 };
 
@@ -321,11 +320,7 @@ const deleteGenre = async (req, res) => {
 //написать доки
 
 const uploadTrack = async (req, res) => {
-  // console.log("FILE", req.file);
-  // console.log(req.translatedFileName);
-
   const { existFileError, existFileName, translatedFileName } = req.uploadTrack;
-
   const wrongExt = req?.extError;
 
   if (wrongExt) {
@@ -333,23 +328,17 @@ const uploadTrack = async (req, res) => {
   }
 
   const playlistId = req?.params?.id;
+
   ///////// Запись трека в базу данных, если он в плейлисте и файл на сервере существует
   if (playlistId && existFileError) {
     const trackExist = await Track.findOne({
       trackURL: `tracks/${translatedFileName}`,
     });
 
-    // console.log(trackExist.id);
-    // console.log("Попали в блок проверки плейлиста и existFileError");
-
     // если ли трек в плейлисте
-
-    // console.log("playlistId", playlistId);
     const playList = await PlayList.findById(playlistId);
 
     const isExistTrackInPlaylist = playList.trackList.includes(trackExist.id);
-
-    // console.log("isExistTrackInPlaylist", isExistTrackInPlaylist);
 
     if (isExistTrackInPlaylist) {
       throw HttpError(409);
@@ -420,8 +409,8 @@ const uploadTrack = async (req, res) => {
         : `${fileName[2] ? fileName[2] : ""}${" "}${
             fileName[3] ? fileName[3] : ""
           }`,
-      // trackGenre: genre?.toString(),
-      trackGenre: null,
+
+      $push: { trackGenre: genre ? genre[0] : null },
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
         ? resizeTrackCoverURL
@@ -429,28 +418,13 @@ const uploadTrack = async (req, res) => {
     },
     { new: true }
   );
-
   if (playlistId) {
     await PlayList.findByIdAndUpdate(playlistId, {
       $push: { trackList: newTrack.id },
     });
-
-    const playlistInGenre = await Genre.find({
-      playList: { $in: [playlistId] },
+    await Track.findByIdAndUpdate(newTrack.id, {
+      $push: { playList: playlistId },
     });
-
-    if (playlistInGenre.length !== 0) {
-      console.log("playlistInGenre", playlistInGenre[0]._id);
-      await Track.findByIdAndUpdate(newTrack.id, {
-        $push: { playList: playlistId },
-        trackGenre: playlistInGenre[0]._id,
-      });
-    } else {
-      console.log("Плейлиста в жанре нету");
-      await Track.findByIdAndUpdate(newTrack.id, {
-        $push: { playList: playlistId },
-      });
-    }
   }
 
   res.json({
@@ -496,6 +470,7 @@ const deleteTrackInPlaylist = async (req, res) => {
 
   const track = await Track.findById(trackId);
   const playList = await PlayList.findById(playlistId);
+
   if (!track) {
     throw HttpError(404, `Track with ${trackId} not found`);
   }
@@ -505,10 +480,11 @@ const deleteTrackInPlaylist = async (req, res) => {
   const isExistTracksInPlaylist = playList.trackList.includes(trackId);
 
   if (isExistTracksInPlaylist) {
+    //удаляем айди трека из плейлиста
     await PlayList.findByIdAndUpdate(playlistId, {
       $pull: { trackList: trackId },
     });
-
+    //удаляем айди плейлиста из трека
     await Track.findByIdAndUpdate(trackId, {
       $pull: { playList: playlistId },
     });
@@ -537,9 +513,10 @@ const latestTracks = async (req, res) => {
     }
   )
     .sort({ createdAt: -1 })
-
-    .populate("playList")
-    .populate("trackGenre");
+    .populate({
+      path: "playList",
+      options: { populate: "playlistGenre" },
+    });
 
   const totalTracks = latestTracks.length;
 
@@ -608,14 +585,43 @@ const deleteShop = async (req, res) => {
   });
 };
 
-const test = (req, res) => {
-  const { message } = req.body;
+const test = async (req, res) => {
+  const { idGenre, idPlaylist } = req.body;
 
-  const result = decodeFromIso8859(message);
+  const genre = await Genre.findById(idGenre);
+  const playList = await PlayList.findById(idPlaylist);
+
+  console.log(genre);
+
+  console.log(genre.playList.includes(idPlaylist));
+
+  // if (genre.playList.includes(idPlaylist)) {
+  //   await PlayList.findByIdAndUpdate(idPlaylist.id, {
+  //     $push: { playlistGenre: genre._id },
+  //   });
+
+  //   res.json({
+  //     message: "ok",
+  //   });
+  // } else {
+  //   return;
+  // }
+
+  await PlayList.findByIdAndUpdate(
+    idPlaylist,
+    {
+      $push: { playlistGenre: genre._id },
+    },
+    { new: true }
+  );
 
   res.json({
-    result,
+    message: "ok",
   });
+
+  // const genre = await Genre.find({
+  //   playList: { $in: [idPlaylist] },
+  // });
 };
 
 // const getTracksInGenre = async (req, res) => {

@@ -25,8 +25,7 @@ const trackSchema = new Schema(
     //   default: null,
     // },
     trackGenre: {
-      type: Schema.Types.ObjectId,
-      ref: "genre",
+      type: Array,
       default: null,
     },
     trackURL: {
