@@ -45,8 +45,8 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
-app.use((err, req, res, next) => {
-  res.setHeader("Accept-Encoding", "gzip, br");
-  next();
-});
+// app.use((err, req, res, next) => {
+//   res.setHeader("Accept-Encoding", "gzip, br");
+//   next();
+// });
 export default app;

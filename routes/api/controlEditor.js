@@ -10,7 +10,6 @@ import isValid from "../../middlewares/isValid.js";
 import upload from "../../middlewares/upload.js";
 import uploadTrack from "../../middlewares/uploadTrack.js";
 
-
 const router = express.Router();
 
 router.post(
@@ -23,13 +22,6 @@ router.post(
 );
 
 router.get("/playlist/latest", controllers.latestPlaylists);
-
-router.get(
-  "/playlist/count",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.playlistsCount
-);
 
 router.get(
   "/playlist/:id",
@@ -119,6 +111,12 @@ router.post(
 );
 
 router.delete(
+  "/playlist/:playlistId/tracks/delete/:trackId",
+
+  controllers.deleteTrackInPlaylist
+);
+
+router.delete(
   "/tracks/delete/:id",
   authenticateAdmin,
   permisionsEditor,
@@ -131,13 +129,6 @@ router.post(
   uploadTrack.single("trackURL"),
 
   controllers.uploadTrack
-);
-
-router.get(
-  "/tracks/count",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.countTracks
 );
 
 router.get(
@@ -159,10 +150,16 @@ router.post(
   permisionsEditor,
   controllers.createShop
 );
+
+router.get("/shops/:id", controllers.getShopById);
+
 router.delete(
   "/shops/delete/:id",
   authenticateAdmin,
   permisionsEditor,
   controllers.deleteShop
 );
+
+router.post("/test", controllers.test);
+
 export default router;

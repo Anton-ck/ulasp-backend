@@ -1,3 +1,6 @@
+import path from "path";
+import * as fs from "fs";
+
 import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
 import Genre from "../models/genreModel.js";
@@ -5,11 +8,11 @@ import Track from "../models/trackModel.js";
 import Shop from "../models/shopModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
-import path from "path";
-import * as fs from "fs";
+
 import { resizePics, resizeTrackCover } from "../helpers/resizePics.js";
 import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
+import decodeFromIso8859 from "../helpers/decode8859-1.js";
 
 import albumArt from "album-art";
 
@@ -55,9 +58,6 @@ const createPlayListByGenre = async (req, res) => {
   const { _id: owner } = req?.admin;
   const { id } = req?.params;
 
-  console.log("BODY", req.body);
-  console.log("FILE", req.file);
-
   let randomPicUrl;
   let resizePicURL;
 
@@ -89,6 +89,10 @@ const createPlayListByGenre = async (req, res) => {
     { new: true }
   );
 
+  await PlayList.findByIdAndUpdate(newPlayList.id, {
+    $push: { playlistGenre: id },
+  });
+
   res.status(201).json({
     playlistId: newPlayList.id,
     playListName: newPlayList.playListName,
@@ -102,10 +106,12 @@ const createPlayListByGenre = async (req, res) => {
 
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
-  const playlist = await PlayList.findById(id).populate({
-    path: "trackList",
-    options: { sort: { createdAt: -1 }, populate: "trackGenre" },
-  });
+  const playlist = await PlayList.findById(id)
+    .populate({
+      path: "trackList",
+      options: { sort: { createdAt: -1 } },
+    })
+    .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
@@ -159,14 +165,13 @@ const updatePlaylistById = async (req, res) => {
 
 const deletePlaylist = async (req, res) => {
   const { id } = req.params;
-  const { _id: admin } = req.admin;
 
   const playlist = await PlayList.findById(id);
 
   const idPlayListInGenre = await Genre.find({
     playList: { $in: [id] },
   });
-
+  //не правильно названны переменные
   if (idPlayListInGenre) {
     idPlayListInGenre.map(
       async (playlist) =>
@@ -195,12 +200,6 @@ const deletePlaylist = async (req, res) => {
   });
 };
 
-const playlistsCount = async (req, res) => {
-  const countPlaylists = await PlayList.find().count();
-
-  res.json({ countPlaylists: countPlaylists });
-};
-
 const latestPlaylists = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
   const skip = (page - 1) * limit;
@@ -213,9 +212,6 @@ const latestPlaylists = async (req, res) => {
       limit,
     }
   ).sort({ createdAt: -1 });
-
-  const totalHits = await PlayList.countDocuments();
-
   res.json(latestPlaylists);
 };
 
@@ -322,25 +318,53 @@ const deleteGenre = async (req, res) => {
 };
 
 //написать доки
+
 const uploadTrack = async (req, res) => {
-  // console.log("FILE", req.file);
-  // console.log(req.translatedFileName);
+  const { existFileError, existFileName, translatedFileName } = req.uploadTrack;
+  const wrongExt = req?.extError;
 
-  const translatedFileName = req.translatedFileName;
-
-  if (req.existFileError === "Error") {
-    throw HttpError(409, `Track "${req.file.filename}" already exist`);
+  if (wrongExt) {
+    throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
   }
 
-  if (req.extError === "Error") {
-    throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
+  const playlistId = req?.params?.id;
+
+  ///////// Запись трека в базу данных, если он в плейлисте и файл на сервере существует
+  if (playlistId && existFileError) {
+    const trackExist = await Track.findOne({
+      trackURL: `tracks/${translatedFileName}`,
+    });
+
+    // если ли трек в плейлисте
+    const playList = await PlayList.findById(playlistId);
+
+    const isExistTrackInPlaylist = playList.trackList.includes(trackExist.id);
+
+    if (isExistTrackInPlaylist) {
+      throw HttpError(409);
+    } else {
+      await PlayList.findByIdAndUpdate(playlistId, {
+        $push: { trackList: trackExist.id },
+      });
+      await Track.findByIdAndUpdate(trackExist.id, {
+        $push: { playList: playlistId },
+      });
+    }
+    res.status(201).json({
+      message: `Track successfully wrote to ${playList.playListName}`,
+    });
+    return;
+  }
+  /////////////
+
+  if (existFileError) {
+    throw HttpError(409, `Track "${translatedFileName}" already exist`);
   }
 
   if (!req.file) {
     throw HttpError(404, "File not found for upload");
   }
 
-  const playlistId = req?.params?.id;
   const { originalname, filename } = req.file;
 
   const fileName = path.parse(translatedFileName).name.split("__");
@@ -352,16 +376,18 @@ const uploadTrack = async (req, res) => {
   const { artist, title, genre, album } = metadata?.common;
   const { duration } = metadata.format;
 
+  const resArtist = decodeFromIso8859(artist);
+  const resTitle = decodeFromIso8859(title);
+
   const tracksDir = req.file.path.split("/").slice(-2)[0];
   const trackURL = path.join(tracksDir, filename);
   let resizeTrackCoverURL;
 
-  if (artist) {
-    const trackPicture = await albumArt(artist, {
+  if (resArtist) {
+    const trackPicture = await albumArt(resArtist, {
       album: album,
       size: "large",
     });
-
     resizeTrackCoverURL = await resizeTrackCover(trackPicture, "trackCover");
   }
 
@@ -374,17 +400,17 @@ const uploadTrack = async (req, res) => {
     {
       trackURL,
       artist: artist
-        ? artist
+        ? resArtist
         : `${fileName[0] ? fileName[0] : ""}${" "}${
             fileName[1] ? fileName[1] : ""
           }`,
       trackName: title
-        ? title
+        ? resTitle
         : `${fileName[2] ? fileName[2] : ""}${" "}${
             fileName[3] ? fileName[3] : ""
           }`,
-      // trackGenre: genre?.toString(),
-      trackGenre: null,
+
+      $push: { trackGenre: genre ? genre[0] : null },
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
         ? resizeTrackCoverURL
@@ -392,28 +418,13 @@ const uploadTrack = async (req, res) => {
     },
     { new: true }
   );
-
   if (playlistId) {
     await PlayList.findByIdAndUpdate(playlistId, {
       $push: { trackList: newTrack.id },
     });
-
-    const playlistInGenre = await Genre.find({
-      playList: { $in: [playlistId] },
+    await Track.findByIdAndUpdate(newTrack.id, {
+      $push: { playList: playlistId },
     });
-
-    if (playlistInGenre.length !== 0) {
-      console.log("playlistInGenre", playlistInGenre[0]._id);
-      await Track.findByIdAndUpdate(newTrack.id, {
-        $push: { playList: playlistId },
-        trackGenre: playlistInGenre[0]._id,
-      });
-    } else {
-      console.log("Плейлиста в жанре нету");
-      await Track.findByIdAndUpdate(newTrack.id, {
-        $push: { playList: playlistId },
-      });
-    }
   }
 
   res.json({
@@ -454,12 +465,40 @@ const deleteTrack = async (req, res) => {
   });
 };
 
-//написать доки
-const countTracks = async (req, res) => {
-  const countTracks = await Track.find().count();
+const deleteTrackInPlaylist = async (req, res) => {
+  const { trackId, playlistId } = req.params;
 
-  res.json({ countTracks: countTracks });
+  const track = await Track.findById(trackId);
+  const playList = await PlayList.findById(playlistId);
+
+  if (!track) {
+    throw HttpError(404, `Track with ${trackId} not found`);
+  }
+  if (!playList) {
+    throw HttpError(404, `Track with ${playlistId} not found`);
+  }
+  const isExistTracksInPlaylist = playList.trackList.includes(trackId);
+
+  if (isExistTracksInPlaylist) {
+    //удаляем айди трека из плейлиста
+    await PlayList.findByIdAndUpdate(playlistId, {
+      $pull: { trackList: trackId },
+    });
+    //удаляем айди плейлиста из трека
+    await Track.findByIdAndUpdate(trackId, {
+      $pull: { playList: playlistId },
+    });
+  } else {
+    throw HttpError(
+      404,
+      `Track ${track.artist} ${track.trackName} not found in ${playList.playListName} playlist`
+    );
+  }
+  res.json({
+    message: `Track ${track.artist} ${track.trackName} was deleted ${playList.playListName} playlist`,
+  });
 };
+
 //написать доки
 
 const latestTracks = async (req, res) => {
@@ -474,11 +513,16 @@ const latestTracks = async (req, res) => {
     }
   )
     .sort({ createdAt: -1 })
+    .populate({
+      path: "playList",
+      options: { populate: "playlistGenre" },
+    });
 
-    .populate("playList")
-    .populate("trackGenre");
+  const totalTracks = latestTracks.length;
 
-  res.json(latestTracks);
+  const totalPlaylists = (await PlayList.find()).length;
+
+  res.json({ latestTracks, totalTracks, totalPlaylists });
 };
 
 const allShops = async (req, res) => {
@@ -495,7 +539,7 @@ const allShops = async (req, res) => {
 const createShop = async (req, res) => {
   const { shopCategoryName } = req.body;
   const isExistShop = await Shop.findOne({ shopCategoryName });
-  if (shopCategoryName === "") {
+  if (shopCategoryName === " ") {
     throw HttpError(404, `shop is empty`);
   }
   if (isExistShop) {
@@ -513,6 +557,18 @@ const createShop = async (req, res) => {
   });
 };
 
+const getShopById = async (req, res) => {
+  const { id } = req.params;
+
+  const shop = await Shop.findById(id);
+
+  if (!shop) {
+    throw HttpError(404, `Genre with ${id} not found`);
+  }
+
+  res.json({ shop });
+};
+
 const deleteShop = async (req, res) => {
   const { id } = req.params;
 
@@ -527,6 +583,45 @@ const deleteShop = async (req, res) => {
   res.json({
     message: `Shop ${shop.shopCategoryName} was deleted`,
   });
+};
+
+const test = async (req, res) => {
+  const { idGenre, idPlaylist } = req.body;
+
+  const genre = await Genre.findById(idGenre);
+  const playList = await PlayList.findById(idPlaylist);
+
+  console.log(genre);
+
+  console.log(genre.playList.includes(idPlaylist));
+
+  // if (genre.playList.includes(idPlaylist)) {
+  //   await PlayList.findByIdAndUpdate(idPlaylist.id, {
+  //     $push: { playlistGenre: genre._id },
+  //   });
+
+  //   res.json({
+  //     message: "ok",
+  //   });
+  // } else {
+  //   return;
+  // }
+
+  await PlayList.findByIdAndUpdate(
+    idPlaylist,
+    {
+      $push: { playlistGenre: genre._id },
+    },
+    { new: true }
+  );
+
+  res.json({
+    message: "ok",
+  });
+
+  // const genre = await Genre.find({
+  //   playList: { $in: [idPlaylist] },
+  // });
 };
 
 // const getTracksInGenre = async (req, res) => {
@@ -566,7 +661,6 @@ export default {
   updatePlaylistById: ctrlWrapper(updatePlaylistById),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
-  playlistsCount: ctrlWrapper(playlistsCount),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   allGenres: ctrlWrapper(allGenres),
   createGenre: ctrlWrapper(createGenre),
@@ -574,11 +668,13 @@ export default {
   updateGenreById: ctrlWrapper(updateGenreById),
   deleteGenre: ctrlWrapper(deleteGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
+  deleteTrackInPlaylist: ctrlWrapper(deleteTrackInPlaylist),
   deleteTrack: ctrlWrapper(deleteTrack),
-  countTracks: ctrlWrapper(countTracks),
   latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   createShop: ctrlWrapper(createShop),
+  getShopById: ctrlWrapper(getShopById),
   deleteShop: ctrlWrapper(deleteShop),
+  test: ctrlWrapper(test),
   // getTracksInGenre: ctrlWrapper(getTracksInGenre),
 };

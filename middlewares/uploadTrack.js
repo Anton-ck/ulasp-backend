@@ -19,6 +19,11 @@ const FileNameToUtf8 = (file) => {
     .toString("utf8")
     .replaceAll(" ", "__");
 
+  // const fileName = file.originalname
+  //   .toString("cp1251")
+  //   // .toString("utf8")
+  //   .replaceAll(" ", "__");
+
   const translatedFileName = generateLatinTranslation(fileName);
 
   return { fileName, translatedFileName };
@@ -41,21 +46,45 @@ const uploadTrack = multer({
     const fileName = FileNameToUtf8(file);
     console.log("fileName.translatedFileName", fileName);
     const trackPath = trackDir + "/" + fileName.translatedFileName;
-    if (fs.existsSync(trackPath)) {
-      cb(null, false, (req.existFileError = "Error"));
-    } else {
-      cb(null, true);
-    }
 
-    if (ext !== ".mp3") {
-      cb(null, false, (req.extError = "Error"));
-    } else {
+    const optionsWithError = {
+      existFileError: true,
+      existFileName: fileName,
+      translatedFileName: fileName.fileName,
+    };
+
+    const optionsWithOutError = {
+      existFileError: false,
+      existFileName: fileName,
+      translatedFileName: fileName.fileName,
+    };
+
+    const codeError = {
+      fileExist: 4091,
+      wrongExt: 4001,
+    };
+
+    if (fs.existsSync(trackPath)) {
       cb(
         null,
-        true,
-        (req.translatedFileName = fileName.fileName)
+        false,
+        (req.uploadTrackError = codeError.fileExist),
+        (req.uploadTrack = optionsWithError)
       );
+    } else {
+      cb(null, true, (req.uploadTrack = optionsWithOutError));
     }
+
+    // if (ext !== ".mp3") {
+    //   cb(
+    //     null,
+    //     false,
+    //     ((req.uploadTrack.codeError = codeError.wrongExt),
+    //     (req.uploadTrack.options = optionsWithError))
+    //   );
+    // } else {
+    //   cb(null, true, (req.options = optionsWithOutError));
+    // }
   },
 });
 

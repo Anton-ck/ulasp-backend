@@ -25,19 +25,20 @@ const trackSchema = new Schema(
     //   default: null,
     // },
     trackGenre: {
-      type: Schema.Types.ObjectId,
-      ref: "genre",
+      type: Array,
       default: null,
     },
     trackURL: {
       type: String,
       default: null,
     },
-    playList: {
-      type: Schema.Types.ObjectId,
-      ref: "playlist",
-      playList: [],
-    },
+    playList: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "playlist",
+        playList: [],
+      },
+    ],
   },
   { versionKey: false, timestamps: true }
 );
