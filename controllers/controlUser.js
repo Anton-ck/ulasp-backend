@@ -7,6 +7,8 @@ import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
+import { UserListenCount } from "../models/userListenCountModel.js";
+import mongoose from 'mongoose';
 
 const getAllUsers = async (req, res) => {
   const result = await User.find();
@@ -369,7 +371,58 @@ res.json(tracks);
 
 
 };
+
+
+  const countListensTrackByUser = async (req, res) => {
+    const { _id: userId } = req.user;
+    const { id: trackId } = req.params;
+
+    console.log('userId', userId)
+    console.log('trackId', trackId)
+
   
+      // Получаем текущую дату
+      const currentDate = new Date();
+      console.log('currentDate', currentDate)
+  
+      // Находим или создаем запись о пользователе
+      let userListenCount = await UserListenCount.findOne({ "userId": userId });
+  
+      if (!userListenCount) {
+        userListenCount = 
+        await UserListenCount.create({ userId });
+      }
+  console.log('userListenCount', userListenCount)
+     // Находим или создаем запись о прослушивании трека для этого пользователя
+
+    let trackListen = [];
+    trackListen = userListenCount.tracks.find(track => {
+      console.log('track', track)
+      return track.trackId.toString() === trackId &&
+             new Date(track.listens[0].date).toDateString() === currentDate.toDateString();
+    });
+    console.log('trackListen', trackListen);
+
+    if (!trackListen) {
+     
+      console.log('trackId', trackId)
+      // Если запись о прослушивании трека за текущий день не найдена, создаем новую запись
+      userListenCount.tracks.push({
+        trackId,
+        listens: [ { countOfListenes: 1, date: currentDate }]
+      });
+      console.log('userListenCount.tracks', userListenCount.tracks)
+    } else {
+      // Если запись о прослушивании трека за текущий день уже существует, увеличиваем счетчик прослушиваний
+      trackListen.listens[0].countOfListenes++;
+    }
+
+    await userListenCount.save();
+   
+  res.json(userListenCount);
+  
+  
+  };
 
 
 export default {
@@ -389,4 +442,5 @@ export default {
   getAddPlaylists: ctrlWrapper(getAddPlaylists),
   updateAddPlaylists: ctrlWrapper(updateAddPlaylists),
   getTracksByGenreId: ctrlWrapper(getTracksByGenreId),
+  countListensTrackByUser: ctrlWrapper(countListensTrackByUser)
 };

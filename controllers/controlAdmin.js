@@ -6,6 +6,7 @@ import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
 
+
 const createEditorRole = async (req, res) => {
   const { login, password } = req.body;
 

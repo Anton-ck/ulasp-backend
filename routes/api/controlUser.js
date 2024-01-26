@@ -94,6 +94,12 @@ authenticatUser,
   router.patch("/playlist/add/:id", 
 authenticatUser, 
  controllers.updateAddPlaylists);
+
+ router.patch("/tracks/count/:id", 
+ authenticatUser, 
+  controllers.countListensTrackByUser);
+
+
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);
