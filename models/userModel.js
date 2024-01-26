@@ -96,16 +96,16 @@ const userSchema = new Schema(
       required: true,
       default: 0,
     },
-    quantityPlaylists: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
-    quantitySongs: {
-      type: Number,
-      required: true,
-      default: 0,
-    },
+    // quantityPlaylists: {
+    //   type: Number,
+    //   required: true,
+    //   default: 0,
+    // },
+    // quantitySongs: {
+    //   type: Number,
+    //   required: true,
+    //   default: 0,
+    // },
     comment: {
       type: String,
       required: true,
