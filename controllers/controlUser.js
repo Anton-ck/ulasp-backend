@@ -107,10 +107,14 @@ const latestTracks = async (req, res) => {
   )
     .sort({ createdAt: -1 })
 
-    .populate("playList");
-
+    .populate("playList")
+    .populate("trackGenre");
+  
   res.json(latestTracks);
 };
+
+
+
 
 const allShops = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
