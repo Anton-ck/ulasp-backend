@@ -395,29 +395,30 @@ res.json(tracks);
   console.log('userListenCount', userListenCount)
      // Находим или создаем запись о прослушивании трека для этого пользователя
 
-    let trackListen = [];
-    trackListen = userListenCount.tracks.find(track => {
-      console.log('track', track)
-      return track.trackId.toString() === trackId &&
-             new Date(track.listens[0].date).toDateString() === currentDate.toDateString();
-    });
-    console.log('trackListen', trackListen);
+    // Находим или создаем запись о прослушивании трека для этого пользователя
+let track = userListenCount.tracks.find(track => track.trackId.toString() === trackId);
 
-    if (!trackListen) {
-     
-      console.log('trackId', trackId)
-      // Если запись о прослушивании трека за текущий день не найдена, создаем новую запись
-      userListenCount.tracks.push({
-        trackId,
-        listens: [ { countOfListenes: 1, date: currentDate }]
-      });
-      console.log('userListenCount.tracks', userListenCount.tracks)
-    } else {
-      // Если запись о прослушивании трека за текущий день уже существует, увеличиваем счетчик прослушиваний
-      trackListen.listens[0].countOfListenes++;
-    }
+if (!track) {
+  // Если запись о прослушивании трека не найдена, создаем новый объект track
+  track = {
+    trackId,
+    listens: []
+  };
+  userListenCount.tracks.push(track);
+}
 
-    await userListenCount.save();
+// Находим или создаем запись о прослушивании трека за текущий день
+let listensForToday = track.listens.find(listen => new Date(listen.date).toDateString() === currentDate.toDateString());
+
+if (!listensForToday) {
+  // Если запись о прослушивании трека за текущий день не найдена, создаем новую запись
+  track.listens.push({ countOfListenes: 1, date: currentDate });
+} else {
+  // Если запись о прослушивании трека за текущий день уже существует, увеличиваем счетчик прослушиваний
+  listensForToday.countOfListenes++;
+}
+
+await userListenCount.save();
    
   res.json(userListenCount);
   
