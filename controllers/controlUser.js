@@ -386,14 +386,9 @@ res.json(tracks);
   const countListensTrackByUser = async (req, res) => {
     const { _id: userId } = req.user;
     const { id: trackId } = req.params;
-
-    console.log('userId', userId)
-    console.log('trackId', trackId)
-
-  
-      // Получаем текущую дату
+   
       const currentDate = new Date();
-      console.log('currentDate', currentDate)
+     
   
       // Находим или создаем запись о пользователе
       let userListenCount = await UserListenCount.findOne({ "userId": userId });
@@ -403,8 +398,6 @@ res.json(tracks);
         await UserListenCount.create({ userId });
       }
   console.log('userListenCount', userListenCount)
-     // Находим или создаем запись о прослушивании трека для этого пользователя
-
     // Находим или создаем запись о прослушивании трека для этого пользователя
 let track = userListenCount.tracks.find(track => track.trackId.toString() === trackId);
 
