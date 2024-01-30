@@ -109,8 +109,10 @@ const latestTracks = async (req, res) => {
   )
     .sort({ createdAt: -1 })
 
-    .populate("playList")
-    .populate("trackGenre");
+    .populate({
+      path: "playList",
+      options: { populate: "playlistGenre" },
+    });
   
   res.json(latestTracks);
 };
