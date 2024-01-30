@@ -5,7 +5,8 @@ import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
-
+import mongoose from 'mongoose';
+import { UserListenCount } from "../models/userListenCountModel.js";
 
 const createEditorRole = async (req, res) => {
   const { login, password } = req.body;
@@ -331,6 +332,23 @@ const countNewClientsByMonth = async (req, res) => {
   res.json({ countNewClientsByMonth: countNewClientsByMonth });
 };
 
+const countListensByUser = async (req, res) => {
+console.log('req.body', req.body)
+
+const userId = req.body.userId; 
+
+const dateOfStart = new Date(req.body.dateOfStart);
+const dateOfEnd = new Date(req.body.dateOfEnd);
+
+const userListenCount = await UserListenCount.findOne({ userId });
+
+
+res.json( userListenCount)
+
+
+
+}
+
 export default {
   createEditorRole: ctrlWrapper(createEditorRole),
   getAllAdmin: ctrlWrapper(getAllAdmin),
@@ -350,4 +368,5 @@ export default {
   countNewClientsByMonth: ctrlWrapper(countNewClientsByMonth),
   countClients: ctrlWrapper(countClients),
   countTracks: ctrlWrapper(countTracks),
+  countListensByUser:ctrlWrapper(countListensByUser),
 };

@@ -49,6 +49,13 @@ router.get(
   controllers.countClients
 );
 
+router.post(
+  "/users/countlistens",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countListensByUser
+);
+
 router.get(
   "/newclients/count",
   authenticateAdmin,
