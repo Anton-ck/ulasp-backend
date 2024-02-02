@@ -8,7 +8,7 @@ import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
 import { UserListenCount } from "../models/userListenCountModel.js";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const getAllUsers = async (req, res) => {
   const result = await User.find();
@@ -56,14 +56,30 @@ const latestPlaylists = async (req, res) => {
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
-  const playlist = await PlayList.findById(id) .populate({
-      path: "trackList",
-      options: { sort: { createdAt: -1 } },
-    })
-    .populate("playlistGenre");
+  const playlist = await PlayList.findById(id).populate({
+   
+    path: "trackList",
+    populate: {
+      path: "playList",
+      model: "playlist",
+      select: "playlistGenre",
+      populate: {
+        path: "playlistGenre",
+       
+      }
+      // select: "playlistGenre genre", 
+    },
+   
+    
+    
+    options: {
+      sort: { createdAt: -1 },
+     
+    },
+  });
 
   if (!playlist) {
-     throw HttpError(404, `Playlist not found`);
+    throw HttpError(404, `Playlist not found`);
   }
 
   const totalTracks = playlist.trackList.length;
@@ -117,12 +133,9 @@ const latestTracks = async (req, res) => {
       path: "playList",
       options: { populate: "playlistGenre" },
     });
-  
+
   res.json(latestTracks);
 };
-
-
-
 
 const allShops = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
@@ -282,9 +295,7 @@ const updateAddPlaylists = async (req, res) => {
     await PlayList.findByIdAndUpdate(playlist._id, {
       $push: { addByUsers: user },
     });
-    res
-      .status(200)
-      .json({ message: `Added ${playlist.playListName} to add` });
+    res.status(200).json({ message: `Added ${playlist.playListName} to add` });
   }
 };
 
@@ -308,14 +319,13 @@ const getAddPlaylists = async (req, res) => {
   const totalPlayLists = await PlayList.countDocuments({
     addByUsers: user,
   });
- 
+
   res.json({ totalPlayLists, add });
 };
 
 // const getTracksByGenreId = async (req, res) => {
 //   const { id } = req.params;
 
-  
 //   const genre = await Genre.findById(id).populate("playList");
 
 //   // Получить все треки из этих плейлистов
@@ -333,26 +343,26 @@ const getAddPlaylists = async (req, res) => {
 // };
 
 // const getTracksByGenreId = async (req, res) => {
-  
+
 //   const { id } = req.params;
 
 //   const genre = await Genre.findById(id).populate("playList");
 
-  // Use a Set to keep track of unique track IDs
-  // const uniqueTrackIds = new Set();
+// Use a Set to keep track of unique track IDs
+// const uniqueTrackIds = new Set();
 
-  // // Retrieve tracks from each playlist and add them to the Set
-  // for (const playlist of genre.playList) {
-  //   const tracks = await Track.find({ playList: playlist._id });
-  //   tracks.forEach((track) => {
-  //     uniqueTrackIds.add(track._id.toString());
-  //   });
-  // }
+// // Retrieve tracks from each playlist and add them to the Set
+// for (const playlist of genre.playList) {
+//   const tracks = await Track.find({ playList: playlist._id });
+//   tracks.forEach((track) => {
+//     uniqueTrackIds.add(track._id.toString());
+//   });
+// }
 
-  // // Convert the Set back to an array
-  // const uniqueTracksArray = Array.from(uniqueTrackIds);
+// // Convert the Set back to an array
+// const uniqueTracksArray = Array.from(uniqueTrackIds);
 
-  // Fetch all unique tracks using the array of unique IDs
+// Fetch all unique tracks using the array of unique IDs
 //   const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
 
 //   res.json(tracks);
@@ -360,74 +370,83 @@ const getAddPlaylists = async (req, res) => {
 
 const getTracksByGenreId = async (req, res) => {
   const { id } = req.params;
- const allTracks=[];
+  const allTracks = [];
 
   const genreTracks = await Genre.findById(id).populate({
     path: "playList",
-    options: { populate: "trackList" },
-  }
+    options: { populate: "playlistGenre" },
+  });
+
+  genreTracks.playList.map(async (playlist) =>
+    allTracks.push(playlist.trackList)
   );
 
-genreTracks.playList.map(async (playlist) => allTracks.push(playlist.trackList));
-const tracksArray = allTracks.flat().map(el => el._id.toString());
-// console.log('tracksArray', tracksArray)
+  const tracksArray = allTracks.flat().map((el) => el._id);
 
- const uniqueTracksArray=tracksArray.filter((track, index, array) => array.indexOf(track)=== index);
-// console.log('uniqueTracksArray', uniqueTracksArray);
+  const uniqueTracksArray = tracksArray.filter(
+    (track, index, array) => array.indexOf(track) === index
+  );
+  // console.log('uniqueTracksArray', uniqueTracksArray);
 
-const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
+  const tracks = await Track.find({ _id: { $in: uniqueTracksArray } }).populate(
+    {
+      path: "playList",
+      select: "playlistGenre",
+      populate: {
+        path: "playlistGenre",
+        select: "genre",
+      },
+    }
+  );
 
-res.json(tracks);
-
-
+  res.json(tracks);
 };
 
+const countListensTrackByUser = async (req, res) => {
+  const { _id: userId } = req.user;
+  const { id: trackId } = req.params;
 
-  const countListensTrackByUser = async (req, res) => {
-    const { _id: userId } = req.user;
-    const { id: trackId } = req.params;
-   
-      const currentDate = new Date();
-     
-  
-      // Находим или создаем запись о пользователе
-      let userListenCount = await UserListenCount.findOne({ "userId": userId });
-  
-      if (!userListenCount) {
-        userListenCount = 
-        await UserListenCount.create({ userId });
-      }
-  console.log('userListenCount', userListenCount)
-    // Находим или создаем запись о прослушивании трека для этого пользователя
-let track = userListenCount.tracks.find(track => track.trackId.toString() === trackId);
+  const currentDate = new Date();
 
-if (!track) {
-  // Если запись о прослушивании трека не найдена, создаем новый объект track
-  track = {
-    trackId,
-    listens: []
-  };
-  userListenCount.tracks.push(track);
-}
+  // Находим или создаем запись о пользователе
+  let userListenCount = await UserListenCount.findOne({ userId: userId });
 
-// Находим или создаем запись о прослушивании трека за текущий день
-let listensForToday = track.listens.find(listen => new Date(listen.date).toDateString() === currentDate.toDateString());
+  if (!userListenCount) {
+    userListenCount = await UserListenCount.create({ userId });
+  }
+  console.log("userListenCount", userListenCount);
+  // Находим или создаем запись о прослушивании трека для этого пользователя
+  let track = userListenCount.tracks.find(
+    (track) => track.trackId.toString() === trackId
+  );
 
-if (!listensForToday) {
-  // Если запись о прослушивании трека за текущий день не найдена, создаем новую запись
-  track.listens.push({ countOfListenes: 1, date: currentDate });
-} else {
-  // Если запись о прослушивании трека за текущий день уже существует, увеличиваем счетчик прослушиваний
-  listensForToday.countOfListenes++;
-}
+  if (!track) {
+    // Если запись о прослушивании трека не найдена, создаем новый объект track
+    track = {
+      trackId,
+      listens: [],
+    };
+    userListenCount.tracks.push(track);
+  }
 
-await userListenCount.save();
-   
+  // Находим или создаем запись о прослушивании трека за текущий день
+  let listensForToday = track.listens.find(
+    (listen) =>
+      new Date(listen.date).toDateString() === currentDate.toDateString()
+  );
+
+  if (!listensForToday) {
+    // Если запись о прослушивании трека за текущий день не найдена, создаем новую запись
+    track.listens.push({ countOfListenes: 1, date: currentDate });
+  } else {
+    // Если запись о прослушивании трека за текущий день уже существует, увеличиваем счетчик прослушиваний
+    listensForToday.countOfListenes++;
+  }
+
+  await userListenCount.save();
+
   res.json(userListenCount);
-  
-  
-  };
-
+};
 
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
@@ -446,5 +465,5 @@ export default {
   getAddPlaylists: ctrlWrapper(getAddPlaylists),
   updateAddPlaylists: ctrlWrapper(updateAddPlaylists),
   getTracksByGenreId: ctrlWrapper(getTracksByGenreId),
-  countListensTrackByUser: ctrlWrapper(countListensTrackByUser)
+  countListensTrackByUser: ctrlWrapper(countListensTrackByUser),
 };
