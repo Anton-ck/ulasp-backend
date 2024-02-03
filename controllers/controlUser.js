@@ -48,7 +48,8 @@ const latestPlaylists = async (req, res) => {
       skip,
       limit,
     }
-  ).sort({ createdAt: -1 });
+  ).sort({ createdAt: -1 })
+    
 
   res.json(latestPlaylists);
 };
