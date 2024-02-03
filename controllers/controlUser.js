@@ -57,31 +57,11 @@ const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
   const playlist = await PlayList.findById(id)
-  // .populate({
-   
-  //   path: "trackList",
-  //   populate: {
-  //     path: "playList",
-  //     model: "playlist",
-  //     select: "playlistGenre",
-  //     populate: {
-  //       path: "playlistGenre",
-       
-  //     }
-  //     // select: "playlistGenre genre", 
-  //   },
-          
-  //   options: {
-  //     sort: { createdAt: -1 },
-     
-  //   },
-  // });
-
-  .populate({
-    path: "trackList",
-    options: { sort: { createdAt: -1 } },
-  })
-  .populate("playlistGenre");
+    .populate({
+      path: "trackList",
+      options: { sort: { createdAt: -1 } },
+    })
+    .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
@@ -382,6 +362,9 @@ const getTracksByGenreId = async (req, res) => {
     options: { populate: "playlistGenre" },
   });
 
+  const genreId = genreTracks._id;
+  const genreName = genreTracks.genre;
+
   genreTracks.playList.map(async (playlist) =>
     allTracks.push(playlist.trackList)
   );
@@ -393,18 +376,11 @@ const getTracksByGenreId = async (req, res) => {
   );
   // console.log('uniqueTracksArray', uniqueTracksArray);
 
-  const tracks = await Track.find({ _id: { $in: uniqueTracksArray } }).populate(
-    {
-      path: "playList",
-      select: "playlistGenre",
-      populate: {
-        path: "playlistGenre",
-        select: "genre",
-      },
-    }
-  );
-
-  res.json(tracks);
+  const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
+  res.json({
+    playlistGenre: [{ _id: genreId, genre: genreName }],
+    tracks: [...tracks],
+  });
 };
 
 const countListensTrackByUser = async (req, res) => {
@@ -419,7 +395,7 @@ const countListensTrackByUser = async (req, res) => {
   if (!userListenCount) {
     userListenCount = await UserListenCount.create({ userId });
   }
-  console.log("userListenCount", userListenCount);
+  // console.log("userListenCount", userListenCount);
   // Находим или создаем запись о прослушивании трека для этого пользователя
   let track = userListenCount.tracks.find(
     (track) => track.trackId.toString() === trackId
