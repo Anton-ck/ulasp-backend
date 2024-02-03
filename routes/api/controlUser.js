@@ -78,7 +78,7 @@ router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
 
 router.get(
   "/genres/:id",
-  // authenticatUser,
+  authenticatUser,
   controllers.findGenreById
 );
 
