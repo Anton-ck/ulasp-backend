@@ -56,27 +56,32 @@ const latestPlaylists = async (req, res) => {
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
-  const playlist = await PlayList.findById(id).populate({
+  const playlist = await PlayList.findById(id)
+  // .populate({
    
-    path: "trackList",
-    populate: {
-      path: "playList",
-      model: "playlist",
-      select: "playlistGenre",
-      populate: {
-        path: "playlistGenre",
+  //   path: "trackList",
+  //   populate: {
+  //     path: "playList",
+  //     model: "playlist",
+  //     select: "playlistGenre",
+  //     populate: {
+  //       path: "playlistGenre",
        
-      }
-      // select: "playlistGenre genre", 
-    },
-   
-    
-    
-    options: {
-      sort: { createdAt: -1 },
+  //     }
+  //     // select: "playlistGenre genre", 
+  //   },
+          
+  //   options: {
+  //     sort: { createdAt: -1 },
      
-    },
-  });
+  //   },
+  // });
+
+  .populate({
+    path: "trackList",
+    options: { sort: { createdAt: -1 } },
+  })
+  .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
