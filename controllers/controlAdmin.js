@@ -5,7 +5,6 @@ import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
-import mongoose from 'mongoose';
 import { UserListenCount } from "../models/userListenCountModel.js";
 
 const createEditorRole = async (req, res) => {
@@ -134,7 +133,6 @@ const createUser = async (req, res) => {
   let newUser = {};
   console.log("newUser", newUser);
   if (userFop === "fop") {
-
     newUser = await Fop.create({
       ...req.body,
       password: hashtaxCode,
@@ -310,7 +308,7 @@ const countOnlineClients = async (req, res) => {
 
 const countNewClientsByMonth = async (req, res) => {
   const currentDate = new Date();
-  
+
   const startOfMonth = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
@@ -333,21 +331,45 @@ const countNewClientsByMonth = async (req, res) => {
 };
 
 const countListensByUser = async (req, res) => {
-console.log('req.body', req.body)
+  const userId = req.body.userId;
 
-const userId = req.body.userId; 
+  const dateOfStart = new Date(req.body.dateOfStart);
+  const dateOfEnd = new Date(req.body.dateOfEnd);
+ 
 
-const dateOfStart = new Date(req.body.dateOfStart);
-const dateOfEnd = new Date(req.body.dateOfEnd);
+  const userListenCount = await UserListenCount.findOne({ userId }).populate("tracks.trackId");
+  console.log('userListenCount', userListenCount)
+  if (userListenCount) {
+    if (dateOfEnd.getTime() === dateOfStart.getTime()) {
+      const filterTrackByDate = userListenCount.tracks.filter((track) => {
+        return track.listens.some((listen) => {
+          console.log(
+            " listen.date === dateOfStart",
+            listen.date.toDateString() === dateOfStart.toDateString()
+          );
+          return listen.date.toDateString() === dateOfStart.toDateString();
+        });
+      });
+     
+      res.json(filterTrackByDate);
+    } else {
+      const filterTrackByDate = userListenCount.tracks.filter((track) => {
+        return track.listens.some((listen) => {
+          console.log(
+            "listen.date >= dateOfStart && listen.date <= dateOfEnd",
+            listen.date >= dateOfStart && listen.date <= dateOfEnd
+          );
 
-const userListenCount = await UserListenCount.findOne({ userId });
-
-
-res.json( userListenCount)
-
-
-
-}
+          return listen.date >= dateOfStart && listen.date <= dateOfEnd;
+        });
+      });
+     
+      res.json(filterTrackByDate);
+    }
+  } else {
+    `User listen count not found for user: ${userId}`;
+  }
+};
 
 export default {
   createEditorRole: ctrlWrapper(createEditorRole),
@@ -368,5 +390,5 @@ export default {
   countNewClientsByMonth: ctrlWrapper(countNewClientsByMonth),
   countClients: ctrlWrapper(countClients),
   countTracks: ctrlWrapper(countTracks),
-  countListensByUser:ctrlWrapper(countListensByUser),
+  countListensByUser: ctrlWrapper(countListensByUser),
 };
