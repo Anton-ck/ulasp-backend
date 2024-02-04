@@ -28,6 +28,8 @@ const playListSchema = new Schema(
         trackList: [],
       },
     ],
+    
+    //playlistGenre may be only one or empty genres
     playlistGenre: [
       {
         type: Schema.Types.ObjectId,
@@ -44,13 +46,7 @@ const playListSchema = new Schema(
       required: true,
     },
 
-    // favoriteByUsers: {
-    //   type:  Array,
-
-    // },
-    // favoriteByUsers: [String],
-
-    favoriteByUsers: [
+     favoriteByUsers: [
       {
         type: Schema.Types.ObjectId,
       },
