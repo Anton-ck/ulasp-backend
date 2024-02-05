@@ -6,6 +6,8 @@ import Pics from "../models/picsModel.js";
 import Genre from "../models/genreModel.js";
 import Track from "../models/trackModel.js";
 import Shop from "../models/shopModel.js";
+import ShopItem from "../models/shopItemModel.js";
+import ShopSubType from "../models/shopSubTypeModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 
@@ -13,13 +15,14 @@ import { resizePics, resizeTrackCover } from "../helpers/resizePics.js";
 import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
 import decodeFromIso8859 from "../helpers/decode8859-1.js";
+import isExistStringToLowerCase from "../helpers/compareStringToLowerCase.js";
 
 import albumArt from "album-art";
 
 const publicDir = path.resolve("public/");
 
 const createPlayList = async (req, res) => {
-  const { playListName } = req.body;
+  const { playListName, type } = req.body;
   const { _id: owner } = req?.admin;
   let randomPicUrl;
   let resizePicURL;
@@ -33,7 +36,7 @@ const createPlayList = async (req, res) => {
   if (!req.file) {
     randomPicUrl = await randomCover("playlist");
   } else {
-    resizePicURL = await resizePics(req.file);
+    resizePicURL = await resizePics(req.file, type);
   }
 
   let picURL = !req.file ? randomPicUrl : resizePicURL;
@@ -104,6 +107,87 @@ const createPlayListByGenre = async (req, res) => {
   });
 };
 
+const createPlayListInShopLibrary = async (req, res) => {
+  const { playListName, type, valueMediaLibrary } = req.body;
+  const { idShopLibrary } = req?.params;
+  const { _id: owner } = req?.admin;
+
+  console.log(req.body);
+
+  let randomPicUrl;
+  let resizePicURL;
+
+  const isExistPlaylist = await PlayList.findOne({ playListName });
+
+  if (isExistPlaylist) {
+    res.status(409).json({
+      message: `${playListName} name in use`,
+      code: "4091",
+      object: `${playListName}`,
+    });
+    return;
+  }
+
+  if (!req.file) {
+    randomPicUrl = await randomCover("playlist");
+  } else {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  let picURL = !req.file ? randomPicUrl : resizePicURL;
+
+  const newPlayList = await PlayList.create({
+    playListName,
+    playListAvatarURL: picURL,
+    owner,
+  });
+
+  if (newPlayList) {
+    switch (valueMediaLibrary) {
+      case "subCategoryShop":
+        await ShopSubType.findByIdAndUpdate(
+          idShopLibrary,
+          {
+            $push: { playList: newPlayList.id },
+          },
+          { new: true }
+        );
+        break;
+      case "shopItem":
+        await ShopItem.findByIdAndUpdate(
+          idShopLibrary,
+          {
+            $push: { playList: newPlayList.id },
+          },
+          { new: true }
+        );
+        break;
+      case "shop":
+        await Shop.findByIdAndUpdate(
+          idShopLibrary,
+          {
+            $push: { playList: newPlayList.id },
+          },
+          { new: true }
+        );
+        break;
+      default:
+        res.status(404).json({
+          message: `This category ${valueMediaLibrary} is not supported`,
+          code: "4041",
+          object: `${valueMediaLibrary}`,
+        });
+        return;
+    }
+  }
+
+  res.status(201).json({
+    playListId: newPlayList._id,
+    playListName: newPlayList.playListName,
+    playListAvatarURL: newPlayList.playListAvatarURL,
+  });
+};
+
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
   const playlist = await PlayList.findById(id)
@@ -171,12 +255,52 @@ const deletePlaylist = async (req, res) => {
   const idPlayListInGenre = await Genre.find({
     playList: { $in: [id] },
   });
+
+  const idPlayListsInShop = await Shop.find({
+    playList: { $in: [id] },
+  });
+
+  const idPlayListsInShopItem = await ShopItem.find({
+    playList: { $in: [id] },
+  });
+
+  const idPlayListsInShopSubType = await ShopSubType.find({
+    playList: { $in: [id] },
+  });
+  console.log("idPlayListsInShopSubType", idPlayListsInShopSubType);
+  console.log("idPlayListInGenre", idPlayListInGenre);
+  console.log("idPlayListsInShopItem", idPlayListsInShopItem);
+
   //не правильно названны переменные
   if (idPlayListInGenre) {
     idPlayListInGenre.map(
-      async (playlist) =>
-        await Genre.updateOne(
-          { _id: playlist._id },
+      async (genre) =>
+        await Genre.updateOne({ _id: genre._id }, { $pull: { playList: id } })
+    );
+  }
+
+  if (idPlayListsInShop) {
+    idPlayListsInShop.map(
+      async (shop) =>
+        await Shop.updateOne({ _id: shop._id }, { $pull: { playList: id } })
+    );
+  }
+
+  if (idPlayListsInShopItem) {
+    idPlayListsInShopItem.map(
+      async (shopitem) =>
+        await ShopItem.updateOne(
+          { _id: shopitem._id },
+          { $pull: { playList: id } }
+        )
+    );
+  }
+
+  if (idPlayListsInShopSubType) {
+    idPlayListsInShopSubType.map(
+      async (shopsubtype) =>
+        await ShopSubType.updateOne(
+          { _id: shopsubtype._id },
           { $pull: { playList: id } }
         )
     );
@@ -234,12 +358,25 @@ const allGenres = async (req, res) => {
 
 const createGenre = async (req, res) => {
   const { genre } = req.body;
-  const isExistGenre = await Genre.findOne({ genre });
+  const isExistGenre = await Genre.findOne({
+    genre: {
+      $regex: genre.toString(),
+      $options: "i",
+    },
+  });
+
+  const isExist = isExistStringToLowerCase(genre, isExistGenre?.genre);
+
   if (genre === "") {
     throw HttpError(404, `genre is empty`);
   }
-  if (isExistGenre) {
-    throw HttpError(409, `${genre} already in use`);
+  if (isExist) {
+    res.status(409).json({
+      message: `${genre} already in use`,
+      code: "4091",
+      object: `${genre}`,
+    });
+    return;
   }
 
   const randomPicUrl = await randomCover("genre");
@@ -269,20 +406,23 @@ const findGenreById = async (req, res) => {
 const updateGenreById = async (req, res) => {
   const { id } = req.params;
   const { genre, type } = req.body;
-  const isExistGenre = await Genre.findOne({ genre });
+  const isExistGenre = await Genre.findOne({
+    genre: {
+      $regex: genre.toString(),
+      $options: "i",
+    },
+  });
+
   if (genre === "") {
     throw HttpError(404, `genre is empty`);
   }
-  // if (isExistGenre) {
-  //   throw HttpError(409, `${genre} already in use`);
-  // }
-
   if (isExistGenre) {
     res.status(409).json({
       message: `${genre} already in use`,
       code: "4091",
       object: `${genre}`,
     });
+    return;
   }
 
   let resizePicURL;
@@ -320,8 +460,11 @@ const deleteGenre = async (req, res) => {
 //написать доки
 
 const uploadTrack = async (req, res) => {
-  const { existFileError, existFileName, translatedFileName } = req.uploadTrack;
+  const { existFileError, existFileName } = req.uploadTrack;
   const wrongExt = req?.extError;
+
+  const FileNameLatin = existFileName.fileName;
+  const FileNameCyrillic = existFileName.translatedFileName;
 
   if (wrongExt) {
     throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
@@ -332,13 +475,17 @@ const uploadTrack = async (req, res) => {
   ///////// Запись трека в базу данных, если он в плейлисте и файл на сервере существует
   if (playlistId && existFileError) {
     const trackExist = await Track.findOne({
-      trackURL: `tracks/${translatedFileName}`,
+      trackURL: `tracks/${FileNameLatin}`,
     });
+
+    if (!trackExist) {
+      throw HttpError(404, "Track doesn't found");
+    }
 
     // если ли трек в плейлисте
     const playList = await PlayList.findById(playlistId);
 
-    const isExistTrackInPlaylist = playList.trackList.includes(trackExist.id);
+    const isExistTrackInPlaylist = playList.trackList.includes(trackExist?.id);
 
     if (isExistTrackInPlaylist) {
       throw HttpError(409);
@@ -358,7 +505,7 @@ const uploadTrack = async (req, res) => {
   /////////////
 
   if (existFileError) {
-    throw HttpError(409, `Track "${translatedFileName}" already exist`);
+    throw HttpError(409, `Track "${FileNameCyrillic}" already exist`);
   }
 
   if (!req.file) {
@@ -367,7 +514,7 @@ const uploadTrack = async (req, res) => {
 
   const { originalname, filename } = req.file;
 
-  const fileName = path.parse(translatedFileName).name.split("__");
+  const fileName = path.parse(FileNameLatin).name.split("__");
 
   const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
 
@@ -538,13 +685,21 @@ const allShops = async (req, res) => {
 
 const createShop = async (req, res) => {
   const { shopCategoryName } = req.body;
+
   const isExistShop = await Shop.findOne({ shopCategoryName });
+
   if (shopCategoryName === " ") {
     throw HttpError(404, `shop is empty`);
   }
   if (isExistShop) {
-    throw HttpError(409, `${shopCategoryName} already in use`);
+    res.status(409).json({
+      message: `${shopCategoryName} already in use`,
+      code: "4091",
+      object: `${shopCategoryName}`,
+    });
+    return;
   }
+
   const randomPicUrl = await randomCover("shop");
 
   const newShop = await Shop.create({
@@ -559,14 +714,98 @@ const createShop = async (req, res) => {
 
 const getShopById = async (req, res) => {
   const { id } = req.params;
+  const allPlaylistsInShopCategory = [];
+  let playlistsInSubCat = [];
 
-  const shop = await Shop.findById(id);
+  const shop = await Shop.findById(id)
+    .populate("playList")
+    .populate({
+      path: "shopChildItems",
+      options: { populate: "playList" },
+    });
 
   if (!shop) {
-    throw HttpError(404, `Genre with ${id} not found`);
+    throw HttpError(404, `Shop with ${id} not found`);
   }
 
-  res.json({ shop });
+  shop.playList.map((playlist) => allPlaylistsInShopCategory.push(playlist));
+
+  //Проходимся по категориям в ресторанах
+  shop.shopChildItems.map((shopChildItem) => {
+    // console.log("shopChildItem", shopChildItem);
+
+    //Проходимся по по всем плейлистам в категорях
+    shopChildItem.playList.map(async (playlist) => {
+      // console.log("playlist", playlist);
+
+      //Добавляем все плейлисты в массив
+      allPlaylistsInShopCategory.push(playlist);
+
+      const shop = await ShopItem.findById(shopChildItem._id).populate({
+        path: "shopChildSubType",
+        options: { populate: "playList" },
+      });
+
+      shop.shopChildSubType.map((shopChildSubType) =>
+        shopChildSubType.playList.map((playlist) =>
+          allPlaylistsInShopCategory.push(playlist)
+        )
+      );
+    });
+
+    // shopChildItem.shopChildSubType.map(async (id) => {
+    //   // console.log(playlistsInSubCat.push(id));
+    //   // playlistsInSubCat.push(id);
+
+    //   const subCat = await ShopSubType.findById(id).populate("playList");
+    //   // pl.push(subCat);
+    //   // console.log(subCat);
+    //   if (subCat.playList.length !== 0) {
+    //     subCat.playList.map((playlist) => {
+    //       playlistsInSubCat.push(playlist._id);
+    //     });
+    //   }
+    // });
+  });
+
+  // console.log("allPlaylistsInShopCategory", allPlaylistsInShopCategory);
+
+  // console.log("playlistsInSubCat", playlistsInSubCat);
+  // console.log(allPlaylistsInShopCategory);
+
+  res.json({ shop, allPlaylistsInShopCategory, playlistsInSubCat });
+};
+
+const updateShopById = async (req, res) => {
+  const { id } = req.params;
+  const { shopCategoryName, type } = req.body;
+  const isExistShop = await Shop.findOne({ shopCategoryName });
+  if (shopCategoryName === " ") {
+    throw HttpError(404, `shop is empty`);
+  }
+  if (isExistShop) {
+    res.status(409).json({
+      message: `${shopCategoryName} already in use`,
+      code: "4091",
+      object: `${shopCategoryName}`,
+    });
+    return;
+  }
+
+  let resizePicURL;
+
+  if (req.file) {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  const newShop = await Shop.findByIdAndUpdate(
+    id,
+    { ...req.body, shopAvatarURL: resizePicURL },
+    {
+      new: true,
+    }
+  );
+  res.json(newShop);
 };
 
 const deleteShop = async (req, res) => {
@@ -578,6 +817,22 @@ const deleteShop = async (req, res) => {
     throw HttpError(404, `Genre with ${id} not found`);
   }
 
+  if (shop.shopChildItems !== 0) {
+    shop.shopChildItems.map(async (idShopChildItem) => {
+      const childItems = await ShopItem.findById(idShopChildItem);
+      childItems.shopChildSubType.map(
+        async (idShopChildSubType) =>
+          await ShopSubType.findByIdAndRemove(idShopChildSubType)
+      );
+      await ShopItem.findByIdAndRemove(idShopChildItem);
+      await Shop.findByIdAndUpdate(id, {
+        $pull: { shopChildItems: idShopChildItem },
+      });
+    });
+  } else {
+    await Shop.findByIdAndDelete(id);
+  }
+
   await Shop.findByIdAndDelete(id);
 
   res.json({
@@ -585,44 +840,343 @@ const deleteShop = async (req, res) => {
   });
 };
 
-const test = async (req, res) => {
-  const { idGenre, idPlaylist } = req.body;
+const createCategoryShop = async (req, res) => {
+  const { shopId } = req.params;
+  const { shopItemName } = req.body;
 
-  const genre = await Genre.findById(idGenre);
-  const playList = await PlayList.findById(idPlaylist);
+  const isExistCategoryShop = await ShopItem.findOne({ shopItemName });
+  if (isExistCategoryShop) {
+    res.status(409).json({
+      message: `${shopItemName} already in use`,
+      code: "4091",
+      object: `${shopItemName}`,
+    });
+    return;
+  }
 
-  console.log(genre);
+  const randomPicUrl = await randomCover("shop");
 
-  console.log(genre.playList.includes(idPlaylist));
+  const newShopItem = await ShopItem.create({
+    ...req.body,
+    shopItemAvatarURL: randomPicUrl,
+  });
 
-  // if (genre.playList.includes(idPlaylist)) {
-  //   await PlayList.findByIdAndUpdate(idPlaylist.id, {
-  //     $push: { playlistGenre: genre._id },
-  //   });
+  await Shop.findByIdAndUpdate(shopId, {
+    $push: { shopChildItems: newShopItem._id },
+  });
 
-  //   res.json({
-  //     message: "ok",
-  //   });
-  // } else {
-  //   return;
-  // }
-
-  await PlayList.findByIdAndUpdate(
-    idPlaylist,
+  const shopItem = await ShopItem.findByIdAndUpdate(
+    newShopItem._id,
     {
-      $push: { playlistGenre: genre._id },
+      $push: { shopParentType: shopId },
     },
     { new: true }
   );
 
-  res.json({
-    message: "ok",
+  res.status(201).json({
+    shopItem,
+  });
+};
+
+const getCategoryShopById = async (req, res) => {
+  const { id } = req.params;
+  const allPlaylistsInShopCategory = [];
+  const shop = await ShopItem.findById(id)
+    .populate("playList")
+    .populate({
+      path: "shopChildSubType",
+      options: { populate: "playList" },
+    });
+
+  if (!shop) {
+    throw HttpError(404, `Shop category with ${id} not found`);
+  }
+
+  shop.playList.map((playlist) => allPlaylistsInShopCategory.push(playlist));
+
+  shop.shopChildSubType.map((shopChildSubType) =>
+    shopChildSubType.playList.map((playlist) =>
+      allPlaylistsInShopCategory.push(playlist)
+    )
+  );
+
+  res.json({ shop, allPlaylistsInShopCategory });
+};
+const updateCategoryShopById = async (req, res) => {
+  const { id } = req.params;
+  const { shopItemName, type } = req.body;
+  const isExistShop = await ShopItem.findOne({ shopItemName });
+  if (shopItemName === " ") {
+    throw HttpError(404, `shop is empty`);
+  }
+  if (isExistShop) {
+    res.status(409).json({
+      message: `${shopItemName} already in use`,
+      code: "4091",
+      object: `${shopItemName}`,
+    });
+    return;
+  }
+
+  let resizePicURL;
+
+  if (req.file) {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  const newShop = await ShopItem.findByIdAndUpdate(
+    id,
+    { ...req.body, shopItemAvatarURL: resizePicURL },
+    {
+      new: true,
+    }
+  );
+  res.json(newShop);
+};
+
+const deleteCategoryShop = async (req, res) => {
+  const { id } = req.params;
+
+  const shopItem = await ShopItem.findById(id);
+
+  if (!shopItem) {
+    throw HttpError(404, `Shop category with ${id} not found`);
+  }
+
+  console.log(shopItem);
+
+  //удаляем детей саб тайп
+
+  shopItem.shopChildSubType.map(
+    async (idShopChildSubType) =>
+      await ShopSubType.findByIdAndRemove(idShopChildSubType)
+  );
+
+  await Shop.findByIdAndUpdate(shopItem.shopParentType[0]._id, {
+    $pull: { shopChildItems: id },
   });
 
-  // const genre = await Genre.find({
-  //   playList: { $in: [idPlaylist] },
-  // });
+  await ShopItem.findByIdAndDelete(id);
+
+  res.json({
+    message: `Shop category ${shopItem.shopItemName} was deleted`,
+  });
 };
+
+const createSubCategoryShop = async (req, res) => {
+  const { shopItemId } = req.params;
+  const { shopSubTypeName } = req.body;
+
+  const isExistSubCategoryShop = await ShopSubType.findOne({
+    shopSubTypeName: {
+      $regex: shopSubTypeName.toString(),
+      $options: "i",
+    },
+  });
+
+  const isExist = isExistStringToLowerCase(
+    shopSubTypeName,
+    isExistSubCategoryShop?.shopSubTypeName
+  );
+
+  if (isExist) {
+    res.status(409).json({
+      message: `${shopSubTypeName} already in use`,
+      code: "4091",
+      object: `${shopSubTypeName}`,
+    });
+    return;
+  }
+
+  const randomPicUrl = await randomCover("shop");
+
+  const newShopSubCategory = await ShopSubType.create({
+    ...req.body,
+    shopSubTypeAvatarURL: randomPicUrl,
+  });
+
+  await ShopItem.findByIdAndUpdate(shopItemId, {
+    $push: { shopChildSubType: newShopSubCategory._id },
+  });
+
+  const shopSubCategory = await ShopSubType.findByIdAndUpdate(
+    newShopSubCategory._id,
+    {
+      $push: { shopParentItem: shopItemId },
+    },
+    { new: true }
+  );
+
+  res.status(201).json({
+    shopSubCategory,
+  });
+};
+
+const getSubCategoryShopById = async (req, res) => {
+  const { id } = req.params;
+
+  const shop = await ShopSubType.findById(id).populate("playList");
+
+  if (!shop) {
+    throw HttpError(404, `Shop subcategory with ${id} not found`);
+  }
+
+  res.json(shop);
+};
+
+const updateSubCategoryShopById = async (req, res) => {
+  const { id } = req.params;
+  const { shopSubTypeName, type } = req.body;
+  const isExistShopSubCategory = await ShopSubType.findOne({ shopSubTypeName });
+  if (shopSubTypeName === " ") {
+    throw HttpError(404, `shop is empty`);
+  }
+  if (isExistShopSubCategory) {
+    res.status(409).json({
+      message: `${shopSubTypeName} already in use`,
+      code: "4091",
+      object: `${shopSubTypeName}`,
+    });
+  }
+
+  let resizePicURL;
+
+  if (req.file) {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  const newShop = await ShopSubType.findByIdAndUpdate(
+    id,
+    { ...req.body, shopSubTypeAvatarURL: resizePicURL },
+    {
+      new: true,
+    }
+  );
+  res.json(newShop);
+};
+
+const deleteSubCategoryShop = async (req, res) => {
+  const { id } = req.params;
+
+  const shopSubCategory = await ShopSubType.findById(id);
+
+  if (!shopSubCategory) {
+    throw HttpError(404, `Shop subcategory with ${id} not found`);
+  }
+
+  await ShopItem.findByIdAndUpdate(shopSubCategory.shopParentItem[0]._id, {
+    $pull: { shopChildSubType: id },
+  });
+
+  await ShopSubType.findByIdAndDelete(id);
+
+  res.json({
+    message: `Shop category ${shopSubCategory.shopSubTypeName} was deleted`,
+  });
+};
+
+const deletePlaylistInShopSubCategory = async (req, res) => {
+  const { idSubCategory, idPlaylist } = req.params;
+
+  const playlist = await PlayList.findById(idPlaylist);
+
+  const subCategoryShop = await ShopSubType.findById(idSubCategory);
+
+  if (!playlist) {
+    throw HttpError(404, `Playlist with ${idPlaylist} not found`);
+  }
+
+  if (!subCategoryShop) {
+    throw HttpError(404, `Subcategory with ${idSubCategory} not found`);
+  }
+
+  const isExistPlaylist = subCategoryShop.playList.includes(idPlaylist);
+
+  if (isExistPlaylist) {
+    await ShopSubType.findByIdAndUpdate(idSubCategory, {
+      $pull: { playList: idPlaylist },
+    });
+  } else {
+    throw HttpError(
+      404,
+      `Playlist "${playlist.playListName} "in subcategory "${subCategoryShop.shopSubTypeName}" not found`
+    );
+  }
+  res.json({
+    message: `Playlist ${playlist.playListName} was deleted`,
+  });
+};
+
+const deletePlaylistInShopItem = async (req, res) => {
+  const { idShopItem, idPlaylist } = req.params;
+
+  const playlist = await PlayList.findById(idPlaylist);
+
+  const shopItem = await ShopItem.findById(idShopItem);
+
+  if (!playlist) {
+    throw HttpError(404, `Playlist with ${idPlaylist} not found`);
+  }
+
+  if (!shopItem) {
+    throw HttpError(404, `Shop item with ${idShopItem} not found`);
+  }
+
+  const isExistPlaylist = shopItem.playList.includes(idPlaylist);
+
+  if (isExistPlaylist) {
+    await ShopItem.findByIdAndUpdate(idShopItem, {
+      $pull: { playList: idPlaylist },
+    });
+  } else {
+    throw HttpError(
+      404,
+      `Playlist "${playlist.playListName}" in item "${shopItem.shopItemName}" not found`
+    );
+  }
+  res.json({
+    message: `Playlist ${playlist.playListName} was deleted`,
+  });
+};
+
+// const test = async (req, res) => {
+//   const { idGenre, idPlaylist } = req.body;
+
+//   const genre = await Genre.findById(idGenre);
+//   const playList = await PlayList.findById(idPlaylist);
+
+//   console.log(genre);
+
+//   console.log(genre.playList.includes(idPlaylist));
+
+//   // if (genre.playList.includes(idPlaylist)) {
+//   //   await PlayList.findByIdAndUpdate(idPlaylist.id, {
+//   //     $push: { playlistGenre: genre._id },
+//   //   });
+
+//   //   res.json({
+//   //     message: "ok",
+//   //   });
+//   // } else {
+//   //   return;
+//   // }
+
+//   await PlayList.findByIdAndUpdate(
+//     idPlaylist,
+//     {
+//       $push: { playlistGenre: genre._id },
+//     },
+//     { new: true }
+//   );
+
+//   res.json({
+//     message: "ok",
+//   });
+
+//   // const genre = await Genre.find({
+//   //   playList: { $in: [idPlaylist] },
+//   // });
+// };
 
 // const getTracksInGenre = async (req, res) => {
 //   const { id } = req.params;
@@ -674,7 +1228,19 @@ export default {
   allShops: ctrlWrapper(allShops),
   createShop: ctrlWrapper(createShop),
   getShopById: ctrlWrapper(getShopById),
+  updateShopById: ctrlWrapper(updateShopById),
   deleteShop: ctrlWrapper(deleteShop),
-  test: ctrlWrapper(test),
+  createCategoryShop: ctrlWrapper(createCategoryShop),
+  getCategoryShopById: ctrlWrapper(getCategoryShopById),
+  updateCategoryShopById: ctrlWrapper(updateCategoryShopById),
+  deleteCategoryShop: ctrlWrapper(deleteCategoryShop),
+  createSubCategoryShop: ctrlWrapper(createSubCategoryShop),
+  getSubCategoryShopById: ctrlWrapper(getSubCategoryShopById),
+  updateSubCategoryShopById: ctrlWrapper(updateSubCategoryShopById),
+  deleteSubCategoryShop: ctrlWrapper(deleteSubCategoryShop),
+  createPlayListInShopLibrary: ctrlWrapper(createPlayListInShopLibrary),
+  deletePlaylistInShopSubCategory: ctrlWrapper(deletePlaylistInShopSubCategory),
+  deletePlaylistInShopItem: ctrlWrapper(deletePlaylistInShopItem),
+  // test: ctrlWrapper(test),
   // getTracksInGenre: ctrlWrapper(getTracksInGenre),
 };

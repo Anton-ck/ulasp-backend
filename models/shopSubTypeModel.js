@@ -2,28 +2,28 @@ import { Schema, model } from "mongoose";
 
 import handleMongooseError from "../helpers/handleMongooseError.js";
 
-const shopSchema = new Schema(
+const shopSubTypeSchema = new Schema(
   {
-    shopCategoryName: {
+    shopSubTypeName: {
       type: String,
       required: true,
+      unique: true,
     },
-    shopAvatarURL: {
+    shopSubTypeAvatarURL: {
       type: String,
       default: null,
     },
+    shopParentItem: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "shopitem",
+        default: null,
+      },
+    ],
     playList: [
       {
         type: Schema.Types.ObjectId,
         ref: "playlist",
-        playList: [],
-        default: null,
-      },
-    ],
-    shopChildItems: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "shopitem",
         default: null,
       },
     ],
@@ -31,9 +31,9 @@ const shopSchema = new Schema(
   { versionKey: false, timestamps: true }
 );
 
-shopSchema.post("findOneAndUpdate", handleMongooseError);
-shopSchema.post("save", handleMongooseError);
+shopSubTypeSchema.post("findOneAndUpdate", handleMongooseError);
+shopSubTypeSchema.post("save", handleMongooseError);
 
-const Shop = model("shop", shopSchema);
+const ShopSubType = model("shopsubtype", shopSubTypeSchema);
 
-export default Shop;
+export default ShopSubType;

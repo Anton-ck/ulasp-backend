@@ -15,7 +15,7 @@ const FileNameToUtf8 = (file) => {
   if (!file) {
     return;
   }
-  const fileName = Buffer.from(file.originalname, "latin1")
+  const translatedFileName = Buffer.from(file.originalname, "latin1")
     .toString("utf8")
     .replaceAll(" ", "__");
 
@@ -24,7 +24,7 @@ const FileNameToUtf8 = (file) => {
   //   // .toString("utf8")
   //   .replaceAll(" ", "__");
 
-  const translatedFileName = generateLatinTranslation(fileName);
+  const fileName = generateLatinTranslation(translatedFileName);
 
   return { fileName, translatedFileName };
 };
@@ -34,7 +34,7 @@ const multerConfig = multer.diskStorage({
 
   filename: (req, file, cb) => {
     const fileName = FileNameToUtf8(file);
-    cb(null, fileName.translatedFileName);
+    cb(null, fileName.fileName);
   },
 });
 
@@ -45,18 +45,16 @@ const uploadTrack = multer({
     const ext = path.extname(file.originalname);
     const fileName = FileNameToUtf8(file);
     console.log("fileName.translatedFileName", fileName);
-    const trackPath = trackDir + "/" + fileName.translatedFileName;
+    const trackPath = trackDir + "/" + fileName.fileName;
 
     const optionsWithError = {
       existFileError: true,
       existFileName: fileName,
-      translatedFileName: fileName.fileName,
     };
 
     const optionsWithOutError = {
       existFileError: false,
       existFileName: fileName,
-      translatedFileName: fileName.fileName,
     };
 
     const codeError = {

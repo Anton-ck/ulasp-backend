@@ -151,7 +151,21 @@ router.post(
   controllers.createShop
 );
 
-router.get("/shops/:id", controllers.getShopById);
+router.get(
+  "/shops/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.getShopById
+);
+
+router.patch(
+  "/shops/update/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  upload.single("picsURL"),
+
+  controllers.updateShopById
+);
 
 router.delete(
   "/shops/delete/:id",
@@ -160,6 +174,89 @@ router.delete(
   controllers.deleteShop
 );
 
-router.post("/test", controllers.test);
+router.post(
+  "/shop/shopitem/create/:shopId",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.createCategoryShop
+);
+
+router.get(
+  "/shops/shopitem/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.getCategoryShopById
+);
+
+router.patch(
+  "/shops/shopitem/update/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  upload.single("picsURL"),
+
+  controllers.updateCategoryShopById
+);
+
+router.delete(
+  "/shop/shopitem/delete/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deleteCategoryShop
+);
+
+router.post(
+  "/shop/shopitem/subcategory/create/:shopItemId",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.createSubCategoryShop
+);
+
+router.get(
+  "/shops/shopitem/subcategory/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.getSubCategoryShopById
+);
+
+router.patch(
+  "/shops/shopitem/subcategory/update/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  upload.single("picsURL"),
+
+  controllers.updateSubCategoryShopById
+);
+
+router.delete(
+  "/shop/shopitem/subcategory/delete/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deleteSubCategoryShop
+);
+
+router.post(
+  "/shoplibrary/playlist/create/:idShopLibrary",
+  authenticateAdmin,
+  permisionsEditor,
+  upload.single("picsURL"),
+  validateBody(playListSchema),
+  controllers.createPlayListInShopLibrary
+);
+
+router.delete(
+  "/shopsubcategory/:idSubCategory/delete/:idPlaylist",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deletePlaylistInShopSubCategory
+);
+
+router.delete(
+  "/shopitem/:idShopItem/delete/:idPlaylist",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.deletePlaylistInShopItem
+);
+
+// router.post("/test", controllers.test);
 
 export default router;
