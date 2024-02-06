@@ -267,7 +267,7 @@ const updateUserFavoritesPlaylists = async (req, res) => {
 const getFavoritePlaylists = async (req, res) => {
   const { page = 1, limit = 8 } = req.query;
   const { _id: user } = req.user;
-
+  console.log("user getFavoritePlaylists ", user);
   const skip = (page - 1) * limit;
 
   try {

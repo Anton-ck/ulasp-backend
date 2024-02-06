@@ -1,10 +1,12 @@
 import bcrypt from "bcrypt";
 import { User, Fop, Company } from "../models/userModel.js";
 import Track from "../models/trackModel.js";
+import PlayList from "../models/playlistModel.js";
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { UserListenCount } from "../models/userListenCountModel.js";
 
 const createEditorRole = async (req, res) => {
@@ -335,10 +337,11 @@ const countListensByUser = async (req, res) => {
 
   const dateOfStart = new Date(req.body.dateOfStart);
   const dateOfEnd = new Date(req.body.dateOfEnd);
- 
 
-  const userListenCount = await UserListenCount.findOne({ userId }).populate("tracks.trackId");
-  console.log('userListenCount', userListenCount)
+  const userListenCount = await UserListenCount.findOne({ userId }).populate(
+    "tracks.trackId"
+  );
+  console.log("userListenCount", userListenCount);
   if (userListenCount) {
     if (dateOfEnd.getTime() === dateOfStart.getTime()) {
       const filterTrackByDate = userListenCount.tracks.filter((track) => {
@@ -350,7 +353,7 @@ const countListensByUser = async (req, res) => {
           return listen.date.toDateString() === dateOfStart.toDateString();
         });
       });
-     
+
       res.json(filterTrackByDate);
     } else {
       const filterTrackByDate = userListenCount.tracks.filter((track) => {
@@ -363,12 +366,33 @@ const countListensByUser = async (req, res) => {
           return listen.date >= dateOfStart && listen.date <= dateOfEnd;
         });
       });
-     
+
       res.json(filterTrackByDate);
     }
   } else {
     `User listen count not found for user: ${userId}`;
   }
+};
+const countTrackByUser = async (req, res) => {
+  const { id } = req.params;
+  console.log("id", id);
+
+  res.json({ id });
+};
+
+const countPlaylistByUser = async (req, res) => {
+  const { id } = req.params;
+  // console.log("id", id);
+  const objectId = new mongoose.Types.ObjectId(id);
+  // console.log("objectId", objectId);
+  const add = await PlayList.find(
+    { addByUsers: objectId },
+    "-addByUsers -createdAt -updatedAt"
+  );
+
+  // console.log("add", add.length);
+
+  res.json({ id });
 };
 
 export default {
@@ -391,4 +415,6 @@ export default {
   countClients: ctrlWrapper(countClients),
   countTracks: ctrlWrapper(countTracks),
   countListensByUser: ctrlWrapper(countListensByUser),
+  countTrackByUser: ctrlWrapper(countTrackByUser),
+  countPlaylistByUser: ctrlWrapper(countPlaylistByUser),
 };
