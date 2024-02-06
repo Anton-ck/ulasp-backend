@@ -76,12 +76,23 @@ router.get(
   controllers.countNewClientsByMonth
 );
 
-
 router.get(
   "/users/:id",
   authenticateAdmin,
   permisionsAdmin,
   controllers.getUserById
+);
+router.get(
+  "/users/:id/trackcount",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countTrackByUser
+);
+router.get(
+  "/users/:id/playlistcount",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countPlaylistByUser
 );
 
 router.get(
@@ -163,6 +174,5 @@ router.patch(
   isValid,
   controllers.toggleUserAccess
 );
-
 
 export default router;
