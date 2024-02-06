@@ -9,6 +9,7 @@ import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
 import { UserListenCount } from "../models/userListenCountModel.js";
 import mongoose from "mongoose";
+import userPlaylist from "../models/userPlayList.js";
 
 const getAllUsers = async (req, res) => {
   const result = await User.find();
@@ -228,29 +229,94 @@ const updateFavoritesPlaylists = async (req, res) => {
   }
 };
 
+const updateUserFavoritesPlaylists = async (req, res) => {
+  const { id } = req.params;
+  console.log("playlistId", req.params.id);
+  const { _id: user } = req.user;
+  console.log(" id", user);
+
+  const playlist = await userPlaylist.findById(id);
+
+  if (!playlist) {
+    return res
+      .status(404)
+      .json({ error: "Playlist with such id is not found" });
+  }
+
+  const isFavorite = playlist.favoriteByUsers.includes(user);
+  console.log("isFavorite", isFavorite);
+  console.log("userplaylist", playlist);
+
+  if (isFavorite) {
+    await userPlaylist.findByIdAndUpdate(playlist._id, {
+      $pull: { favoriteByUsers: user },
+    });
+    res
+      .status(200)
+      .json({ message: `Removed ${playlist.playListName} from favorites` });
+  } else {
+    await userPlaylist.findByIdAndUpdate(playlist._id, {
+      $push: { favoriteByUsers: user },
+    });
+    res
+      .status(200)
+      .json({ message: `Added ${playlist.playListName} to favorites` });
+  }
+};
+
 const getFavoritePlaylists = async (req, res) => {
   const { page = 1, limit = 8 } = req.query;
   const { _id: user } = req.user;
 
   const skip = (page - 1) * limit;
 
-  const favorites = await PlayList.find(
-    { favoriteByUsers: user },
-    "-favoriteByUsers -createdAt -updatedAt"
-  )
-    .skip(skip)
-    .limit(limit);
-  console.log("favorites", favorites);
-  // if (!favorites || favorites.length === 0) {
-  //   return res.status(404).json({ error: "No favorite playlists" });
-  // }
+  try {
+    
+    const favorites = await Promise.all([
+      PlayList.find({ favoriteByUsers: user }, "-favoriteByUsers -createdAt -updatedAt")
+        .skip(skip)
+        .limit(limit),
+      userPlaylist.find({ favoriteByUsers: user }, "-favoriteByUsers -createdAt -updatedAt")
+        .skip(skip)
+        .limit(limit),
+    ]);
 
-  const totalPlayLists = await PlayList.countDocuments({
-    favoriteByUsers: user,
-  });
-  // delete favorites._doc.favoriteByUsers;
-  res.json({ totalPlayLists, favorites });
+    
+    const mergedFavorites = [].concat(...favorites);
+
+    const totalPlayLists = await Promise.all([
+      PlayList.countDocuments({ favoriteByUsers: user }),
+      userPlaylist.countDocuments({ favoriteByUsers: user }),
+    ]).then(counts => counts.reduce((total, count) => total + count, 0));
+
+    res.json({ totalPlayLists, favorites: mergedFavorites });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
+
+// const getFavoritePlaylists = async (req, res) => {
+//   const { page = 1, limit = 8 } = req.query;
+//   const { _id: user } = req.user;
+
+//   const skip = (page - 1) * limit;
+
+//   const favorites = await PlayList.find(
+//     { favoriteByUsers: user },
+//     "-favoriteByUsers -createdAt -updatedAt"
+//   )
+//     .skip(skip)
+//     .limit(limit);
+//   console.log("favorites", favorites);
+  
+
+//   const totalPlayLists = await PlayList.countDocuments({
+//     favoriteByUsers: user,
+//   });
+ 
+//   res.json({ totalPlayLists, favorites });
+// };
 
 const updateAddPlaylists = async (req, res) => {
   const { id } = req.params;
@@ -430,6 +496,111 @@ const countListensTrackByUser = async (req, res) => {
   res.json(userListenCount);
 };
 
+const getCreatePlaylists = async (req, res) => {
+   const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+
+  const createPlaylists = await userPlaylist.find(
+    { ...req.query },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  ).sort({ createdAt: -1 });
+  res.json(createPlaylists);
+};
+
+const createUserPlaylist = async (req, res) => {
+  console.log(req);
+  const { playListName } = req.body;
+  const { _id: owner } = req.user;
+
+  const playlist = await userPlaylist.findOne({ playListName });
+
+  if (playlist) {
+    throw HttpError(409, "PlayList name in use");
+  }
+
+  const newPlayList = await userPlaylist.create({ ...req.body, owner });
+
+  res.status(201).json({
+    playListName: newPlayList.playListName,
+    owner: newPlayList.owner,
+  });
+};
+
+const findUserPlayListById = async (req, res) => {
+  const { id } = req.params;
+
+  const playlist = await userPlaylist.findById(id)
+    .populate({
+      path: "trackList",
+      options: { sort: { createdAt: -1 } },
+    })
+  .populate("playlistGenre");
+    
+  if (!playlist) {
+    throw HttpError(404, `Playlist not found`);
+  }
+
+  const totalTracks = playlist.trackList.length;
+
+  res.json({ playlist, totalTracks });
+};
+
+const uploadPics = async (req, res) => {
+  const { type } = req.body;
+  if (!req.file) {
+    throw HttpError(404, "File not found for upload");
+  }
+  const picsURL = await resizePics(req.file, type);
+  const cover = await Pics.create({ picsURL, ...req.body });
+  res.json({
+    cover,
+  });
+};
+
+const updateUserPlaylistById = async (req, res) => {
+  const { id } = req.params;
+  const isExistPlaylist = await userPlaylist.findById(id);
+
+  if (isExistPlaylist === null) {
+    res.status(404).json({
+      message: `ID ${id} doesn't found`,
+      code: "4041",
+      object: `${id}`,
+    });
+  }
+    const updatedPlaylist = await userPlaylist.findByIdAndUpdate(
+    id,
+    { ...req.body },
+    {
+      new: true,
+    }
+  );
+
+  res.json(updatedPlaylist);
+};
+
+const deleteUserPlaylist = async (req, res) => {
+  const { id } = req.params;
+
+  const playlist = await userPlaylist.findById(id);
+
+ 
+  if (!playlist) {
+    throw HttpError(404, `Playlist with ${id} not found`);
+  }
+
+  
+  await userPlaylist.findByIdAndDelete(id);
+
+  res.json({
+    message: `Playlist ${playlist.playListName} was deleted`,
+  });
+};
+
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
   // addFavoritePlaylist: ctrlWrapper(addFavoritePlaylist),
@@ -448,4 +619,12 @@ export default {
   updateAddPlaylists: ctrlWrapper(updateAddPlaylists),
   getTracksByGenreId: ctrlWrapper(getTracksByGenreId),
   countListensTrackByUser: ctrlWrapper(countListensTrackByUser),
+  getCreatePlaylists: ctrlWrapper(getCreatePlaylists),
+  createUserPlaylist: ctrlWrapper(createUserPlaylist),
+  findUserPlayListById: ctrlWrapper(findUserPlayListById),
+  uploadPics: ctrlWrapper(uploadPics),
+  updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
+  deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
+  updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),
+
 };
