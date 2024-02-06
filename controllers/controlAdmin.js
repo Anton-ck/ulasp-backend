@@ -390,9 +390,9 @@ const countPlaylistByUser = async (req, res) => {
     "-addByUsers -createdAt -updatedAt"
   );
 
-  // console.log("add", add.length);
+  const countAdd = add.length;
 
-  res.json({ id });
+  res.json({ countPlaylist: countAdd });
 };
 
 export default {
