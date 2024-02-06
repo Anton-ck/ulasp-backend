@@ -12,9 +12,21 @@ import {
 
 const userSchema = new Schema(
   {
+    // addPlayList: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "playlist",
+    //   },
+    // ],
+    // favotitePlayList: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: "playlist",
+    //   },
+    // ],
+
     password: {
       type: String,
-     
     },
     contractNumber: {
       type: String,
@@ -106,6 +118,7 @@ const userSchema = new Schema(
     //   required: true,
     //   default: 0,
     // },
+
     comment: {
       type: String,
       required: true,
@@ -117,7 +130,6 @@ const userSchema = new Schema(
       required: true,
       default: false,
     },
-
   },
   { versionKey: false, timestamps: true, discriminatorKey: "kind" }
 );

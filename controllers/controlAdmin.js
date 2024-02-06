@@ -392,7 +392,7 @@ const countPlaylistByUser = async (req, res) => {
 
   const countAdd = add.length;
 
-  res.json({ countPlaylist: countAdd });
+  res.json(countAdd);
 };
 
 export default {
