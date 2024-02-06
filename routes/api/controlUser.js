@@ -1,5 +1,5 @@
 import express from "express";
-
+import upload from "../../middlewares/upload.js";
 import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
 import {
@@ -8,7 +8,7 @@ import {
 } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlUser.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
-
+import {playListUserSchema} from "../../schemas/userSchema.js"
 import {
   createFopUserSchema,
   createCompanyUserSchema,
@@ -90,6 +90,10 @@ router.get('/genre/:id/tracks',
 router.patch("/playlist/favorites/:id", 
 authenticatUser, 
   controllers.updateFavoritesPlaylists);
+
+  router.patch("/userPlaylist/favorites/:id", 
+authenticatUser, 
+  controllers.updateUserFavoritesPlaylists);
  
   router.patch("/playlist/add/:id", 
 authenticatUser, 
@@ -97,7 +101,50 @@ authenticatUser,
 
  router.patch("/tracks/count/:id", 
  authenticatUser, 
-  controllers.countListensTrackByUser);
+   controllers.countListensTrackByUser
+ );
+  
+   router.get(
+  "/userPlaylist/all",
+  authenticatUser,
+  controllers.getCreatePlaylists
+);
+
+router.post(
+  "/userPlaylist/create",
+   authenticatUser,
+   upload.single("picsURL"),
+  validateBody(playListUserSchema),
+  controllers.createUserPlaylist
+);
+
+router.get(
+  "/userPlaylist/:id",
+  authenticatUser,
+   isValid,
+  controllers.findUserPlayListById
+);
+
+router.delete(
+  "/userPlaylist/delete/:id",
+   authenticatUser,
+    isValid,
+  controllers.deleteUserPlaylist
+);
+
+router.post(
+  "/pics/create",
+  authenticatUser,
+  upload.single("picsURL"),
+  controllers.uploadPics
+);
+
+router.patch(
+  "/userPlaylist/update/:id",
+ authenticatUser,
+  isValid,
+  controllers.updateUserPlaylistById
+);
 
 
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);

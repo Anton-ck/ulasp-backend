@@ -51,3 +51,9 @@ export const createCompanyUserSchema = createCommonUserSchema.keys({
   taxCode: Joi.string().min(8).max(10).pattern(onlyNumberRegexp),
   // lastPay: Joi.string().pattern(regularDateRegexp).required(),
 });
+
+export const playListUserSchema = Joi.object({
+  playListName: Joi.string().required().empty(false).min(1).max(30),
+  picsURL: Joi.string().empty(""),
+  type: Joi.string().required().empty(false),
+});
