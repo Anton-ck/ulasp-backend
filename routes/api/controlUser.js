@@ -67,10 +67,21 @@ router.get(
 );
 router.get(
   "/shops/:id",
-  authenticatUser,
+  // authenticatUser,
   controllers.findShopById
 );
 
+router.get(
+  "/shops/shopitem/:id",
+  // authenticatUser,
+  controllers.getCategoryShopById
+);
+
+router.get(
+  "/shops/shopitem/subcategory/:id",
+  // authenticatUser,
+  controllers.getSubCategoryShopById
+);
 
 
 
