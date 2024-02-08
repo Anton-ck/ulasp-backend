@@ -290,7 +290,10 @@ const countTracks = async (req, res) => {
 //счетчик новых клиентов
 
 const countNewClients = async (req, res) => {
-  const countNewClients = await User.countDocuments({ status: false });
+  const countNewClients = await User.countDocuments({
+    access: false,
+    status: false,
+  });
 
   res.json({ countNewClients: countNewClients });
 };

@@ -4,6 +4,7 @@ import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
 import { authenticateAdmin } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlAdmin.js";
+import controllersEmail from "../../controllers/controllEmail.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
 import {
   createEditorSchema,
@@ -42,33 +43,41 @@ router.get(
   permisionsAdmin,
   controllers.countTracks
 );
+//подсчет пользователей
 router.get(
   "/users/count",
   authenticateAdmin,
   permisionsAdmin,
   controllers.countClients
 );
-
+//подсчет прослушанных песен
 router.post(
   "/users/countlistens",
   authenticateAdmin,
   permisionsAdmin,
   controllers.countListensByUser
 );
-
+//подсчет новых клиентов - которым не отправлено письмо status = false и не открыт доступ access = false
 router.get(
   "/newclients/count",
   authenticateAdmin,
   permisionsAdmin,
   controllers.countNewClients
 );
+//подсчет  клиентов -online = true
 router.get(
   "/onlineclients/count",
   authenticateAdmin,
   permisionsAdmin,
   controllers.countOnlineClients
 );
-
+//отправка письма с доступом -  переключение достпупа access =Оn status=true
+router.post(
+  "/users/:id/accessemail",
+  authenticateAdmin,
+  permisionsAdmin,
+  controllersEmail.sendEmailByAccess
+);
 router.get(
   "/newclientsbymonth/count",
   authenticateAdmin,

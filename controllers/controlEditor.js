@@ -1208,6 +1208,8 @@ const deletePlaylistInShopItem = async (req, res) => {
 //  res.json(tracks);
 // };
 
+//send mail to client about access - off- on
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
