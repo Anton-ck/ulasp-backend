@@ -28,6 +28,7 @@ app.use(express.static("public"));
 app.use("/admin", authRouter);
 app.use("/admin", controlAdminRouter);
 
+
 app.use("/editor", controlEditorRouter);
 
 app.use("/user", authUserRouter);
