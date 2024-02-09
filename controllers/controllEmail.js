@@ -5,7 +5,6 @@ import HttpError from "../helpers/HttpError.js";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import sgMail from "@sendgrid/mail";
 dotenv.config();
 
 const {
@@ -54,7 +53,7 @@ const sendEmailByAccess = async (req, res) => {
   console.log("_id", id);
   const objectId = new mongoose.Types.ObjectId(id);
   const user = await User.findOne({ _id: objectId });
-
+  console.log("user", user);
   if (!user) {
     throw HttpError(404, "User not found");
   }
