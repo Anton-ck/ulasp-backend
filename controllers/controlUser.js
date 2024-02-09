@@ -3,6 +3,8 @@ import PlayList from "../models/playlistModel.js";
 import Track from "../models/trackModel.js";
 import Genre from "../models/genreModel.js";
 import Shop from "../models/shopModel.js";
+import ShopItem from "../models/shopItemModel.js";
+import ShopSubType from "../models/shopSubTypeModel.js";
 import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
@@ -136,63 +138,52 @@ const allShops = async (req, res) => {
 };
 
 const findShopById = async (req, res) => {
-  const { id } = req.params;
+ const { id } = req.params;
+  const allPlaylistsInShopCategory = [];
+  let playlistsInSubCat = [];
 
-  const shop = await Shop.findById(id).populate("playList");
+  const shop = await Shop.findById(id)
+    .populate("playList")
+    .populate({
+      path: "shopChildItems",
+      options: { populate: "playList" },
+    });
 
   if (!shop) {
-    throw HttpError(404);
+    throw HttpError(404, `Shop with ${id} not found`);
   }
 
-  res.json(shop);
+  shop.playList.map((playlist) => allPlaylistsInShopCategory.push(playlist));
+
+  //Проходимся по категориям в ресторанах
+  shop.shopChildItems.map((shopChildItem) => {
+    // console.log("shopChildItem", shopChildItem);
+
+    //Проходимся по по всем плейлистам в категорях
+    shopChildItem.playList.map(async (playlist) => {
+      // console.log("playlist", playlist);
+
+      //Добавляем все плейлисты в массив
+      allPlaylistsInShopCategory.push(playlist);
+
+      const shop = await ShopItem.findById(shopChildItem._id).populate({
+        path: "shopChildSubType",
+        options: { populate: "playList" },
+      });
+
+      shop.shopChildSubType.map((shopChildSubType) =>
+        shopChildSubType.playList.map((playlist) =>
+          allPlaylistsInShopCategory.push(playlist)
+        )
+      );
+    });
+
+    
+  });
+
+  res.json({ shop, allPlaylistsInShopCategory, playlistsInSubCat });
 };
 
-// const addPlaylist = async (req, res) => {
-//   const { _id: userId  } = req.user;
-//   const playlistId = req.params.playlistId;
-
-//   const playList = await PlayList.findById(playlistId);
-//   if (playlistId.favoriteByUsers.includes(userId)) {
-//     return res.status(409).json({ message: "Favorite added early" });
-//   }
-//   await PlayList.findByIdAndUpdate(
-//     playlistId,
-//     { $push: { favoriteByUsers: userId.toString() } },
-//     {
-//       new: true,
-//     }
-//   );
-//   const totalPlayLists = await PlayList.countDocuments({ favoriteByUsers: userId });
-
-//   delete playList._doc.favoriteByUsers;
-//   res.json({
-//     totalPlayLists,
-//     ...playList._doc,
-//   });
-// };
-
-// const deleteFavoritePlayList = async (req, res) => {
-//   const { _id: userId } = req.user;
-//   const playlistId = req.params.playlistId;
-
-//   const playList = await PlayList.findById(playlistId);
-
-//   if (!playList.favoriteByUsers.includes(userId)) {
-//     return res.status(409).json({ message: "Favorite deleted early" });
-//   }
-
-//   await PlayList.findByIdAndUpdate(
-//     playlistId,
-//     { $pull: { favoriteByUsers: userId.toString() } },
-
-//     {
-//       new: true,
-//     }
-//   );
-//   const totalPlayLists = await PlayList.countDocuments({ favoriteByUsers: userId });
-//   delete playList._doc.favoriteByUsers;
-//   res.json({ totalPlayLists, ...playList._doc });
-// };
 
 const updateFavoritesPlaylists = async (req, res) => {
   const { id } = req.params;
@@ -601,6 +592,45 @@ const deleteUserPlaylist = async (req, res) => {
   });
 };
 
+
+
+const getCategoryShopById = async (req, res) => {
+  const { id } = req.params;
+  const allPlaylistsInShopCategory = [];
+  const shop = await ShopItem.findById(id)
+    .populate("playList")
+    .populate({
+      path: "shopChildSubType",
+      options: { populate: "playList" },
+    });
+
+  if (!shop) {
+    throw HttpError(404, `Shop category with ${id} not found`);
+  }
+
+  shop.playList.map((playlist) => allPlaylistsInShopCategory.push(playlist));
+
+  shop.shopChildSubType.map((shopChildSubType) =>
+    shopChildSubType.playList.map((playlist) =>
+      allPlaylistsInShopCategory.push(playlist)
+    )
+  );
+
+  res.json({ shop, allPlaylistsInShopCategory });
+};
+
+const getSubCategoryShopById = async (req, res) => {
+  const { id } = req.params;
+
+  const shop = await ShopSubType.findById(id).populate("playList");
+
+  if (!shop) {
+    throw HttpError(404, `Shop subcategory with ${id} not found`);
+  }
+
+  res.json(shop);
+};
+
 export default {
   getAllUsers: ctrlWrapper(getAllUsers),
   // addFavoritePlaylist: ctrlWrapper(addFavoritePlaylist),
@@ -626,5 +656,6 @@ export default {
   updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
   deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
   updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),
-
+  getCategoryShopById: ctrlWrapper(getCategoryShopById),
+getSubCategoryShopById: ctrlWrapper(getSubCategoryShopById),
 };
