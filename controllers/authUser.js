@@ -67,7 +67,9 @@ const userSignIn = async (req, res) => {
   const { contractNumber, password } = req.body;
 
   const user = await User.findOne({ contractNumber });
-
+  console.log("contractNumber", contractNumber);
+  console.log("password", password);
+  console.log("user", user);
   if (!user) {
     throw HttpError(401, "Login  or taxCode is wrong");
   }
@@ -84,7 +86,7 @@ const userSignIn = async (req, res) => {
   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
     expiresIn: accessTokenExpires,
   });
-  await User.findByIdAndUpdate(user._id, {  accessToken, online: true });
+  await User.findByIdAndUpdate(user._id, { accessToken, online: true });
   res.json({
     accessToken,
 
@@ -119,7 +121,7 @@ const getCurrentUser = async (req, res) => {
     email,
     contractNumber,
     dateOfAccess,
-    lastPay
+    lastPay,
   } = req.user;
   res.json({
     user: {
@@ -141,7 +143,11 @@ const getCurrentUser = async (req, res) => {
 
 const logoutUser = async (req, res) => {
   const { _id } = req.user;
-  await User.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "", online: false });
+  await User.findByIdAndUpdate(_id, {
+    accessToken: "",
+    refreshToken: "",
+    online: false,
+  });
   res.status(204).json();
 };
 const updateUserAvatar = async (req, res) => {

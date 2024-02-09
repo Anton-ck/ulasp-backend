@@ -121,7 +121,7 @@ const userSchema = new Schema(
 
     comment: {
       type: String,
-      required: true,
+
       default: "",
     },
     online: {

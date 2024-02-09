@@ -155,7 +155,7 @@ const createUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-  const allUsers = await User.find({ ...req.body });
+  const allUsers = await User.find({ ...req.body }).sort({ createdAt: -1 });
 
   res.json({
     allUsers,
