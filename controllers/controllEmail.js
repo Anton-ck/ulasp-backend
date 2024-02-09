@@ -58,9 +58,18 @@ const sendEmailByAccess = async (req, res) => {
     throw HttpError(404, "User not found");
   }
   const accessEmail = {
-    to: "testnolimiti@gmail.com",
-    subject: " Доступ",
-    html: `Тест
+    to: user.email,
+    subject: " Уласп доступ",
+    html: `<h2>Шановний користувач! </h2>
+    <div>
+
+    <p>Вам надано доступ до ресурсу УЛАСП: https://iskrai.github.io/ulasp/</p>
+</br>
+    Дані для входу:
+
+     <p>Номер договору: ${user.contractNumber} </p>
+    <p>Ідентифікаційний номер: ${user.taxCode} </p>
+    </div>
 `,
   };
 
