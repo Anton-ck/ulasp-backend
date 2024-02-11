@@ -8,7 +8,7 @@ import {
 } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlUser.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
-import {playListUserSchema} from "../../schemas/userSchema.js"
+import { playListUserSchema } from "../../schemas/userSchema.js";
 import {
   createFopUserSchema,
   createCompanyUserSchema,
@@ -26,21 +26,15 @@ router.get("/playlist/latest", controllers.latestPlaylists);
 //   controllers.playlistsCount
 // );
 router.get(
-
-
   "/playlist/favorites",
   authenticatUser,
-
 
   controllers.getFavoritePlaylists
 );
 
 router.get(
-
-
   "/playlist/add",
   authenticatUser,
-
 
   controllers.getAddPlaylists
 );
@@ -48,7 +42,7 @@ router.get(
 router.get(
   "/playlist/:id",
   authenticatUser,
-   isValid,
+  isValid,
   controllers.findPlayListById
 );
 
@@ -59,11 +53,10 @@ router.get(
   controllers.allGenres
 );
 
-
 router.get(
   "/shops/all",
   // authenticatUser,
-   controllers.allShops
+  controllers.allShops
 );
 router.get(
   "/shops/:id",
@@ -83,39 +76,41 @@ router.get(
   controllers.getSubCategoryShopById
 );
 
-
-
 router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
 
+router.get("/genres/:id", authenticatUser, controllers.findGenreById);
+
 router.get(
-  "/genres/:id",
-  authenticatUser,
-  controllers.findGenreById
+  "/genre/:id/tracks",
+  // authenticatUser,
+  controllers.getTracksByGenreId
 );
 
-router.get('/genre/:id/tracks',
-  // authenticatUser,
-  controllers.getTracksByGenreId);
+router.patch(
+  "/playlist/favorites/:id",
+  authenticatUser,
+  controllers.updateFavoritesPlaylists
+);
 
+router.patch(
+  "/userPlaylist/favorites/:id",
+  authenticatUser,
+  controllers.updateUserFavoritesPlaylists
+);
 
-router.patch("/playlist/favorites/:id", 
-authenticatUser, 
-  controllers.updateFavoritesPlaylists);
+router.patch(
+  "/playlist/add/:id",
+  authenticatUser,
+  controllers.updateAddPlaylists
+);
 
-  router.patch("/userPlaylist/favorites/:id", 
-authenticatUser, 
-  controllers.updateUserFavoritesPlaylists);
- 
-  router.patch("/playlist/add/:id", 
-authenticatUser, 
- controllers.updateAddPlaylists);
+router.post(
+  "/tracks/countlisten/:id",
+  authenticatUser,
+  controllers.countListensTrackByUser
+);
 
- router.patch("/tracks/count/:id", 
- authenticatUser, 
-   controllers.countListensTrackByUser
- );
-  
-   router.get(
+router.get(
   "/userPlaylist/all",
   authenticatUser,
   controllers.getCreatePlaylists
@@ -123,8 +118,8 @@ authenticatUser,
 
 router.post(
   "/userPlaylist/create",
-   authenticatUser,
-   upload.single("picsURL"),
+  authenticatUser,
+  upload.single("picsURL"),
   validateBody(playListUserSchema),
   controllers.createUserPlaylist
 );
@@ -132,14 +127,14 @@ router.post(
 router.get(
   "/userPlaylist/:id",
   authenticatUser,
-   isValid,
+  isValid,
   controllers.findUserPlayListById
 );
 
 router.delete(
   "/userPlaylist/delete/:id",
-   authenticatUser,
-    isValid,
+  authenticatUser,
+  isValid,
   controllers.deleteUserPlaylist
 );
 
@@ -152,11 +147,10 @@ router.post(
 
 router.patch(
   "/userPlaylist/update/:id",
- authenticatUser,
+  authenticatUser,
   isValid,
   controllers.updateUserPlaylistById
 );
-
 
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
