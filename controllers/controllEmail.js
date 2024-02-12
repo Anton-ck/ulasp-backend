@@ -5,7 +5,6 @@ import HttpError from "../helpers/HttpError.js";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-// import sgMail from "@sendgrid/mail";
 dotenv.config();
 
 const {
@@ -54,14 +53,23 @@ const sendEmailByAccess = async (req, res) => {
   console.log("_id", id);
   const objectId = new mongoose.Types.ObjectId(id);
   const user = await User.findOne({ _id: objectId });
-
+  console.log("user", user);
   if (!user) {
     throw HttpError(404, "User not found");
   }
   const accessEmail = {
-    to: "testnolimiti@gmail.com",
-    subject: " Доступ",
-    html: `Тест
+    to: user.email,
+    subject: " Уласп доступ",
+    html: `<h2>Шановний користувач! </h2>
+    <div>
+
+    <p>Вам надано доступ до ресурсу УЛАСП: http://music.ulasp.com.ua:9080/</p>
+</br>
+    Дані для входу:
+
+     <p>Номер договору: ${user.contractNumber} </p>
+    <p>Ідентифікаційний номер: ${user.taxCode} </p>
+    </div>
 `,
   };
 

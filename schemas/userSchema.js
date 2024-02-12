@@ -6,7 +6,8 @@ import {
   onlyNumberRegexp,
   regularDateRegexp,
   phoneNumberUaRegexp,
-  nameRegexp,nameCompanyRegexp
+  nameRegexp,
+  nameCompanyRegexp,
 } from "../helpers/regExp.js";
 const joiPassword = Joi.extend(joiPasswordExtendCore);
 
@@ -31,11 +32,11 @@ export const createCommonUserSchema = Joi.object({
   contactFaceTelNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   contactFaceEmail: Joi.string().pattern(emailRegexp).required(),
   status: Joi.boolean(),
-  lastPay: Joi.string(),
-  comment:Joi.string(),
-  dateOfAccess:Joi.string(),
+  lastPay: Joi.string().allow("").optional(),
+  comment: Joi.string().allow("").optional(),
+  dateOfAccess: Joi.string().allow("").optional(),
   access: Joi.boolean(),
-  online:Joi.boolean(),
+  online: Joi.boolean(),
 });
 
 export const createFopUserSchema = createCommonUserSchema.keys({

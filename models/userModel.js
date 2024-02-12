@@ -60,7 +60,7 @@ const userSchema = new Schema(
       type: String,
       required: true,
       match: emailRegexp,
-      unique: true,
+      // unique: true,
     },
 
     contactFace: {
@@ -100,12 +100,12 @@ const userSchema = new Schema(
 
     dateOfAccess: {
       type: String,
-      required: true,
+      // required: true,
       default: 0,
     },
     lastPay: {
       type: String,
-      required: true,
+      // required: true,
       default: 0,
     },
     // quantityPlaylists: {
@@ -121,7 +121,7 @@ const userSchema = new Schema(
 
     comment: {
       type: String,
-      required: true,
+
       default: "",
     },
     online: {

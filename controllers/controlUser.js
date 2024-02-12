@@ -51,8 +51,7 @@ const latestPlaylists = async (req, res) => {
       skip,
       limit,
     }
-  ).sort({ createdAt: -1 })
-    
+  ).sort({ createdAt: -1 });
 
   res.json(latestPlaylists);
 };
@@ -138,7 +137,7 @@ const allShops = async (req, res) => {
 };
 
 const findShopById = async (req, res) => {
- const { id } = req.params;
+  const { id } = req.params;
   const allPlaylistsInShopCategory = [];
   let playlistsInSubCat = [];
 
@@ -177,13 +176,10 @@ const findShopById = async (req, res) => {
         )
       );
     });
-
-    
   });
 
   res.json({ shop, allPlaylistsInShopCategory, playlistsInSubCat });
 };
-
 
 const updateFavoritesPlaylists = async (req, res) => {
   const { id } = req.params;
@@ -262,23 +258,28 @@ const getFavoritePlaylists = async (req, res) => {
   const skip = (page - 1) * limit;
 
   try {
-    
     const favorites = await Promise.all([
-      PlayList.find({ favoriteByUsers: user }, "-favoriteByUsers -createdAt -updatedAt")
+      PlayList.find(
+        { favoriteByUsers: user },
+        "-favoriteByUsers -createdAt -updatedAt"
+      )
         .skip(skip)
         .limit(limit),
-      userPlaylist.find({ favoriteByUsers: user }, "-favoriteByUsers -createdAt -updatedAt")
+      userPlaylist
+        .find(
+          { favoriteByUsers: user },
+          "-favoriteByUsers -createdAt -updatedAt"
+        )
         .skip(skip)
         .limit(limit),
     ]);
 
-    
     const mergedFavorites = [].concat(...favorites);
 
     const totalPlayLists = await Promise.all([
       PlayList.countDocuments({ favoriteByUsers: user }),
       userPlaylist.countDocuments({ favoriteByUsers: user }),
-    ]).then(counts => counts.reduce((total, count) => total + count, 0));
+    ]).then((counts) => counts.reduce((total, count) => total + count, 0));
 
     res.json({ totalPlayLists, favorites: mergedFavorites });
   } catch (error) {
@@ -300,12 +301,11 @@ const getFavoritePlaylists = async (req, res) => {
 //     .skip(skip)
 //     .limit(limit);
 //   console.log("favorites", favorites);
-  
 
 //   const totalPlayLists = await PlayList.countDocuments({
 //     favoriteByUsers: user,
 //   });
- 
+
 //   res.json({ totalPlayLists, favorites });
 // };
 
@@ -463,7 +463,7 @@ const countListensTrackByUser = async (req, res) => {
     // Если запись о прослушивании трека не найдена, создаем новый объект track
     track = {
       trackId,
-      listens: [],
+      listens: [{ countOfListenes: 1, date: currentDate }],
     };
     userListenCount.tracks.push(track);
   }
@@ -488,17 +488,15 @@ const countListensTrackByUser = async (req, res) => {
 };
 
 const getCreatePlaylists = async (req, res) => {
-   const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
   const skip = (page - 1) * limit;
 
-  const createPlaylists = await userPlaylist.find(
-    { ...req.query },
-    "-createdAt -updatedAt",
-    {
+  const createPlaylists = await userPlaylist
+    .find({ ...req.query }, "-createdAt -updatedAt", {
       skip,
       limit,
-    }
-  ).sort({ createdAt: -1 });
+    })
+    .sort({ createdAt: -1 });
   res.json(createPlaylists);
 };
 
@@ -524,13 +522,14 @@ const createUserPlaylist = async (req, res) => {
 const findUserPlayListById = async (req, res) => {
   const { id } = req.params;
 
-  const playlist = await userPlaylist.findById(id)
+  const playlist = await userPlaylist
+    .findById(id)
     .populate({
       path: "trackList",
       options: { sort: { createdAt: -1 } },
     })
-  .populate("playlistGenre");
-    
+    .populate("playlistGenre");
+
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
   }
@@ -563,7 +562,7 @@ const updateUserPlaylistById = async (req, res) => {
       object: `${id}`,
     });
   }
-    const updatedPlaylist = await userPlaylist.findByIdAndUpdate(
+  const updatedPlaylist = await userPlaylist.findByIdAndUpdate(
     id,
     { ...req.body },
     {
@@ -579,20 +578,16 @@ const deleteUserPlaylist = async (req, res) => {
 
   const playlist = await userPlaylist.findById(id);
 
- 
   if (!playlist) {
     throw HttpError(404, `Playlist with ${id} not found`);
   }
 
-  
   await userPlaylist.findByIdAndDelete(id);
 
   res.json({
     message: `Playlist ${playlist.playListName} was deleted`,
   });
 };
-
-
 
 const getCategoryShopById = async (req, res) => {
   const { id } = req.params;
@@ -657,5 +652,5 @@ export default {
   deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
   updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),
   getCategoryShopById: ctrlWrapper(getCategoryShopById),
-getSubCategoryShopById: ctrlWrapper(getSubCategoryShopById),
+  getSubCategoryShopById: ctrlWrapper(getSubCategoryShopById),
 };
