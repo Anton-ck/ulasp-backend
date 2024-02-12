@@ -63,7 +63,7 @@ const sendEmailByAccess = async (req, res) => {
     html: `<h2>Шановний користувач! </h2>
     <div>
 
-    <p>Вам надано доступ до ресурсу УЛАСП: https://iskrai.github.io/ulasp/</p>
+    <p>Вам надано доступ до ресурсу УЛАСП: http://music.ulasp.com.ua:9080/</p>
 </br>
     Дані для входу:
 

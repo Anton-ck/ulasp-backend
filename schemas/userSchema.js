@@ -32,9 +32,9 @@ export const createCommonUserSchema = Joi.object({
   contactFaceTelNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   contactFaceEmail: Joi.string().pattern(emailRegexp).required(),
   status: Joi.boolean(),
-  lastPay: Joi.string(),
+  lastPay: Joi.string().allow("").optional(),
   comment: Joi.string().allow("").optional(),
-  dateOfAccess: Joi.string(),
+  dateOfAccess: Joi.string().allow("").optional(),
   access: Joi.boolean(),
   online: Joi.boolean(),
 });
