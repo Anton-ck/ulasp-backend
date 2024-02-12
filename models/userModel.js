@@ -101,12 +101,12 @@ const userSchema = new Schema(
     dateOfAccess: {
       type: String,
       // required: true,
-      default: 0,
+      default: "",
     },
     lastPay: {
       type: String,
       // required: true,
-      default: 0,
+      default: "",
     },
     // quantityPlaylists: {
     //   type: Number,
@@ -175,7 +175,7 @@ const companySchema = new Schema(
     taxCode: {
       type: String,
       required: true,
-      length: 8,
+      // length: 8,
       match: onlyNumberRegexp,
       unique: true,
     },
