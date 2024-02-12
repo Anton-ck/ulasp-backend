@@ -5,7 +5,7 @@ import HttpError from "../helpers/HttpError.js";
 import mongoose from "mongoose";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import sgMail from "@sendgrid/mail";
+// import sgMail from "@sendgrid/mail";
 dotenv.config();
 
 const {
