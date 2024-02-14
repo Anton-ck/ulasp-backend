@@ -6,6 +6,7 @@ import Admin from "../models/adminModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import { resizeAvatar } from "../helpers/resizePics.js";
+import isExistAvatar from "../helpers/isExistAvatar.js";
 
 dotenv.config();
 
@@ -73,6 +74,10 @@ const adminSignIn = async (req, res) => {
   });
   await Admin.findByIdAndUpdate(admin._id, { accessToken, refreshToken });
 
+  const avatar = isExistAvatar(admin.avatarURL);
+
+  console.log(avatar);
+
   if (admin.adminRole) {
     res.json({
       accessToken,
@@ -82,7 +87,7 @@ const adminSignIn = async (req, res) => {
         firstName: admin.firstName,
         lastName: admin.lastName,
         fatherName: admin.fatherName,
-        avatarURL: admin.avatarURL,
+        avatarURL: avatar,
         adminRole: admin.adminRole,
         editorRole: admin.editorRole,
       },
@@ -96,7 +101,7 @@ const adminSignIn = async (req, res) => {
         firstName: admin.firstName,
         lastName: admin.lastName,
         fatherName: admin.fatherName,
-        avatarURL: admin.avatarURL,
+        avatarURL: avatar,
         editorRole: admin.editorRole,
         adminRole: admin.adminRole,
         taxCode: admin.taxCode,
@@ -139,7 +144,7 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 };
 
 const getCurrentAdmin = async (req, res) => {
-  console.log('getCurrentAdmin', req.admin)
+  console.log("getCurrentAdmin", req.admin);
   const {
     login,
     firstName,
@@ -154,6 +159,10 @@ const getCurrentAdmin = async (req, res) => {
     email,
   } = req.admin;
 
+  const avatar = isExistAvatar(avatarURL);
+
+  console.log(avatar);
+
   if (adminRole) {
     res.json({
       admin: {
@@ -161,7 +170,7 @@ const getCurrentAdmin = async (req, res) => {
         firstName,
         lastName,
         fatherName,
-        avatarURL,
+        avatarURL: avatar,
         adminRole,
         editorRole,
         taxCode,
@@ -177,7 +186,7 @@ const getCurrentAdmin = async (req, res) => {
         firstName,
         lastName,
         fatherName,
-        avatarURL,
+        avatarURL: avatar,
         editorRole,
         adminRole,
         taxCode,

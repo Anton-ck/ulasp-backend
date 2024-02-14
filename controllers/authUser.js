@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import fs from "fs/promises";
+import * as fs from "fs";
 import Jimp from "jimp";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -10,9 +10,11 @@ import { User, Fop, Company } from "../models/userModel.js";
 import HttpError from "../helpers/HttpError.js";
 import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import { resizeAvatar } from "../helpers/resizePics.js";
+import isExistAvatar from "../helpers/isExistAvatar.js";
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
+
 
 dotenv.config();
 
@@ -87,6 +89,9 @@ const userSignIn = async (req, res) => {
     expiresIn: accessTokenExpires,
   });
   await User.findByIdAndUpdate(user._id, { accessToken, online: true });
+
+  const avatar = isExistAvatar(user.avatarURL);
+
   res.json({
     accessToken,
 
@@ -96,7 +101,7 @@ const userSignIn = async (req, res) => {
       lastName: user.lastName,
       fatherName: user.fatherName,
       name: user.name,
-      avatarURL: user.avatarURL,
+      avatarURL: avatar,
       online: user.online,
       taxCode: user.taxCode,
       dayOfBirthday: user.dayOfBirthday,
@@ -123,13 +128,16 @@ const getCurrentUser = async (req, res) => {
     dateOfAccess,
     lastPay,
   } = req.user;
+
+  const avatar = isExistAvatar(avatarURL);
+
   res.json({
     user: {
       firstName,
       lastName,
       fatherName,
       name,
-      avatarURL,
+      avatarURL: avatar,
       taxCode,
       dayOfBirthday,
       telNumber,
