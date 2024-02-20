@@ -118,6 +118,10 @@ const userSchema = new Schema(
     //   required: true,
     //   default: 0,
     // },
+    institution: {
+      type: String,
+      default: "",
+    },
 
     comment: {
       type: String,
@@ -148,19 +152,21 @@ const fopSchema = new Schema(
     },
     fatherName: {
       type: String,
+      default: "",
       match: nameRegexp,
     },
 
     taxCode: {
       type: String,
       required: true,
-      // match: onlyNumberRegexp,
+      match: onlyNumberRegexp,
       unique: true,
     },
-    dayOfBirthday: {
-      type: String,
-      required: true,
-    },
+
+    // dayOfBirthday: {
+    //   type: String,
+    //   required: true,
+    // },
   },
   { versionKey: false, timestamps: true }
 );

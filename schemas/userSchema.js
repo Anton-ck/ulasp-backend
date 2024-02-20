@@ -42,15 +42,21 @@ export const createCommonUserSchema = Joi.object({
 export const createFopUserSchema = createCommonUserSchema.keys({
   firstName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
   lastName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
-  fatherName: Joi.string().min(3).max(30).pattern(nameRegexp),
-  dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
+  fatherName: Joi.string()
+    .min(3)
+    .max(30)
+    .pattern(nameRegexp)
+    .allow("")
+    .optional(),
+  // dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp),
+  institution: Joi.string().allow("").optional(),
 });
 
 export const createCompanyUserSchema = createCommonUserSchema.keys({
   name: Joi.string().min(5).max(30).pattern(nameCompanyRegexp).required(),
   taxCode: Joi.string().min(8).max(10).pattern(onlyNumberRegexp),
-  });
+});
 
 export const playListUserSchema = Joi.object({
   playListName: Joi.string().required().empty(false).min(1).max(30),
