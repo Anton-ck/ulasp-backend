@@ -343,14 +343,17 @@ const updateAddPlaylists = async (req, res) => {
 };
 
 const getAddPlaylists = async (req, res) => {
-  const { page = 1, limit = 8 } = req.query;
+  // const { page = 1, limit = 8 } = req.query;
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
   const { _id: user } = req.user;
 
   const skip = (page - 1) * limit;
 
+  const findQuery = { addByUsers: user, ...query };
+
   const add = await PlayList.find(
-    { addByUsers: user },
-    "-addByUsers -createdAt -updatedAt"
+   findQuery,
+       "-addByUsers -createdAt -updatedAt"
   )
     .skip(skip)
     .limit(limit);
@@ -359,9 +362,7 @@ const getAddPlaylists = async (req, res) => {
   //   return res.status(404).json({ error: "No add playlists" });
   // }
 
-  const totalPlayLists = await PlayList.countDocuments({
-    addByUsers: user,
-  });
+  const totalPlayLists = await PlayList.countDocuments(findQuery);
 
   res.json({ totalPlayLists, add });
 };
