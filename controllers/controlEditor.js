@@ -351,7 +351,7 @@ const allGenres = async (req, res) => {
     }
   )
     .populate("playList")
-    .sort({ createdAt: -1 });
+    .sort({ genre: 1 });
 
   res.json(allGenres);
 };
@@ -649,7 +649,12 @@ const deleteTrackInPlaylist = async (req, res) => {
 //написать доки
 
 const latestTracks = async (req, res) => {
-  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    ...query
+  } = req.query;
+
   const skip = (page - 1) * limit;
   const latestTracks = await Track.find(
     { ...req.query },
@@ -665,11 +670,20 @@ const latestTracks = async (req, res) => {
       options: { populate: "playlistGenre" },
     });
 
-  const totalTracks = latestTracks.length;
+  const totalTracks = (await Track.find()).length;
 
   const totalPlaylists = (await PlayList.find()).length;
+  const totalPages = Math.ceil(totalTracks / limit);
 
-  res.json({ latestTracks, totalTracks, totalPlaylists });
+  const pageNumber = page ? parseInt(page) : null;
+
+  res.json({
+    latestTracks,
+    totalTracks,
+    totalPlaylists,
+    totalPages,
+    pageNumber,
+  });
 };
 
 const allShops = async (req, res) => {
