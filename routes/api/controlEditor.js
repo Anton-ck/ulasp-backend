@@ -12,6 +12,13 @@ import uploadTrack from "../../middlewares/uploadTrack.js";
 
 const router = express.Router();
 
+router.get(
+  "/freeDiskSpace",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.getFreeDiskSpace
+);
+
 router.post(
   "/playlist/create",
   authenticateAdmin,
