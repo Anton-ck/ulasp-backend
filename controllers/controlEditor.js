@@ -21,6 +21,18 @@ import albumArt from "album-art";
 
 const publicDir = path.resolve("public/");
 
+const uploadPics = async (req, res) => {
+  const { type } = req.body;
+  if (!req.file) {
+    throw HttpError(404, "File not found for upload");
+  }
+  const picsURL = await resizePics(req.file, type);
+  const cover = await Pics.create({ picsURL, ...req.body });
+  res.json({
+    cover,
+  });
+};
+
 const createPlayList = async (req, res) => {
   const { playListName, type } = req.body;
   const { _id: owner } = req?.admin;
@@ -112,8 +124,6 @@ const createPlayListInShopLibrary = async (req, res) => {
   const { idShopLibrary } = req?.params;
   const { _id: owner } = req?.admin;
 
-  console.log(req.body);
-
   let randomPicUrl;
   let resizePicURL;
 
@@ -190,31 +200,34 @@ const createPlayListInShopLibrary = async (req, res) => {
 
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
-  const playlist = await PlayList.findById(id)
+
+  const { page = req.query.page, limit = req.query.limit } = req.query;
+
+  const skip = (page - 1) * limit;
+
+  const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
     .populate({
       path: "trackList",
-      options: { sort: { createdAt: -1 } },
+      options: { sort: { createdAt: -1 }, skip, limit },
     })
     .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
   }
-  const totalTracks = playlist.trackList.length;
 
-  res.json({ playlist, totalTracks });
-};
-
-const uploadPics = async (req, res) => {
-  const { type } = req.body;
-  if (!req.file) {
-    throw HttpError(404, "File not found for upload");
-  }
-  const picsURL = await resizePics(req.file, type);
-  const cover = await Pics.create({ picsURL, ...req.body });
-  res.json({
-    cover,
+  const trackList = await PlayList.findById(id, "trackList").populate({
+    path: "trackList",
+    select: "artist trackName trackURL",
+    options: { sort: { createdAt: -1 } },
   });
+
+  const totalTracks = trackList.trackList.length;
+  const totalPages = Math.ceil(totalTracks / limit);
+
+  const tracksSRC = trackList.trackList;
+
+  res.json({ playlist, totalTracks, totalPages, tracksSRC });
 };
 
 const updatePlaylistById = async (req, res) => {
@@ -667,14 +680,24 @@ const latestTracks = async (req, res) => {
     .sort({ createdAt: -1 })
     .populate({
       path: "playList",
-      options: { populate: "playlistGenre" },
+      select: "playListName",
+      options: {
+        populate: {
+          path: "playlistGenre",
+          select: "genre",
+        },
+      },
     });
 
   const totalTracks = (await Track.find()).length;
 
   const totalPlaylists = (await PlayList.find()).length;
-  const totalPages = Math.ceil(totalTracks / limit);
 
+  const tracksSRC = await Track.find(
+    { ...req.query },
+    "artist trackName trackURL"
+  ).sort({ createdAt: -1 });
+  const totalPages = Math.ceil(totalTracks / limit);
   const pageNumber = page ? parseInt(page) : null;
 
   res.json({
@@ -683,6 +706,7 @@ const latestTracks = async (req, res) => {
     totalPlaylists,
     totalPages,
     pageNumber,
+    tracksSRC,
   });
 };
 
