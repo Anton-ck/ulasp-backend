@@ -373,9 +373,11 @@ const countListensByUser = async (req, res) => {
       res.json(filterTrackByDate);
     }
   } else {
-    `User listen count not found for user: ${userId}`;
+    res.json([]);
+    // res.json(`User listen count not found for user: ${userId}`);
   }
 };
+
 const countTrackByUser = async (req, res) => {
   const { id } = req.params;
   console.log("id", id);
