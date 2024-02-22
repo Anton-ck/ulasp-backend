@@ -28,7 +28,6 @@ app.use(express.static("public"));
 app.use("/admin", authRouter);
 app.use("/admin", controlAdminRouter);
 
-
 app.use("/editor", controlEditorRouter);
 
 app.use("/user", authUserRouter);
@@ -46,8 +45,4 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
-// app.use((err, req, res, next) => {
-//   res.setHeader("Accept-Encoding", "gzip, br");
-//   next();
-// });
 export default app;
