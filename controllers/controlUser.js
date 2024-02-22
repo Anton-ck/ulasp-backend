@@ -384,8 +384,8 @@ const getAddPlaylists = async (req, res) => {
   const findQuery = { addByUsers: user, ...query };
 
   const add = await PlayList.find(
-   findQuery,
-       "-addByUsers -createdAt -updatedAt"
+    findQuery,
+    "-addByUsers -createdAt -updatedAt"
   )
     .skip(skip)
     .limit(limit);
@@ -447,6 +447,14 @@ const getAddPlaylists = async (req, res) => {
 const getTracksByGenreId = async (req, res) => {
   const { id } = req.params;
   const allTracks = [];
+  const allTracksPlayer = [];
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    ...query
+  } = req.query;
+
+  const skip = (page - 1) * limit;
 
   const genreTracks = await Genre.findById(id).populate({
     path: "playList",
@@ -465,12 +473,54 @@ const getTracksByGenreId = async (req, res) => {
   const uniqueTracksArray = tracksArray.filter(
     (track, index, array) => array.indexOf(track) === index
   );
-  // console.log('uniqueTracksArray', uniqueTracksArray);
+  // console.log("uniqueTracksArray", uniqueTracksArray);
 
-  const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
+  const tracks = await Track.find(
+    {
+      _id: { $in: uniqueTracksArray },
+    },
+    {
+      artist: 1,
+      trackName: 1,
+      trackDuration: 1,
+      trackGenre: 1,
+      trackPictureURL: 1,
+      trackURL: 1,
+    },
+    { skip, limit }
+  );
+
+  const genreTracksPlayer = await Genre.findById(id).populate({
+    path: "playList",
+  });
+
+  genreTracksPlayer.playList.map(async (playlist) =>
+    allTracksPlayer.push(playlist.trackList)
+  );
+
+  const tracksArrayPlayer = allTracksPlayer.flat().map((el) => el._id);
+
+  const uniqueTracksArrayPlayer = tracksArrayPlayer.filter(
+    (track, index, array) => array.indexOf(track) === index
+  );
+
+  const tracksSRC = await Track.find(
+    {
+      _id: { $in: uniqueTracksArrayPlayer },
+    },
+    "artist trackName trackURL"
+  );
+
+  const totalTracks = tracksSRC.length;
+  const totalPages = Math.ceil(totalTracks / limit);
+
   res.json({
     playlistGenre: [{ _id: genreId, genre: genreName }],
-    tracks: [...tracks],
+    // tracks: [...tracks],
+    tracks,
+    tracksSRC,
+    totalPages,
+    totalTracks,
   });
 };
 
