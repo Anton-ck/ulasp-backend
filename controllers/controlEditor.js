@@ -215,18 +215,14 @@ const createPlayListInShopLibrary = async (req, res) => {
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
-  const {
-    page = req.query.page,
-    limit = req.query.limit,
-    sort = req.query.sort,
-  } = req.query;
+  const { page = req.query.page, limit = req.query.limit } = req.query;
 
   const skip = (page - 1) * limit;
 
   const sortPlaylist = await PlayList.findById(id, "sortedTracks");
 
   function isEmptyObject(obj) {
-    for (const i in obj) {
+    for (let i in obj) {
       if (obj.hasOwnProperty(i)) {
         return false;
       }
@@ -236,13 +232,11 @@ const findPlayListById = async (req, res) => {
 
   const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
 
-  // const sortedBy = sort !== "0" ? randomFn(sort) : sortPlaylist.sortedTracks;
-
   const sortedBy = !isEmptySortedTracks
     ? sortPlaylist.sortedTracks
     : { createdAt: -1 };
 
-  console.log("sortedBy ===>", sortedBy);
+  // console.log("sortedBy GET ===>", sortedBy);
 
   const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
     .populate({
@@ -278,6 +272,8 @@ const updatePlaylistsSortedTracks = async (req, res) => {
   const sort = req.body.data;
 
   const sortedBy = randomFn(sort.toString());
+
+  // console.log("sortedBy UPDATE ===>", sortedBy);
 
   await PlayList.findByIdAndUpdate(
     id,
