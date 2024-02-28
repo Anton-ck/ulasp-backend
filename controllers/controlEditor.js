@@ -18,7 +18,7 @@ import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
 import decodeFromIso8859 from "../helpers/decode8859-1.js";
 import isExistStringToLowerCase from "../helpers/compareStringToLowerCase.js";
-
+import randomFn from "../helpers/randomSort.js";
 import albumArt from "album-art";
 
 const publicDir = path.resolve("public/");
@@ -37,6 +37,7 @@ const uploadPics = async (req, res) => {
 
 const getFreeDiskSpace = async (req, res) => {
   let path = os.platform() === "win32" ? "c:" : "/";
+
   const { free, available, total } = await disk.check(path);
 
   res.json({
@@ -214,14 +215,43 @@ const createPlayListInShopLibrary = async (req, res) => {
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
-  const { page = req.query.page, limit = req.query.limit } = req.query;
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    sort = req.query.sort,
+  } = req.query;
 
   const skip = (page - 1) * limit;
+
+  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+
+  function isEmptyObject(obj) {
+    for (const i in obj) {
+      if (obj.hasOwnProperty(i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
+
+  // const sortedBy = sort !== "0" ? randomFn(sort) : sortPlaylist.sortedTracks;
+
+  const sortedBy = !isEmptySortedTracks
+    ? sortPlaylist.sortedTracks
+    : { createdAt: -1 };
+
+  console.log("sortedBy ===>", sortedBy);
 
   const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
     .populate({
       path: "trackList",
-      options: { sort: { createdAt: -1 }, skip, limit },
+      options: {
+        sort: sortedBy,
+        skip,
+        limit,
+      },
     })
     .populate("playlistGenre");
 
@@ -231,8 +261,8 @@ const findPlayListById = async (req, res) => {
 
   const trackList = await PlayList.findById(id, "trackList").populate({
     path: "trackList",
-    select: "artist trackName trackURL",
-    options: { sort: { createdAt: -1 } },
+    select: "artist trackName trackURL ",
+    options: { sort: sortedBy },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -241,6 +271,23 @@ const findPlayListById = async (req, res) => {
   const tracksSRC = trackList.trackList;
 
   res.json({ playlist, totalTracks, totalPages, tracksSRC });
+};
+
+const updatePlaylistsSortedTracks = async (req, res) => {
+  const { id } = req.params;
+  const sort = req.body.data;
+
+  const sortedBy = randomFn(sort.toString());
+
+  await PlayList.findByIdAndUpdate(
+    id,
+    { sortedTracks: sortedBy },
+    {
+      new: true,
+    }
+  );
+
+  res.json({ message: "ok" });
 };
 
 const updatePlaylistById = async (req, res) => {
@@ -432,11 +479,13 @@ const findGenreById = async (req, res) => {
 const updateGenreById = async (req, res) => {
   const { id } = req.params;
   const { genre, type } = req.body;
+
   const isExistGenre = await Genre.findOne({
-    genre: {
-      $regex: genre.toString(),
-      $options: "i",
-    },
+    genre,
+    // genre: {
+    //   $regex: genre.toString(),
+    //   $options: "i",
+    // },
   });
 
   if (genre === "") {
@@ -678,8 +727,11 @@ const latestTracks = async (req, res) => {
   const {
     page = req.query.page,
     limit = req.query.limit,
+    sort = req.query.sort,
     ...query
   } = req.query;
+
+  console.log("sort", sort);
 
   const skip = (page - 1) * limit;
   const latestTracks = await Track.find(
@@ -690,7 +742,7 @@ const latestTracks = async (req, res) => {
       limit,
     }
   )
-    .sort({ createdAt: -1 })
+
     .populate({
       path: "playList",
       select: "playListName",
@@ -700,16 +752,17 @@ const latestTracks = async (req, res) => {
           select: "genre",
         },
       },
-    });
+    })
+    .sort({ trackName: sort });
 
-  const totalTracks = (await Track.find()).length;
+  const totalTracks = await Track.find().countDocuments();
 
-  const totalPlaylists = (await PlayList.find()).length;
+  const totalPlaylists = await PlayList.find().countDocuments();
 
   const tracksSRC = await Track.find(
     { ...req.query },
     "artist trackName trackURL"
-  ).sort({ createdAt: -1 });
+  ).sort({ trackName: sort });
   const totalPages = Math.ceil(totalTracks / limit);
   const pageNumber = page ? parseInt(page) : null;
 
@@ -1266,6 +1319,7 @@ export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
   findPlayListById: ctrlWrapper(findPlayListById),
+  updatePlaylistsSortedTracks: ctrlWrapper(updatePlaylistsSortedTracks),
   updatePlaylistById: ctrlWrapper(updatePlaylistById),
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
