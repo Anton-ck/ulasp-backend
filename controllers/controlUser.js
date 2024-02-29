@@ -12,6 +12,8 @@ import jwt from "jsonwebtoken";
 import { UserListenCount } from "../models/userListenCountModel.js";
 import mongoose from "mongoose";
 import userPlaylist from "../models/userPlayList.js";
+import randomCover from "../helpers/randomCover.js";
+import { resizePics } from "../helpers/resizePics.js";
 
 const getAllUsers = async (req, res) => {
   const result = await User.find();
@@ -584,21 +586,35 @@ const getCreatePlaylists = async (req, res) => {
 };
 
 const createUserPlaylist = async (req, res) => {
-  console.log(req);
-  const { playListName } = req.body;
-  const { _id: owner } = req.user;
+   const { playListName, type } = req.body;
+  const { _id: owner } = req?.user;
+  let randomPicUrl;
+  let resizePicURL;
 
   const playlist = await userPlaylist.findOne({ playListName });
 
   if (playlist) {
-    throw HttpError(409, "PlayList name in use");
+    throw HttpError(409, `${playListName} name in use`);
   }
 
-  const newPlayList = await userPlaylist.create({ ...req.body, owner });
+   if (!req.file) {
+    randomPicUrl = await randomCover("playlist");
+  } else {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  let picURL = !req.file ? randomPicUrl : resizePicURL;
+
+  const newPlayList = await userPlaylist.create({
+    ...req.body,
+     playListAvatarURL: picURL,
+    owner,
+  });
 
   res.status(201).json({
     playListName: newPlayList.playListName,
     owner: newPlayList.owner,
+    playListAvatarURL: newPlayList.playListAvatarURL,
   });
 };
 
