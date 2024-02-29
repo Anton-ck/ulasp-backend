@@ -20,6 +20,14 @@ const router = express.Router();
 // );
 
 router.post(
+  "/pics/create",
+  authenticateAdmin,
+  permisionsEditor,
+  upload.single("picsURL"),
+  controllers.uploadPics
+);
+
+router.post(
   "/playlist/create",
   authenticateAdmin,
   permisionsEditor,
@@ -38,20 +46,21 @@ router.get(
   controllers.findPlayListById
 );
 
-router.post(
-  "/pics/create",
-  authenticateAdmin,
-  permisionsEditor,
-  upload.single("picsURL"),
-  controllers.uploadPics
-);
-
 router.patch(
   "/playlist/update/:id",
   authenticateAdmin,
   permisionsEditor,
   isValid,
   controllers.updatePlaylistById
+);
+
+
+router.patch(
+  "/playlist/sortupdate/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  isValid,
+  controllers.updatePlaylistsSortedTracks
 );
 
 router.delete(
