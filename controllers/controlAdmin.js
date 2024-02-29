@@ -340,43 +340,106 @@ const countListensByUser = async (req, res) => {
 
   const dateOfStart = new Date(req.body.dateOfStart);
   const dateOfEnd = new Date(req.body.dateOfEnd);
+  console.log("dateOfStart :>> ", dateOfStart.toDateString());
 
   const userListenCount = await UserListenCount.findOne({ userId }).populate(
     "tracks.trackId"
   );
-  console.log("userListenCount", userListenCount);
   if (userListenCount) {
-    if (dateOfEnd.getTime() === dateOfStart.getTime()) {
-      const filterTrackByDate = userListenCount.tracks.filter((track) => {
-        return track.listens.some((listen) => {
-          console.log(
-            " listen.date === dateOfStart",
-            listen.date.toDateString() === dateOfStart.toDateString()
-          );
+    const filteredTracks = userListenCount.tracks.map((track) => {
+      const filteredListens = track.listens.filter((listen) => {
+        const listenDate = new Date(listen.date);
+        if (dateOfEnd.getTime() === dateOfStart.getTime()) {
           return listen.date.toDateString() === dateOfStart.toDateString();
-        });
+        }
+        return listenDate >= dateOfStart && listenDate <= dateOfEnd;
       });
 
-      res.json(filterTrackByDate);
-    } else {
-      const filterTrackByDate = userListenCount.tracks.filter((track) => {
-        return track.listens.some((listen) => {
-          console.log(
-            "listen.date >= dateOfStart && listen.date <= dateOfEnd",
-            listen.date >= dateOfStart && listen.date <= dateOfEnd
-          );
+      return {
+        trackId: track.trackId,
+        listens: filteredListens,
+      };
+    });
 
-          return listen.date >= dateOfStart && listen.date <= dateOfEnd;
-        });
-      });
+    const filterTracksByDate = filteredTracks.filter(
+      (track) => track.listens.length > 0
+    );
 
-      res.json(filterTrackByDate);
-    }
+    res.json(filterTracksByDate);
   } else {
     res.json([]);
-    // res.json(`User listen count not found for user: ${userId}`);
   }
+
+  // if (userListenCount) {
+  //   const filterTracksByDate = userListenCount.tracks.reduce((acc, track) => {
+  //     const filteredListens = track.listens.filter((listen) => {
+  //       const listenDate = new Date(listen.date);
+  //       if (dateOfEnd.getTime() === dateOfStart.getTime()) {
+  //         return listen.date.toDateString() === dateOfStart.toDateString();
+  //       }
+  //       return (
+  //         listenDate.toDateString() >= dateOfStart.toDateString() &&
+  //         listenDate.toDateString() <= dateOfEnd.toDateString()
+  //       );
+  //     });
+
+  //     if (filteredListens.length > 0) {
+  //       acc.push({
+  //         trackId: track.trackId,
+  //         listens: filteredListens,
+  //       });
+  //     }
+
+  //     return acc;
+  //   }, []);
+
+  //   res.json(filterTracksByDate);
+  // } else {
+  //   res.json([]);
+  //   // res.json(`User listen count not found for user: ${userId}`);
+  // }
 };
+
+// if (userListenCount) {
+//   if (dateOfEnd.getTime() === dateOfStart.getTime()) {
+//     const filterTrackByDate = userListenCount.tracks.filter((track) => {
+//       return track.listens.some((listen) => {
+//         console.log(
+//           "listen.date.toDateString() :>> ",
+//           listen.date.toDateString()
+//         );
+//         console.log(
+//           " listen.date === dateOfStart",
+//           listen.date.toDateString() === dateOfStart.toDateString()
+//         );
+//         return listen.date.toDateString() === dateOfStart.toDateString();
+//       });
+//     });
+
+//     res.json(filterTrackByDate);
+//   } else {
+//     const filterTrackByDate = userListenCount.tracks.filter((track) => {
+//       return track.listens.some((listen) => {
+//         console.log("listen.date.toDateString() :>> ", listen.date.getTime());
+//         console.log(
+//           "listen.date >= dateOfStart && listen.date <= dateOfEnd",
+//           listen.date.getTime() >= dateOfStart.getTime() &&
+//             listen.date.getTime() <= dateOfEnd.getTime()
+//         );
+
+//         return (
+//           listen.date.getTime() >= dateOfStart.getTime() &&
+//           listen.date.getTime() <= dateOfEnd.getTime()
+//         );
+//       });
+//     });
+
+//     res.json(filterTrackByDate);
+//   }
+// } else {
+//   res.json([]);
+//   // res.json(`User listen count not found for user: ${userId}`);
+// }
 
 const countTrackByUser = async (req, res) => {
   const { id } = req.params;
