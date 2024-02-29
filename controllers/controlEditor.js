@@ -1,6 +1,6 @@
 import path from "path";
 import * as fs from "fs";
-import disk from "diskusage";
+// import disk from "diskusage";
 import os from "os";
 
 import PlayList from "../models/playlistModel.js";
@@ -35,16 +35,16 @@ const uploadPics = async (req, res) => {
   });
 };
 
-const getFreeDiskSpace = async (req, res) => {
-  let path = os.platform() === "win32" ? "c:" : "/";
-  const { free, available, total } = await disk.check(path);
+// const getFreeDiskSpace = async (req, res) => {
+//   let path = os.platform() === "win32" ? "c:" : "/";
+//   const { free, available, total } = await disk.check(path);
 
-  res.json({
-    free,
-    available,
-    total,
-  });
-};
+//   res.json({
+//     free,
+//     available,
+//     total,
+//   });
+// };
 
 const createPlayList = async (req, res) => {
   const { playListName, type } = req.body;
@@ -1262,7 +1262,7 @@ const deletePlaylistInShopItem = async (req, res) => {
 //send mail to client about access - off- on
 
 export default {
-  getFreeDiskSpace: ctrlWrapper(getFreeDiskSpace),
+  // getFreeDiskSpace: ctrlWrapper(getFreeDiskSpace),
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
   findPlayListById: ctrlWrapper(findPlayListById),
