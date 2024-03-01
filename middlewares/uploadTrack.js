@@ -17,7 +17,7 @@ const FileNameToUtf8 = (file) => {
   }
   const translatedFileName = Buffer.from(file.originalname, "latin1")
     .toString("utf8")
-    .replaceAll(" ", "__");
+    .replaceAll(/[ #]/g, "__");
 
   // const fileName = file.originalname
   //   .toString("cp1251")
