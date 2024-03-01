@@ -54,7 +54,7 @@ export const resizePics = async (file, type) => {
 
   await fs.rename(resizeResultUpload, resultUpload);
 
-  const picsURL = path.join(picsFolder.split("/").pop(), resizeFileName);
+  const picsURL = path.join(picsFolder.split(/[\\\/]/g).pop(), resizeFileName);
 
   return picsURL;
 };
