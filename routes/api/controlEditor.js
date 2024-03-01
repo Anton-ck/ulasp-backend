@@ -12,12 +12,12 @@ import uploadTrack from "../../middlewares/uploadTrack.js";
 
 const router = express.Router();
 
-// router.get(
-//   "/freeDiskSpace",
-//   authenticateAdmin,
-//   permisionsEditor,
-//   controllers.getFreeDiskSpace
-// );
+router.get(
+  "/freeDiskSpace",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.getFreeDiskSpace
+);
 
 router.post(
   "/pics/create",
@@ -53,7 +53,6 @@ router.patch(
   isValid,
   controllers.updatePlaylistById
 );
-
 
 router.patch(
   "/playlist/sortupdate/:id",
@@ -272,7 +271,5 @@ router.delete(
   permisionsEditor,
   controllers.deletePlaylistInShopItem
 );
-
-// router.post("/test", controllers.test);
 
 export default router;

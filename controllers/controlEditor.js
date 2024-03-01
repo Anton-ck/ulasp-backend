@@ -1,6 +1,6 @@
 import path from "path";
 import * as fs from "fs";
-// import disk from "diskusage";
+import disk from "diskusage";
 import os from "os";
 
 import PlayList from "../models/playlistModel.js";
@@ -35,19 +35,16 @@ const uploadPics = async (req, res) => {
   });
 };
 
-
 const getFreeDiskSpace = async (req, res) => {
   let path = os.platform() === "win32" ? "c:" : "/";
-
   const { free, available, total } = await disk.check(path);
 
-
-//   res.json({
-//     free,
-//     available,
-//     total,
-//   });
-// };
+  res.json({
+    free,
+    available,
+    total,
+  });
+};
 
 const createPlayList = async (req, res) => {
   const { playListName, type } = req.body;
@@ -1241,79 +1238,8 @@ const deletePlaylistInShopItem = async (req, res) => {
   });
 };
 
-// const test = async (req, res) => {
-//   const { idGenre, idPlaylist } = req.body;
-
-//   const genre = await Genre.findById(idGenre);
-//   const playList = await PlayList.findById(idPlaylist);
-
-//   console.log(genre);
-
-//   console.log(genre.playList.includes(idPlaylist));
-
-//   // if (genre.playList.includes(idPlaylist)) {
-//   //   await PlayList.findByIdAndUpdate(idPlaylist.id, {
-//   //     $push: { playlistGenre: genre._id },
-//   //   });
-
-//   //   res.json({
-//   //     message: "ok",
-//   //   });
-//   // } else {
-//   //   return;
-//   // }
-
-//   await PlayList.findByIdAndUpdate(
-//     idPlaylist,
-//     {
-//       $push: { playlistGenre: genre._id },
-//     },
-//     { new: true }
-//   );
-
-//   res.json({
-//     message: "ok",
-//   });
-
-//   // const genre = await Genre.find({
-//   //   playList: { $in: [idPlaylist] },
-//   // });
-// };
-
-// const getTracksInGenre = async (req, res) => {
-//   const { id } = req.params;
-//   const allTracks = [];
-
-//   const genre = await Genre.findById(id).populate({
-//     path: "playList",
-//     options: { populate: "trackList" },
-//   });
-
-//   genre.playList.map((playlist) => allTracks.push(playlist.trackList));
-
-//   res.json(allTracks.flat());
-
-//  const { id } = req.params;
-
-//  const genre = await Genre.findById(id).populate("playList");
-
-//  const tracksPromises = genre.playList.map(async (playlist) => {
-//    const tracks = await Track.find({ playList: playlist._id });
-
-//    return tracks;
-//  });
-
-//  const tracks = await Promise.all(tracksPromises).then((results) => {
-//    return results.flat();
-//  });
-
-//  res.json(tracks);
-// };
-
-//send mail to client about access - off- on
-
 export default {
-  // getFreeDiskSpace: ctrlWrapper(getFreeDiskSpace),
+  getFreeDiskSpace: ctrlWrapper(getFreeDiskSpace),
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
   findPlayListById: ctrlWrapper(findPlayListById),
@@ -1347,6 +1273,4 @@ export default {
   createPlayListInShopLibrary: ctrlWrapper(createPlayListInShopLibrary),
   deletePlaylistInShopSubCategory: ctrlWrapper(deletePlaylistInShopSubCategory),
   deletePlaylistInShopItem: ctrlWrapper(deletePlaylistInShopItem),
-  // test: ctrlWrapper(test),
-  // getTracksInGenre: ctrlWrapper(getTracksInGenre),
 };
