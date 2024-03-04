@@ -544,10 +544,22 @@ const countListensTrackByUser = async (req, res) => {
     (track) => track.trackId.toString() === trackId
   );
 
+  //Получаем данные по треку
+  let trackData = await Track.findOne(
+    { _id: trackId },
+    {
+      artist: 1,
+      trackName: 1,
+      trackDuration: 1,
+    }
+  );
+
   if (!track) {
     // Если запись о прослушивании трека не найдена, создаем новый объект track
     track = {
       trackId,
+      trackName: trackData.trackName,
+      artist: trackData.artist,
       listens: [{ countOfListenes: 1, date: currentDate }],
     };
     userListenCount.tracks.push(track);
@@ -586,7 +598,7 @@ const getCreatePlaylists = async (req, res) => {
 };
 
 const createUserPlaylist = async (req, res) => {
-   const { playListName, type } = req.body;
+  const { playListName, type } = req.body;
   const { _id: owner } = req?.user;
   let randomPicUrl;
   let resizePicURL;
@@ -597,7 +609,7 @@ const createUserPlaylist = async (req, res) => {
     throw HttpError(409, `${playListName} name in use`);
   }
 
-   if (!req.file) {
+  if (!req.file) {
     randomPicUrl = await randomCover("playlist");
   } else {
     resizePicURL = await resizePics(req.file, type);
@@ -607,7 +619,7 @@ const createUserPlaylist = async (req, res) => {
 
   const newPlayList = await userPlaylist.create({
     ...req.body,
-     playListAvatarURL: picURL,
+    playListAvatarURL: picURL,
     owner,
   });
 
