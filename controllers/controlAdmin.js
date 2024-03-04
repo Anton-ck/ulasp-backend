@@ -334,29 +334,37 @@ const countNewClientsByMonth = async (req, res) => {
 
   res.json({ countNewClientsByMonth: countNewClientsByMonth });
 };
-
+//отчет по прослушанным песням пользователя
 const countListensByUser = async (req, res) => {
   const userId = req.body.userId;
 
   const dateOfStart = new Date(req.body.dateOfStart);
   const dateOfEnd = new Date(req.body.dateOfEnd);
-  console.log("dateOfStart :>> ", dateOfStart.toDateString());
+  // console.log("dateOfStart :>> ", dateOfStart.toDateString());
+  // console.log("dateOfStart :>> ", dateOfEnd);
+  // console.log("dateOfEnd :>> ", dateOfEnd.getTime() + 86400000);
+  // console.log("dateOfEnd :>> ", dateOfEnd.getTime());
+  const userListenCount = await UserListenCount.findOne({ userId });
 
-  const userListenCount = await UserListenCount.findOne({ userId }).populate(
-    "tracks.trackId"
-  );
   if (userListenCount) {
     const filteredTracks = userListenCount.tracks.map((track) => {
       const filteredListens = track.listens.filter((listen) => {
         const listenDate = new Date(listen.date);
+        console.log(" listenDate :>> ", listenDate);
         if (dateOfEnd.getTime() === dateOfStart.getTime()) {
           return listen.date.toDateString() === dateOfStart.toDateString();
         }
-        return listenDate >= dateOfStart && listenDate <= dateOfEnd;
+
+        return (
+          listenDate.getTime() >= dateOfStart.getTime() &&
+          listenDate.getTime() <= dateOfEnd.getTime() + 86400000
+        );
       });
 
       return {
         trackId: track.trackId,
+        trackName: track.trackName,
+        artist: track.artist,
         listens: filteredListens,
       };
     });
