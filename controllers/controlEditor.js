@@ -655,12 +655,27 @@ const deleteTrack = async (req, res) => {
   if (!track) {
     throw HttpError(404, `Track with ${id} not found`);
   }
-  const trackPath = publicDir + "/" + track?.trackURL;
 
+  const trackPath = publicDir + "/" + track?.trackURL;
+  const coverPath = publicDir + "/" + track?.trackPictureURL;
+
+  const howManyCoverUsed = await Track.countDocuments({
+    trackPictureURL: track?.trackPictureURL,
+  });
+
+  console.log("howManyCoverUsed", howManyCoverUsed);
   await Track.findByIdAndDelete(id);
 
   if (fs.existsSync(trackPath)) {
     fs.unlinkSync(trackPath);
+  }
+
+  if (
+    fs.existsSync(coverPath) &&
+    !coverPath.includes("trackCover_default") &&
+    howManyCoverUsed === 1
+  ) {
+    fs.unlinkSync(coverPath);
   }
 
   const idTrackInPlaylist = await PlayList.find({
