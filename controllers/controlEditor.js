@@ -663,7 +663,6 @@ const deleteTrack = async (req, res) => {
     trackPictureURL: track?.trackPictureURL,
   });
 
-  console.log("howManyCoverUsed", howManyCoverUsed);
   await Track.findByIdAndDelete(id);
 
   if (fs.existsSync(trackPath)) {
@@ -692,8 +691,14 @@ const deleteTrack = async (req, res) => {
     );
   }
 
-  res.json({
-    message: `Track ${track.trackName} was deleted`,
+  res.status(200).json({
+    message: `Track ${track.artist} ${track.trackName} was deleted `,
+
+    code: "2000",
+    object: {
+      artist: `${track.artist}`,
+      trackName: `${track.trackName}`,
+    },
   });
 };
 
@@ -726,8 +731,15 @@ const deleteTrackInPlaylist = async (req, res) => {
       `Track ${track.artist} ${track.trackName} not found in ${playList.playListName} playlist`
     );
   }
-  res.json({
-    message: `Track ${track.artist} ${track.trackName} was deleted ${playList.playListName} playlist`,
+
+  res.status(200).json({
+    message: `Track ${track.artist} ${track.trackName} was deleted in ${playList.playListName} playlist`,
+
+    code: "2000",
+    object: {
+      artist: `${track.artist}`,
+      trackName: `${track.trackName}`,
+    },
   });
 };
 
