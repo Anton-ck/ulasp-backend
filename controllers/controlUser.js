@@ -587,9 +587,10 @@ const countListensTrackByUser = async (req, res) => {
 const getCreatePlaylists = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
   const skip = (page - 1) * limit;
+  const { _id: userId } = req.user;
 
   const createPlaylists = await userPlaylist
-    .find({ ...req.query }, "-createdAt -updatedAt", {
+    .find({ ...req.query, owner: userId }, "-createdAt -updatedAt", {
       skip,
       limit,
     })
@@ -632,23 +633,35 @@ const createUserPlaylist = async (req, res) => {
 
 const findUserPlayListById = async (req, res) => {
   const { id } = req.params;
+const { page = req.query.page, limit = req.query.limit } = req.query;
+  const skip = (page - 1) * limit;
 
   const playlist = await userPlaylist
     .findById(id)
     .populate({
       path: "trackList",
-      options: { sort: { createdAt: -1 } },
-    })
-    .populate("playlistGenre");
+      options: { sort: { createdAt: -1 }, skip, limit },
+    });
+    // .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
   }
 
-  const totalTracks = playlist.trackList.length;
+   const trackList = await PlayList.findById(id, "trackList").populate({
+    path: "trackList",
+    select: "artist trackName trackURL",
+    options: { sort: { createdAt: -1 } },
+  });
 
-  res.json({ playlist, totalTracks });
-};
+  const totalTracks = trackList.trackList.length;
+   const totalPages = Math.ceil(totalTracks / limit);
+
+  const tracksSRC = trackList.trackList;
+
+  res.json({ playlist, totalTracks, totalPages, tracksSRC });
+
+  };
 
 const uploadPics = async (req, res) => {
   const { type } = req.body;

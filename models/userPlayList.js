@@ -40,8 +40,10 @@ const userPlaylistSchema = new Schema(
         type: Schema.Types.ObjectId,
       },
     ],
-
-    
+     sortedTracks: {
+      type: Object,
+      default: null,
+    },
   },
 
   { versionKey: false, timestamps: true }
