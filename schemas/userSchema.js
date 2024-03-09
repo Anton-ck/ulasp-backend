@@ -37,6 +37,7 @@ export const createCommonUserSchema = Joi.object({
   dateOfAccess: Joi.string().allow("").optional(),
   access: Joi.boolean(),
   online: Joi.boolean(),
+  institution: Joi.string().allow("").optional(),
 });
 
 export const createFopUserSchema = createCommonUserSchema.keys({
@@ -50,7 +51,6 @@ export const createFopUserSchema = createCommonUserSchema.keys({
     .optional(),
   // dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp),
-  institution: Joi.string().allow("").optional(),
 });
 
 export const createCompanyUserSchema = createCommonUserSchema.keys({

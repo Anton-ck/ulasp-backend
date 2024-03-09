@@ -62,10 +62,15 @@ const adminSchema = new Schema(
       match: onlyNumberRegexp,
       unique: true,
     },
-    dayOfBirthday: {
+    // dayOfBirthday: {
+    //   type: String,
+    //   required: true,
+    // },
+    institution: {
       type: String,
-      required: true,
+      default: "",
     },
+
     telNumber: {
       type: String,
       required: true,
@@ -83,6 +88,12 @@ const adminSchema = new Schema(
       default: "",
     },
     status: {
+      //{block unblock}
+      type: Boolean,
+      required: true,
+      default: false,
+    },
+    access: {
       //{block unblock}
       type: Boolean,
       required: true,
