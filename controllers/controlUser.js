@@ -65,10 +65,26 @@ const findPlayListById = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  const playlist = await PlayList.findById(id)
+  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+    
+    function isEmptyObject(obj) {
+    for (let i in obj) {
+      if (obj.hasOwnProperty(i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
+
+  const sortedBy = !isEmptySortedTracks
+    ? sortPlaylist.sortedTracks
+    : { createdAt: -1 };
+    
+  const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
     .populate({
       path: "trackList",
-      options: { sort: { createdAt: -1 }, skip, limit },
+      options: { sort: sortedBy, skip, limit },
     })
     .populate("playlistGenre");
 
@@ -79,7 +95,7 @@ const findPlayListById = async (req, res) => {
   const trackList = await PlayList.findById(id, "trackList").populate({
     path: "trackList",
     select: "artist trackName trackURL",
-    options: { sort: { createdAt: -1 } },
+    options: { sort: sortedBy },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -88,6 +104,25 @@ const findPlayListById = async (req, res) => {
   const tracksSRC = trackList.trackList;
 
   res.json({ playlist, totalTracks, totalPages, tracksSRC });
+};
+
+const updatePlaylistsSortedTracks = async (req, res) => {
+  const { id } = req.params;
+  const sort = req.body.data;
+
+  const sortedBy = randomFn(sort.toString());
+
+  // console.log("sortedBy UPDATE ===>", sortedBy);
+
+  await PlayList.findByIdAndUpdate(
+    id,
+    { sortedTracks: sortedBy },
+    {
+      new: true,
+    }
+  );
+
+  res.json({ message: "ok" });
 };
 
 const allGenres = async (req, res) => {
@@ -777,4 +812,5 @@ export default {
   updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),
   getCategoryShopById: ctrlWrapper(getCategoryShopById),
   getSubCategoryShopById: ctrlWrapper(getSubCategoryShopById),
+  updatePlaylistsSortedTracks: ctrlWrapper(updatePlaylistsSortedTracks),
 };
