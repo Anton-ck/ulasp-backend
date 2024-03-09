@@ -52,6 +52,6 @@ const userPlaylistSchema = new Schema(
 userPlaylistSchema.post("findOneAndUpdate", handleMongooseError);
 userPlaylistSchema.post("save", handleMongooseError);
 
-const userPlaylist = model("userplaylist", userPlaylistSchema );
+const UserPlaylist = model("userplaylist", userPlaylistSchema );
 
-export default userPlaylist;
+export default UserPlaylist;

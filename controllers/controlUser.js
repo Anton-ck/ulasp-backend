@@ -11,7 +11,7 @@ import ctrlWrapper from "../helpers/ctrlWrapper.js";
 import jwt from "jsonwebtoken";
 import { UserListenCount } from "../models/userListenCountModel.js";
 import mongoose from "mongoose";
-import userPlaylist from "../models/userPlayList.js";
+import UserPlaylist from "../models/userPlayList.js";
 import randomCover from "../helpers/randomCover.js";
 import { resizePics } from "../helpers/resizePics.js";
 
@@ -291,7 +291,7 @@ const updateUserFavoritesPlaylists = async (req, res) => {
   const { _id: user } = req.user;
   console.log(" id", user);
 
-  const playlist = await userPlaylist.findById(id);
+  const playlist = await UserPlaylist.findById(id);
 
   if (!playlist) {
     return res
@@ -304,14 +304,14 @@ const updateUserFavoritesPlaylists = async (req, res) => {
   console.log("userplaylist", playlist);
 
   if (isFavorite) {
-    await userPlaylist.findByIdAndUpdate(playlist._id, {
+    await UserPlaylist.findByIdAndUpdate(playlist._id, {
       $pull: { favoriteByUsers: user },
     });
     res
       .status(200)
       .json({ message: `Removed ${playlist.playListName} from favorites` });
   } else {
-    await userPlaylist.findByIdAndUpdate(playlist._id, {
+    await UserPlaylist.findByIdAndUpdate(playlist._id, {
       $push: { favoriteByUsers: user },
     });
     res
@@ -334,7 +334,7 @@ const getFavoritePlaylists = async (req, res) => {
       )
         .skip(skip)
         .limit(limit),
-      userPlaylist
+      UserPlaylist
         .find(
           { favoriteByUsers: user },
           "-favoriteByUsers -createdAt -updatedAt"
@@ -347,7 +347,7 @@ const getFavoritePlaylists = async (req, res) => {
 
     const totalPlayLists = await Promise.all([
       PlayList.countDocuments({ favoriteByUsers: user }),
-      userPlaylist.countDocuments({ favoriteByUsers: user }),
+      UserPlaylist.countDocuments({ favoriteByUsers: user }),
     ]).then((counts) => counts.reduce((total, count) => total + count, 0));
 
     res.json({ totalPlayLists, favorites: mergedFavorites });
@@ -624,7 +624,7 @@ const getCreatePlaylists = async (req, res) => {
   const skip = (page - 1) * limit;
   const { _id: userId } = req.user;
 
-  const createPlaylists = await userPlaylist
+  const createPlaylists = await UserPlaylist
     .find({ ...req.query, owner: userId }, "-createdAt -updatedAt", {
       skip,
       limit,
@@ -639,7 +639,7 @@ const createUserPlaylist = async (req, res) => {
   let randomPicUrl;
   let resizePicURL;
 
-  const playlist = await userPlaylist.findOne({ playListName });
+  const playlist = await UserPlaylist.findOne({ playListName });
 
   if (playlist) {
     throw HttpError(409, `${playListName} name in use`);
@@ -653,7 +653,7 @@ const createUserPlaylist = async (req, res) => {
 
   let picURL = !req.file ? randomPicUrl : resizePicURL;
 
-  const newPlayList = await userPlaylist.create({
+  const newPlayList = await UserPlaylist.create({
     ...req.body,
     playListAvatarURL: picURL,
     owner,
@@ -671,7 +671,7 @@ const findUserPlayListById = async (req, res) => {
 const { page = req.query.page, limit = req.query.limit } = req.query;
   const skip = (page - 1) * limit;
 
-  const playlist = await userPlaylist
+  const playlist = await UserPlaylist
     .findById(id)
     .populate({
       path: "trackList",
@@ -683,7 +683,7 @@ const { page = req.query.page, limit = req.query.limit } = req.query;
     throw HttpError(404, `Playlist not found`);
   }
 
-   const trackList = await PlayList.findById(id, "trackList").populate({
+   const trackList = await UserPlaylist.findById(id, "trackList").populate({
     path: "trackList",
     select: "artist trackName trackURL",
     options: { sort: { createdAt: -1 } },
@@ -712,7 +712,7 @@ const uploadPics = async (req, res) => {
 
 const updateUserPlaylistById = async (req, res) => {
   const { id } = req.params;
-  const isExistPlaylist = await userPlaylist.findById(id);
+  const isExistPlaylist = await UserPlaylist.findById(id);
 
   if (isExistPlaylist === null) {
     res.status(404).json({
@@ -721,7 +721,7 @@ const updateUserPlaylistById = async (req, res) => {
       object: `${id}`,
     });
   }
-  const updatedPlaylist = await userPlaylist.findByIdAndUpdate(
+  const updatedPlaylist = await UserPlaylist.findByIdAndUpdate(
     id,
     { ...req.body },
     {
@@ -735,13 +735,13 @@ const updateUserPlaylistById = async (req, res) => {
 const deleteUserPlaylist = async (req, res) => {
   const { id } = req.params;
 
-  const playlist = await userPlaylist.findById(id);
+  const playlist = await UserPlaylist.findById(id);
 
   if (!playlist) {
     throw HttpError(404, `Playlist with ${id} not found`);
   }
 
-  await userPlaylist.findByIdAndDelete(id);
+  await UserPlaylist.findByIdAndDelete(id);
 
   res.json({
     message: `Playlist ${playlist.playListName} was deleted`,
