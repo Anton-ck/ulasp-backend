@@ -47,11 +47,13 @@ export const createEditorSchema = Joi.object({
     .required(),
   editorRole: Joi.boolean(),
   taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp).required(),
-  dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
+  institution: Joi.string().allow("").optional(),
+  // dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),
   comment: Joi.string().allow("").optional(),
   status: Joi.boolean(),
+  access: Joi.boolean(),
 });
 
 export const refreshSchema = Joi.object({
@@ -59,12 +61,13 @@ export const refreshSchema = Joi.object({
 });
 
 export const updateAdminInfo = Joi.object({
-  firstName: Joi.string().min(5).max(30).pattern(nameRegexp).required(),
-  lastName: Joi.string().min(5).max(30).pattern(nameRegexp).required(),
-  fatherName: Joi.string().min(5).max(30).pattern(nameRegexp),
+  firstName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
+  lastName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
+  fatherName: Joi.string().min(3).max(30).pattern(nameRegexp),
   login: Joi.string().min(3).max(10).pattern(loginAdminRegexp).required(),
   taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp).required(),
-  dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
+  institution: Joi.string().allow("").optional(),
+  // dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),
   comment: Joi.string().allow("").optional(),

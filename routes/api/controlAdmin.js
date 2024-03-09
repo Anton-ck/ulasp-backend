@@ -177,6 +177,13 @@ router.patch(
   controllers.toggleUserStatus
 );
 router.patch(
+  "/editors/status/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.toggleAdminStatus
+);
+router.patch(
   "/users/access/:id",
   authenticateAdmin,
   permisionsAdmin,

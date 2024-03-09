@@ -377,77 +377,7 @@ const countListensByUser = async (req, res) => {
   } else {
     res.json([]);
   }
-
-  // if (userListenCount) {
-  //   const filterTracksByDate = userListenCount.tracks.reduce((acc, track) => {
-  //     const filteredListens = track.listens.filter((listen) => {
-  //       const listenDate = new Date(listen.date);
-  //       if (dateOfEnd.getTime() === dateOfStart.getTime()) {
-  //         return listen.date.toDateString() === dateOfStart.toDateString();
-  //       }
-  //       return (
-  //         listenDate.toDateString() >= dateOfStart.toDateString() &&
-  //         listenDate.toDateString() <= dateOfEnd.toDateString()
-  //       );
-  //     });
-
-  //     if (filteredListens.length > 0) {
-  //       acc.push({
-  //         trackId: track.trackId,
-  //         listens: filteredListens,
-  //       });
-  //     }
-
-  //     return acc;
-  //   }, []);
-
-  //   res.json(filterTracksByDate);
-  // } else {
-  //   res.json([]);
-  //   // res.json(`User listen count not found for user: ${userId}`);
-  // }
 };
-
-// if (userListenCount) {
-//   if (dateOfEnd.getTime() === dateOfStart.getTime()) {
-//     const filterTrackByDate = userListenCount.tracks.filter((track) => {
-//       return track.listens.some((listen) => {
-//         console.log(
-//           "listen.date.toDateString() :>> ",
-//           listen.date.toDateString()
-//         );
-//         console.log(
-//           " listen.date === dateOfStart",
-//           listen.date.toDateString() === dateOfStart.toDateString()
-//         );
-//         return listen.date.toDateString() === dateOfStart.toDateString();
-//       });
-//     });
-
-//     res.json(filterTrackByDate);
-//   } else {
-//     const filterTrackByDate = userListenCount.tracks.filter((track) => {
-//       return track.listens.some((listen) => {
-//         console.log("listen.date.toDateString() :>> ", listen.date.getTime());
-//         console.log(
-//           "listen.date >= dateOfStart && listen.date <= dateOfEnd",
-//           listen.date.getTime() >= dateOfStart.getTime() &&
-//             listen.date.getTime() <= dateOfEnd.getTime()
-//         );
-
-//         return (
-//           listen.date.getTime() >= dateOfStart.getTime() &&
-//           listen.date.getTime() <= dateOfEnd.getTime()
-//         );
-//       });
-//     });
-
-//     res.json(filterTrackByDate);
-//   }
-// } else {
-//   res.json([]);
-//   // res.json(`User listen count not found for user: ${userId}`);
-// }
 
 const countTrackByUser = async (req, res) => {
   const { id } = req.params;
@@ -471,6 +401,24 @@ const countPlaylistByUser = async (req, res) => {
   res.json(countAdd);
 };
 
+const toggleAdminStatus = async (req, res) => {
+  const { id } = req.params;
+
+  const user = await Admin.findById(id);
+
+  if (!user) {
+    return res.status(404).json({ error: "Not found" });
+  }
+
+  user.status = !user.status;
+  await user.save();
+
+  res.status(200).json({
+    message: `Status for user '${user.firstName} ${user.lastName}' with ID ${user._id} has been toggled`,
+    newStatus: user.status,
+  });
+};
+
 export default {
   createEditorRole: ctrlWrapper(createEditorRole),
   getAllAdmin: ctrlWrapper(getAllAdmin),
@@ -484,6 +432,7 @@ export default {
   deleteUser: ctrlWrapper(deleteUser),
   toggleUserStatus: ctrlWrapper(toggleUserStatus),
   toggleUserAccess: ctrlWrapper(toggleUserAccess),
+  toggleAdminStatus: ctrlWrapper(toggleAdminStatus),
   updateUserInfo: ctrlWrapper(updateUserInfo),
   countNewClients: ctrlWrapper(countNewClients),
   countOnlineClients: ctrlWrapper(countOnlineClients),

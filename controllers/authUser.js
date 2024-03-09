@@ -15,7 +15,6 @@ const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
 
-
 dotenv.config();
 
 const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
@@ -72,8 +71,9 @@ const userSignIn = async (req, res) => {
   console.log("contractNumber", contractNumber);
   console.log("password", password);
   console.log("user", user);
+
   if (!user) {
-    throw HttpError(401, "Login  or taxCode is wrong");
+    throw HttpError(401, "Login or taxCode is wrong");
   }
 
   const payload = {
@@ -82,9 +82,11 @@ const userSignIn = async (req, res) => {
 
   const passwordCompare = await bcrypt.compare(password, user.password);
   if (!passwordCompare) {
-    throw HttpError(401, "Login  or password is wrong");
+    throw HttpError(401, "Login or password is wrong");
   }
-
+  if (!user.access) {
+    throw HttpError(403, "Access Denied");
+  }
   const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
     expiresIn: accessTokenExpires,
   });
