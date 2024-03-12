@@ -152,6 +152,13 @@ router.patch(
   controllers.updateUserPlaylistById
 );
 
+router.patch(
+  "/playlist/sortupdate/:id",
+   authenticatUser,
+  isValid,
+  controllers.updatePlaylistsSortedTracks
+);
+
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);
