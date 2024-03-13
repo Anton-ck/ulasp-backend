@@ -1,4 +1,4 @@
-const getRandomNumber = (min, max) => {
+export const getRandomNumber = (min, max) => {
   let random = Math.floor(Math.random() * (max - min + 1)) + min;
   if (random === 0) {
     random = -1;
@@ -7,7 +7,7 @@ const getRandomNumber = (min, max) => {
   return random;
 };
 
-const randomFn = (typeSwitch) => {
+export const randomFn = (typeSwitch) => {
   let sortOptions;
   switch (typeSwitch) {
     case "1":
@@ -58,4 +58,3 @@ const randomFn = (typeSwitch) => {
   }
 };
 
-export default randomFn;
