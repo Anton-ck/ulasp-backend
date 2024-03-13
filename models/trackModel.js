@@ -39,6 +39,10 @@ const trackSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    sortIndex: {
+      type: Number,
+      default: null,
+    },
   },
   { versionKey: false, timestamps: true }
 );

@@ -17,7 +17,7 @@ import randomCover from "../helpers/randomCover.js";
 import getId3Tags from "../helpers/id3Tags.js";
 import decodeFromIso8859 from "../helpers/decode8859-1.js";
 import isExistStringToLowerCase from "../helpers/compareStringToLowerCase.js";
-import randomFn from "../helpers/randomSort.js";
+import { randomFn, getRandomNumber } from "../helpers/randomSort.js";
 import albumArt from "album-art";
 
 import createTrackInDB from "../helpers/createTrackInDB.js";
@@ -223,22 +223,22 @@ const findPlayListById = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+  // const sortPlaylist = await PlayList.findById(id, "sortedTracks");
 
-  function isEmptyObject(obj) {
-    for (let i in obj) {
-      if (obj.hasOwnProperty(i)) {
-        return false;
-      }
-    }
-    return true;
-  }
+  // function isEmptyObject(obj) {
+  //   for (let i in obj) {
+  //     if (obj.hasOwnProperty(i)) {
+  //       return false;
+  //     }
+  //   }
+  //   return true;
+  // }
 
-  const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
+  // const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
 
-  const sortedBy = !isEmptySortedTracks
-    ? sortPlaylist.sortedTracks
-    : { createdAt: -1 };
+  // const sortedBy = !isEmptySortedTracks
+  //   ? sortPlaylist.sortedTracks
+  //   : { createdAt: -1 };
 
   const searchOptions = {
     $or: [
@@ -253,7 +253,8 @@ const findPlayListById = async (req, res) => {
 
       match: searchOptions,
       options: {
-        sort: sortedBy,
+        // sort: sortedBy,
+        sort: { sortIndex: 1 },
         skip,
         limit,
       },
@@ -268,7 +269,12 @@ const findPlayListById = async (req, res) => {
     path: "trackList",
     match: searchOptions,
     select: "artist trackName trackURL ",
-    options: { sort: sortedBy },
+    // options: { sort: sortedBy },
+    options: {
+      sort: {
+        sortIndex: 1,
+      },
+    },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -277,24 +283,76 @@ const findPlayListById = async (req, res) => {
 
   const tracksSRC = trackList.trackList;
 
-  res.json({ playlist, totalTracks, totalPages, tracksSRC });
+  res.json({ playlist, tracksSRC, totalTracks, totalPages });
 };
+
+// const updatePlaylistsSortedTracks = async (req, res) => {
+//   const { id } = req.params;
+//   const sort = req.body.data;
+
+//   const sortedBy = randomFn(sort.toString());
+
+//   // console.log("sortedBy UPDATE ===>", sortedBy);
+
+//   await PlayList.findByIdAndUpdate(
+//     id,
+//     { sortedTracks: sortedBy },
+//     {
+//       new: true,
+//     }
+//   );
+
+//   res.json({ message: "ok" });
+// };
 
 const updatePlaylistsSortedTracks = async (req, res) => {
   const { id } = req.params;
-  const sort = req.body.data;
 
-  const sortedBy = randomFn(sort.toString());
+  const playList = await PlayList.findById(id);
 
-  // console.log("sortedBy UPDATE ===>", sortedBy);
+  if (playList) {
+    const tracksInPlaylist = playList.trackList;
 
-  await PlayList.findByIdAndUpdate(
-    id,
-    { sortedTracks: sortedBy },
-    {
-      new: true,
-    }
-  );
+    tracksInPlaylist.map(async (id) => {
+      await Track.findByIdAndUpdate(id, {
+        sortIndex: getRandomNumber(1, 1000),
+      });
+    });
+
+    // console.log("result", res);
+  }
+  // getRandomNumber
+
+  //   function shuffleArray(array) {
+  //     for (let i = array.length - 1; i > 0; i--) {
+  //       const j = Math.floor(Math.random() * (i + 1));
+  //       [array[i], array[j]] = [array[j], array[i]];
+  //     }
+  //     return array;
+  //   }
+  //   const result = shuffleArray(tracksInPlaylist);
+
+  //   console.log(result);
+
+  //   await PlayList.findByIdAndUpdate(
+  //     id,
+  //     {
+  //       $pullAll: { trackList: tracksInPlaylist },
+  //     },
+  //     {
+  //       new: true,
+  //     }
+  //   );
+
+  //   const resultSort = await PlayList.findByIdAndUpdate(
+  //     id,
+  //     {
+  //       $push: { trackList: { $each: result } },
+  //     },
+  //     { new: true }
+  //   );
+  //   res.json({ message: "ok", resultSort });
+  // }
 
   res.json({ message: "ok" });
 };
@@ -718,9 +776,7 @@ const uploadTrack = async (req, res) => {
     res.status(201).json({
       message: `Track successfully wrote to ${playList.playListName}`,
     });
-    res.json({
-      track,
-    });
+
     return;
   }
   /////////////
@@ -730,7 +786,6 @@ const uploadTrack = async (req, res) => {
       trackURL: `tracks/${FileNameLatin}`,
     });
 
-    console.log("trackExist", trackExist);
     if (trackExist) {
       throw HttpError(409, `Track "${FileNameCyrillic}" already exist`);
     } else {
@@ -755,8 +810,6 @@ const uploadTrack = async (req, res) => {
     req,
     trackDir
   );
-
-  console.log("track", track);
 
   res.json({
     track,
