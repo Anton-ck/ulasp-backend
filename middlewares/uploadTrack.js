@@ -50,11 +50,17 @@ const uploadTrack = multer({
     const optionsWithError = {
       existFileError: true,
       existFileName: fileName,
+      file: file,
+      path: trackPath,
+      trackDir,
     };
 
     const optionsWithOutError = {
       existFileError: false,
       existFileName: fileName,
+      file: file,
+      path: trackPath,
+      trackDir,
     };
 
     const codeError = {

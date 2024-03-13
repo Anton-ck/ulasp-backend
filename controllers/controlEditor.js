@@ -2,11 +2,10 @@ import path from "path";
 import * as fs from "fs";
 import disk from "diskusage";
 import os from "os";
-
+import Track from "../models/trackModel.js";
 import PlayList from "../models/playlistModel.js";
 import Pics from "../models/picsModel.js";
 import Genre from "../models/genreModel.js";
-import Track from "../models/trackModel.js";
 import Shop from "../models/shopModel.js";
 import ShopItem from "../models/shopItemModel.js";
 import ShopSubType from "../models/shopSubTypeModel.js";
@@ -20,6 +19,8 @@ import decodeFromIso8859 from "../helpers/decode8859-1.js";
 import isExistStringToLowerCase from "../helpers/compareStringToLowerCase.js";
 import randomFn from "../helpers/randomSort.js";
 import albumArt from "album-art";
+
+import createTrackInDB from "../helpers/createTrackInDB.js";
 
 const publicDir = path.resolve("public/");
 
@@ -214,7 +215,11 @@ const createPlayListInShopLibrary = async (req, res) => {
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
-  const { page = req.query.page, limit = req.query.limit } = req.query;
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    search = req.query.query,
+  } = req.query;
 
   const skip = (page - 1) * limit;
 
@@ -235,11 +240,18 @@ const findPlayListById = async (req, res) => {
     ? sortPlaylist.sortedTracks
     : { createdAt: -1 };
 
-  // console.log("sortedBy GET ===>", sortedBy);
+  const searchOptions = {
+    $or: [
+      { artist: { $regex: search || "", $options: "i" } },
+      { trackName: { $regex: search || "", $options: "i" } },
+    ],
+  };
 
   const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
     .populate({
       path: "trackList",
+
+      match: searchOptions,
       options: {
         sort: sortedBy,
         skip,
@@ -254,11 +266,13 @@ const findPlayListById = async (req, res) => {
 
   const trackList = await PlayList.findById(id, "trackList").populate({
     path: "trackList",
+    match: searchOptions,
     select: "artist trackName trackURL ",
     options: { sort: sortedBy },
   });
 
   const totalTracks = trackList.trackList.length;
+
   const totalPages = Math.ceil(totalTracks / limit);
 
   const tracksSRC = trackList.trackList;
@@ -529,10 +543,134 @@ const deleteGenre = async (req, res) => {
 
 //написать доки
 
-const uploadTrack = async (req, res) => {
-  const { existFileError, existFileName } = req.uploadTrack;
-  const wrongExt = req?.extError;
+// const uploadTrack = async (req, res) => {
+//   const { existFileError, existFileName } = req.uploadTrack;
+//   const wrongExt = req?.extError;
+//   const { originalname, filename } = req.file;
 
+//   console.log("existFileError", existFileError);
+//   console.log("existFileName", existFileName);
+//   const FileNameLatin = existFileName.fileName;
+//   const FileNameCyrillic = existFileName.translatedFileName;
+
+//   if (wrongExt) {
+//     throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
+//   }
+
+//   const playlistId = req?.params?.id;
+
+//   ///////// Запись трека в базу данных, если он в плейлисте или файл на сервере существует
+//   if (playlistId && existFileError) {
+//     const trackExist = await Track.findOne({
+//       trackURL: `tracks/${FileNameLatin}`,
+//     });
+
+//     if (!trackExist) {
+//       throw HttpError(404, "Track doesn't found");
+//     }
+
+//     // если ли трек в плейлисте
+//     const playList = await PlayList.findById(playlistId);
+
+//     const isExistTrackInPlaylist = playList.trackList.includes(trackExist?.id);
+
+//     if (isExistTrackInPlaylist) {
+//       throw HttpError(409);
+//     } else {
+//       await PlayList.findByIdAndUpdate(playlistId, {
+//         $push: { trackList: trackExist.id },
+//       });
+//       await Track.findByIdAndUpdate(trackExist.id, {
+//         $push: { playList: playlistId },
+//       });
+//     }
+//     res.status(201).json({
+//       message: `Track successfully wrote to ${playList.playListName}`,
+//     });
+//     return;
+//   }
+//   /////////////
+
+//   if (existFileError) {
+//     throw HttpError(409, `Track "${FileNameCyrillic}" already exist`);
+//   }
+
+//   if (!req.file) {
+//     throw HttpError(404, "File not found for upload");
+//   }
+
+//   // const { originalname, filename } = req.file;
+
+//   const fileName = path.parse(FileNameLatin).name.split("__");
+
+//   const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
+
+//   const metadata = await getId3Tags(req.file);
+
+//   const { artist, title, genre, album } = metadata?.common;
+//   const { duration } = metadata.format;
+
+//   const resArtist = decodeFromIso8859(artist);
+//   const resTitle = decodeFromIso8859(title);
+
+//   const tracksDir = req.file.path.split("/").slice(-2)[0];
+//   const trackURL = path.join(tracksDir, filename);
+//   let resizeTrackCoverURL;
+
+//   if (resArtist) {
+//     const trackPicture = await albumArt(resArtist, {
+//       album: album,
+//       size: "large",
+//     });
+//     resizeTrackCoverURL = await resizeTrackCover(trackPicture, "trackCover");
+//   }
+
+//   const newTrack = await Track.create({
+//     ...req.body,
+//   });
+
+//   const track = await Track.findByIdAndUpdate(
+//     newTrack._id,
+//     {
+//       trackURL,
+//       artist: artist
+//         ? resArtist
+//         : `${fileName[0] ? fileName[0] : ""}${" "}${
+//             fileName[1] ? fileName[1] : ""
+//           }`,
+//       trackName: title
+//         ? resTitle
+//         : `${fileName[2] ? fileName[2] : ""}${" "}${
+//             fileName[3] ? fileName[3] : ""
+//           }`,
+
+//       $push: { trackGenre: genre ? genre[0] : null },
+//       trackDuration: duration ? duration : null,
+//       trackPictureURL: resizeTrackCoverURL
+//         ? resizeTrackCoverURL
+//         : defaultCoverURL || null,
+//     },
+//     { new: true }
+//   );
+
+//   if (playlistId) {
+//     await PlayList.findByIdAndUpdate(playlistId, {
+//       $push: { trackList: newTrack.id },
+//     });
+//     await Track.findByIdAndUpdate(newTrack.id, {
+//       $push: { playList: playlistId },
+//     });
+//   }
+
+//   res.json({
+//     track,
+//   });
+// };
+
+const uploadTrack = async (req, res) => {
+  const { existFileError, existFileName, file, path, trackDir } =
+    req.uploadTrack;
+  const wrongExt = req?.extError;
   const FileNameLatin = existFileName.fileName;
   const FileNameCyrillic = existFileName.translatedFileName;
 
@@ -547,9 +685,19 @@ const uploadTrack = async (req, res) => {
     const trackExist = await Track.findOne({
       trackURL: `tracks/${FileNameLatin}`,
     });
-
-    if (!trackExist) {
-      throw HttpError(404, "Track doesn't found");
+    //если трек есть на сервере, но в базе не записан
+    if (!trackExist && existFileError) {
+      const track = await createTrackInDB(
+        file,
+        FileNameLatin,
+        playlistId,
+        req,
+        trackDir
+      );
+      res.json({
+        track,
+      });
+      return;
     }
 
     // если ли трек в плейлисте
@@ -570,79 +718,45 @@ const uploadTrack = async (req, res) => {
     res.status(201).json({
       message: `Track successfully wrote to ${playList.playListName}`,
     });
+    res.json({
+      track,
+    });
     return;
   }
   /////////////
 
   if (existFileError) {
-    throw HttpError(409, `Track "${FileNameCyrillic}" already exist`);
-  }
-
-  if (!req.file) {
-    throw HttpError(404, "File not found for upload");
-  }
-
-  const { originalname, filename } = req.file;
-
-  const fileName = path.parse(FileNameLatin).name.split("__");
-
-  const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
-
-  const metadata = await getId3Tags(req.file);
-
-  const { artist, title, genre, album } = metadata?.common;
-  const { duration } = metadata.format;
-
-  const resArtist = decodeFromIso8859(artist);
-  const resTitle = decodeFromIso8859(title);
-
-  const tracksDir = req.file.path.split("/").slice(-2)[0];
-  const trackURL = path.join(tracksDir, filename);
-  let resizeTrackCoverURL;
-
-  if (resArtist) {
-    const trackPicture = await albumArt(resArtist, {
-      album: album,
-      size: "large",
+    const trackExist = await Track.findOne({
+      trackURL: `tracks/${FileNameLatin}`,
     });
-    resizeTrackCoverURL = await resizeTrackCover(trackPicture, "trackCover");
+
+    console.log("trackExist", trackExist);
+    if (trackExist) {
+      throw HttpError(409, `Track "${FileNameCyrillic}" already exist`);
+    } else {
+      const track = await createTrackInDB(
+        file,
+        FileNameLatin,
+        playlistId,
+        req,
+        trackDir
+      );
+      res.json({
+        track,
+      });
+      return;
+    }
   }
 
-  const newTrack = await Track.create({
-    ...req.body,
-  });
-
-  const track = await Track.findByIdAndUpdate(
-    newTrack._id,
-    {
-      trackURL,
-      artist: artist
-        ? resArtist
-        : `${fileName[0] ? fileName[0] : ""}${" "}${
-            fileName[1] ? fileName[1] : ""
-          }`,
-      trackName: title
-        ? resTitle
-        : `${fileName[2] ? fileName[2] : ""}${" "}${
-            fileName[3] ? fileName[3] : ""
-          }`,
-
-      $push: { trackGenre: genre ? genre[0] : null },
-      trackDuration: duration ? duration : null,
-      trackPictureURL: resizeTrackCoverURL
-        ? resizeTrackCoverURL
-        : defaultCoverURL || null,
-    },
-    { new: true }
+  const track = await createTrackInDB(
+    req.file,
+    FileNameLatin,
+    playlistId,
+    req,
+    trackDir
   );
-  if (playlistId) {
-    await PlayList.findByIdAndUpdate(playlistId, {
-      $push: { trackList: newTrack.id },
-    });
-    await Track.findByIdAndUpdate(newTrack.id, {
-      $push: { playList: playlistId },
-    });
-  }
+
+  console.log("track", track);
 
   res.json({
     track,
@@ -750,24 +864,43 @@ const latestTracks = async (req, res) => {
     page = req.query.page,
     limit = req.query.limit,
     sort = req.query.sort,
+    search = req.query.query,
     ...query
   } = req.query;
 
-  console.log("sort", sort);
-
   const skip = (page - 1) * limit;
-  const latestTracks = await Track.find(
-    { ...req.query },
-    "-createdAt -updatedAt",
-    {
-      skip,
-      limit,
-    }
-  )
+  let queryOptions;
+  switch (search === "") {
+    case true:
+      queryOptions = {
+        ...req.query,
+      };
+      break;
+    case false:
+      // queryOptions = { ...req.query, $text: { $search: search } };
+      queryOptions = {
+        $or: [
+          { artist: { $regex: search, $options: "i" } },
+          { trackName: { $regex: search, $options: "i" } },
+        ],
+        ...req.query,
+      };
 
+      break;
+    default:
+      queryOptions = {
+        ...req.query,
+      };
+  }
+
+  const latestTracks = await Track.find(queryOptions, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  })
     .populate({
       path: "playList",
       select: "playListName",
+
       options: {
         populate: {
           path: "playlistGenre",
@@ -777,12 +910,12 @@ const latestTracks = async (req, res) => {
     })
     .sort({ trackName: sort });
 
-  const totalTracks = await Track.find().countDocuments();
+  const totalTracks = await Track.find(queryOptions).countDocuments();
 
   const totalPlaylists = await PlayList.find().countDocuments();
 
   const tracksSRC = await Track.find(
-    { ...req.query },
+    queryOptions,
     "artist trackName trackURL"
   ).sort({ trackName: sort });
   const totalPages = Math.ceil(totalTracks / limit);

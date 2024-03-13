@@ -20,10 +20,6 @@ const trackSchema = new Schema(
       type: String,
       default: null,
     },
-    // trackGenre: {
-    //   type: String,
-    //   default: null,
-    // },
     trackGenre: {
       type: Array,
       default: null,
@@ -39,9 +35,15 @@ const trackSchema = new Schema(
         playList: [],
       },
     ],
+    isTopChart: {
+      type: Boolean,
+      default: false,
+    },
   },
   { versionKey: false, timestamps: true }
 );
+
+trackSchema.index({ artist: "text", trackName: "text" });
 
 trackSchema.post("save", handleMongooseError);
 
