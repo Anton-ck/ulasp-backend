@@ -864,7 +864,7 @@ const latestTracks = async (req, res) => {
     page = req.query.page,
     limit = req.query.limit,
     sort = req.query.sort,
-    search = req.query.query,
+    search = req.query.query || "",
     ...query
   } = req.query;
 
@@ -880,8 +880,8 @@ const latestTracks = async (req, res) => {
       // queryOptions = { ...req.query, $text: { $search: search } };
       queryOptions = {
         $or: [
-          { artist: { $regex: search, $options: "i" } },
-          { trackName: { $regex: search, $options: "i" } },
+          { artist: { $regex: search.toString(), $options: "i" } },
+          { trackName: { $regex: search.toString(), $options: "i" } },
         ],
         ...req.query,
       };
