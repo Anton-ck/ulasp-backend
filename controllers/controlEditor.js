@@ -21,6 +21,7 @@ import { randomFn, getRandomNumber } from "../helpers/randomSort.js";
 import albumArt from "album-art";
 
 import createTrackInDB from "../helpers/createTrackInDB.js";
+import autoPictureForTrack from "../helpers/autoPicureForTrack.js";
 
 const publicDir = path.resolve("public/");
 
@@ -318,41 +319,7 @@ const updatePlaylistsSortedTracks = async (req, res) => {
         sortIndex: getRandomNumber(1, 1000),
       });
     });
-
-    // console.log("result", res);
   }
-  // getRandomNumber
-
-  //   function shuffleArray(array) {
-  //     for (let i = array.length - 1; i > 0; i--) {
-  //       const j = Math.floor(Math.random() * (i + 1));
-  //       [array[i], array[j]] = [array[j], array[i]];
-  //     }
-  //     return array;
-  //   }
-  //   const result = shuffleArray(tracksInPlaylist);
-
-  //   console.log(result);
-
-  //   await PlayList.findByIdAndUpdate(
-  //     id,
-  //     {
-  //       $pullAll: { trackList: tracksInPlaylist },
-  //     },
-  //     {
-  //       new: true,
-  //     }
-  //   );
-
-  //   const resultSort = await PlayList.findByIdAndUpdate(
-  //     id,
-  //     {
-  //       $push: { trackList: { $each: result } },
-  //     },
-  //     { new: true }
-  //   );
-  //   res.json({ message: "ok", resultSort });
-  // }
 
   res.json({ message: "ok" });
 };
@@ -814,6 +781,30 @@ const uploadTrack = async (req, res) => {
   res.json({
     track,
   });
+};
+
+const updateTrackPicture = async (req, res) => {
+  const { id } = req.body;
+  const track = await Track.findById(id);
+  if (!track) {
+    throw HttpError(404, `Track with ${id} not found`);
+  }
+
+  const artist = track.artist;
+  const trackName = track.trackName;
+  const trackURL = path.join(publicDir, track.trackURL);
+
+  const newCover = await autoPictureForTrack(artist, trackName, trackURL);
+
+  if (!newCover) {
+    throw HttpError(400, `Update Error`);
+  }
+
+  await Track.findByIdAndUpdate(id, {
+    trackPictureURL: newCover,
+  });
+
+  res.json({ m: "ok" });
 };
 
 const deleteTrack = async (req, res) => {
@@ -1467,6 +1458,7 @@ export default {
   updateGenreById: ctrlWrapper(updateGenreById),
   deleteGenre: ctrlWrapper(deleteGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
+  updateTrackPicture: ctrlWrapper(updateTrackPicture),
   deleteTrackInPlaylist: ctrlWrapper(deleteTrackInPlaylist),
   deleteTrack: ctrlWrapper(deleteTrack),
   latestTracks: ctrlWrapper(latestTracks),
