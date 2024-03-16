@@ -146,6 +146,8 @@ router.post(
   controllers.uploadTrack
 );
 
+router.patch("/tracks/updateTrackCover", controllers.updateTrackPicture);
+
 router.get(
   "/tracks/latestTracks",
   authenticateAdmin,
