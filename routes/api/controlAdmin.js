@@ -176,12 +176,27 @@ router.patch(
   isValid,
   controllers.toggleUserStatus
 );
+
+router.patch(
+  "/editors/login/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.updateEditorLoginPassword
+);
 router.patch(
   "/editors/status/:id",
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.toggleAdminStatus
+  controllers.toggleEditorStatus
+);
+router.patch(
+  "/editors/access/:id",
+  authenticateAdmin,
+  permisionsAdmin,
+  isValid,
+  controllers.toggleEditorAccess
 );
 router.patch(
   "/users/access/:id",

@@ -122,6 +122,26 @@ const updateAdminPassword = async (req, res) => {
     }' with ID ${result._id} has been changed`,
   });
 };
+const updateEditorLoginPassword = async (req, res) => {
+  const { id } = req.params;
+
+  const { login, password } = req.body;
+
+  console.log("req.body :>> ", login, password);
+  let updateFields = { login };
+  if (password !== "") {
+    const hashPassword = await bcrypt.hash(password, 10);
+    updateFields.password = hashPassword;
+  }
+
+  const result = await Admin.findByIdAndUpdate(id, updateFields, { new: true });
+  console.log("result :>> ", result);
+  res.status(200).json({
+    message: `Password for ${result.editorRole ? "Editor" : "Admin"} '${
+      result.firstName
+    }' with ID ${result._id} has been changed`,
+  });
+};
 
 const createUser = async (req, res) => {
   const { contractNumber, taxCode, password, userFop } = req.body;
@@ -401,7 +421,7 @@ const countPlaylistByUser = async (req, res) => {
   res.json(countAdd);
 };
 
-const toggleAdminStatus = async (req, res) => {
+const toggleEditorStatus = async (req, res) => {
   const { id } = req.params;
 
   const user = await Admin.findById(id);
@@ -419,6 +439,24 @@ const toggleAdminStatus = async (req, res) => {
   });
 };
 
+const toggleEditorAccess = async (req, res) => {
+  const { id } = req.params;
+
+  const user = await Admin.findById(id);
+
+  if (!user) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  console.log(" user.access :>> ", user.access);
+  user.access = !user.access;
+  await user.save();
+
+  res.status(200).json({
+    message: `Access for user '${user.firstName} ${user.lastName}' with ID ${user._id} has been toggled`,
+    newAccess: user.access,
+  });
+};
+
 export default {
   createEditorRole: ctrlWrapper(createEditorRole),
   getAllAdmin: ctrlWrapper(getAllAdmin),
@@ -426,13 +464,15 @@ export default {
   updateAdminInfo: ctrlWrapper(updateAdminInfo),
   deleteAdmin: ctrlWrapper(deleteAdmin),
   updateAdminPassword: ctrlWrapper(updateAdminPassword),
+  updateEditorLoginPassword: ctrlWrapper(updateEditorLoginPassword),
   createUser: ctrlWrapper(createUser),
   getAllUsers: ctrlWrapper(getAllUsers),
   getUserById: ctrlWrapper(getUserById),
   deleteUser: ctrlWrapper(deleteUser),
   toggleUserStatus: ctrlWrapper(toggleUserStatus),
   toggleUserAccess: ctrlWrapper(toggleUserAccess),
-  toggleAdminStatus: ctrlWrapper(toggleAdminStatus),
+  toggleEditorStatus: ctrlWrapper(toggleEditorStatus),
+  toggleEditorAccess: ctrlWrapper(toggleEditorAccess),
   updateUserInfo: ctrlWrapper(updateUserInfo),
   countNewClients: ctrlWrapper(countNewClients),
   countOnlineClients: ctrlWrapper(countOnlineClients),
