@@ -37,7 +37,12 @@ export const adminLoginSchema = Joi.object({
 export const createEditorSchema = Joi.object({
   firstName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
   lastName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
-  fatherName: Joi.string().min(3).max(30).pattern(nameRegexp),
+  fatherName: Joi.string()
+    .min(3)
+    .max(30)
+    .pattern(nameRegexp)
+    .allow("")
+    .optional(),
   login: Joi.string().min(3).max(10).pattern(loginAdminRegexp).required(),
   password: joiPassword
     .string()
@@ -63,7 +68,12 @@ export const refreshSchema = Joi.object({
 export const updateAdminInfo = Joi.object({
   firstName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
   lastName: Joi.string().min(3).max(30).pattern(nameRegexp).required(),
-  fatherName: Joi.string().min(3).max(30).pattern(nameRegexp),
+  fatherName: Joi.string()
+    .min(3)
+    .max(30)
+    .pattern(nameRegexp)
+    .allow("")
+    .optional(),
   login: Joi.string().min(3).max(10).pattern(loginAdminRegexp).required(),
   taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp).required(),
   institution: Joi.string().allow("").optional(),
