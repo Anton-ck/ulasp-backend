@@ -807,6 +807,83 @@ const updateTrackPicture = async (req, res) => {
   res.json({ m: "ok" });
 };
 
+const getTracksInChart = async (req, res) => {
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    ...query
+  } = req.query;
+
+  const skip = (page - 1) * limit;
+
+  const tracksInChart = await Track.find(
+    { isTopChart: true },
+    "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  )
+    .populate({
+      path: "playList",
+      select: "playListName",
+
+      options: {
+        populate: {
+          path: "playlistGenre",
+          select: "genre",
+        },
+      },
+    })
+    .sort({ trackName: 1 });
+
+  const totalTracks = await Track.find({ isTopChart: true }).countDocuments();
+
+  const tracksSRC = await Track.find(
+    { isTopChart: true },
+    "artist trackName trackURL"
+  ).sort({ trackName: 1 });
+  const totalPages = Math.ceil(totalTracks / limit);
+  const pageNumber = page ? parseInt(page) : null;
+
+  res.json({
+    tracksInChart,
+    totalPages,
+    pageNumber,
+    tracksSRC,
+  });
+};
+
+const addTrackToChart = async (req, res) => {
+  const { id } = req.params;
+  const track = await Track.findById(id);
+
+  if (!track) {
+    throw HttpError(404, `Track with ${id} not found`);
+  }
+
+  await Track.findByIdAndUpdate(id, {
+    isTopChart: true,
+  });
+
+  res.json({ m: "ok" });
+};
+
+const removeTrackFromChart = async (req, res) => {
+  const { id } = req.params;
+  const track = await Track.findById(id);
+
+  if (!track) {
+    throw HttpError(404, `Track with ${id} doesn't found`);
+  }
+
+  await Track.findByIdAndUpdate(id, {
+    isTopChart: false,
+  });
+
+  res.json({ m: "ok" });
+};
+
 const deleteTrack = async (req, res) => {
   const { id } = req.params;
   const track = await Track.findById(id);
@@ -1459,8 +1536,11 @@ export default {
   deleteGenre: ctrlWrapper(deleteGenre),
   uploadTrack: ctrlWrapper(uploadTrack),
   updateTrackPicture: ctrlWrapper(updateTrackPicture),
+  addTrackToChart: ctrlWrapper(addTrackToChart),
+  removeTrackFromChart: ctrlWrapper(removeTrackFromChart),
   deleteTrackInPlaylist: ctrlWrapper(deleteTrackInPlaylist),
   deleteTrack: ctrlWrapper(deleteTrack),
+  getTracksInChart: ctrlWrapper(getTracksInChart),
   latestTracks: ctrlWrapper(latestTracks),
   allShops: ctrlWrapper(allShops),
   createShop: ctrlWrapper(createShop),

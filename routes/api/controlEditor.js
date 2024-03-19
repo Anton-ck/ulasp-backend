@@ -146,7 +146,12 @@ router.post(
   controllers.uploadTrack
 );
 
-router.patch("/tracks/updateTrackCover", controllers.updateTrackPicture);
+router.get(
+  "/tracks/getTracksInChart",
+  // authenticateAdmin,
+  // permisionsEditor,
+  controllers.getTracksInChart
+);
 
 router.get(
   "/tracks/latestTracks",
@@ -154,6 +159,29 @@ router.get(
   permisionsEditor,
   controllers.latestTracks
 );
+
+
+router.patch(
+  "/tracks/updateTrackCover",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.updateTrackPicture
+);
+
+router.patch(
+  "/tracks/addTrackToChart/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.addTrackToChart
+);
+
+router.patch(
+  "/tracks/removeTrackFromChart/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllers.removeTrackFromChart
+);
+
 
 router.get(
   "/shops/all",
