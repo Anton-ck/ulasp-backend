@@ -19,7 +19,7 @@ dotenv.config();
 
 const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 
-const accessTokenExpires = "130m";
+const accessTokenExpires = "7d";
 
 // const createUser = async (req, res) => {
 //   const { contractNumber, taxCode, userFop } = req.body;
