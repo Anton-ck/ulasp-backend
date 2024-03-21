@@ -7,6 +7,8 @@ import {
   authenticateAdmin,
 } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlUser.js";
+import controllersPlaylist from "../../controllers/controlsUser/playlistUserCTRL.js";
+import controllersTracks from "../../controllers/controlsUser/tracksUserCTRL.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
 import { playListUserSchema } from "../../schemas/userSchema.js";
 import {
@@ -78,6 +80,11 @@ router.get(
 
 router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
 
+router.get(
+  "/tracks/tracksForUserPlaylists",
+  controllersTracks.getAllTracksForUserPlaylists
+);
+
 router.get("/genres/:id", authenticatUser, controllers.findGenreById);
 
 router.get(
@@ -124,6 +131,16 @@ router.post(
   controllers.createUserPlaylist
 );
 
+router.patch(
+  "/userPlaylist/addTracks",
+  controllersPlaylist.addTracksToPlaylist
+);
+
+router.patch(
+  "/userPlaylist/removeTracks",
+  controllersPlaylist.deleteTracksFromPlaylist
+);
+
 router.get(
   "/userPlaylist/:id",
   authenticatUser,
@@ -154,7 +171,7 @@ router.patch(
 
 router.patch(
   "/playlist/sortupdate/:id",
-   authenticatUser,
+  authenticatUser,
   isValid,
   controllers.updatePlaylistsSortedTracks
 );

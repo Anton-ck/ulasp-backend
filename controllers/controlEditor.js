@@ -848,6 +848,7 @@ const getTracksInChart = async (req, res) => {
 
   res.json({
     tracksInChart,
+    totalTracks,
     totalPages,
     pageNumber,
     tracksSRC,
