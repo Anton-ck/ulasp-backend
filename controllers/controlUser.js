@@ -66,8 +66,8 @@ const findPlayListById = async (req, res) => {
   const skip = (page - 1) * limit;
 
   const sortPlaylist = await PlayList.findById(id, "sortedTracks");
-    
-    function isEmptyObject(obj) {
+
+  function isEmptyObject(obj) {
     for (let i in obj) {
       if (obj.hasOwnProperty(i)) {
         return false;
@@ -80,7 +80,7 @@ const findPlayListById = async (req, res) => {
   const sortedBy = !isEmptySortedTracks
     ? sortPlaylist.sortedTracks
     : { createdAt: -1 };
-    
+
   const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
     .populate({
       path: "trackList",
@@ -158,17 +158,24 @@ const latestTracks = async (req, res) => {
   const {
     page = req.query.page,
     limit = req.query.limit,
+    search = req.query.query || "",
+
     ...query
   } = req.query;
   const skip = (page - 1) * limit;
-  const latestTracks = await Track.find(
-    { ...req.query },
-    "-createdAt -updatedAt",
-    {
-      skip,
-      limit,
-    }
-  )
+
+  const queryOptions = {
+    $or: [
+      { artist: { $regex: search.toString(), $options: "i" } },
+      { trackName: { $regex: search.toString(), $options: "i" } },
+    ],
+    ...req.query,
+  };
+
+  const latestTracks = await Track.find(queryOptions, "-createdAt -updatedAt", {
+    skip,
+    limit,
+  })
     .sort({ createdAt: -1 })
 
     .populate({
@@ -176,10 +183,10 @@ const latestTracks = async (req, res) => {
       options: { populate: "playlistGenre" },
     });
 
-  const totalTracks = (await Track.find()).length;
+  const totalTracks = await Track.find(queryOptions).countDocuments();
 
   const tracksSRC = await Track.find(
-    { ...req.query },
+    queryOptions,
     "artist trackName trackURL"
   ).sort({ createdAt: -1 });
   const totalPages = Math.ceil(totalTracks / limit);
@@ -334,11 +341,10 @@ const getFavoritePlaylists = async (req, res) => {
       )
         .skip(skip)
         .limit(limit),
-      UserPlaylist
-        .find(
-          { favoriteByUsers: user },
-          "-favoriteByUsers -createdAt -updatedAt"
-        )
+      UserPlaylist.find(
+        { favoriteByUsers: user },
+        "-favoriteByUsers -createdAt -updatedAt"
+      )
         .skip(skip)
         .limit(limit),
     ]);
@@ -624,12 +630,14 @@ const getCreatePlaylists = async (req, res) => {
   const skip = (page - 1) * limit;
   const { _id: userId } = req.user;
 
-  const createPlaylists = await UserPlaylist
-    .find({ ...req.query, owner: userId }, "-createdAt -updatedAt", {
+  const createPlaylists = await UserPlaylist.find(
+    { ...req.query, owner: userId },
+    "-createdAt -updatedAt",
+    {
       skip,
       limit,
-    })
-    .sort({ createdAt: -1 });
+    }
+  ).sort({ createdAt: -1 });
   res.json(createPlaylists);
 };
 
@@ -668,35 +676,32 @@ const createUserPlaylist = async (req, res) => {
 
 const findUserPlayListById = async (req, res) => {
   const { id } = req.params;
-const { page = req.query.page, limit = req.query.limit } = req.query;
+  const { page = req.query.page, limit = req.query.limit } = req.query;
   const skip = (page - 1) * limit;
 
-  const playlist = await UserPlaylist
-    .findById(id)
-    .populate({
-      path: "trackList",
-      options: { sort: { createdAt: -1 }, skip, limit },
-    });
-    // .populate("playlistGenre");
+  const playlist = await UserPlaylist.findById(id).populate({
+    path: "trackList",
+    options: { sort: { createdAt: -1 }, skip, limit },
+  });
+  // .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
   }
 
-   const trackList = await UserPlaylist.findById(id, "trackList").populate({
+  const trackList = await UserPlaylist.findById(id, "trackList").populate({
     path: "trackList",
     select: "artist trackName trackURL",
     options: { sort: { createdAt: -1 } },
   });
 
   const totalTracks = trackList.trackList.length;
-   const totalPages = Math.ceil(totalTracks / limit);
+  const totalPages = Math.ceil(totalTracks / limit);
 
   const tracksSRC = trackList.trackList;
 
   res.json({ playlist, totalTracks, totalPages, tracksSRC });
-
-  };
+};
 
 const uploadPics = async (req, res) => {
   const { type } = req.body;
