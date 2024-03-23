@@ -254,6 +254,12 @@ const updateUserInfo = async (req, res) => {
   const { id } = req.params;
   console.log("id", id);
   console.log("req.body", req.body);
+  let userDataOld = {};
+  if (req.body.userFop === "fop") {
+    userDataOld = await Fop.findById(id);
+  } else {
+    userDataOld = await Company.findById(id);
+  }
 
   let result = {};
   if (req.body.userFop === "fop") {
@@ -264,6 +270,11 @@ const updateUserInfo = async (req, res) => {
     result = await Company.findByIdAndUpdate(id, req.body, {
       new: true,
     });
+  }
+
+  if (userDataOld.taxCode !== result.taxCode) {
+    result.password = await bcrypt.hash(result.taxCode, 10);
+    await result.save();
   }
 
   if (!result) {
