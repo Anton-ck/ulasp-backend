@@ -4,6 +4,7 @@ import validateBody from "../../middlewares/validateBody.js";
 import isEmptyBody from "../../middlewares/isEmptyBody.js";
 import { authenticateAdmin } from "../../middlewares/authenticate.js";
 import controllers from "../../controllers/controlEditor.js";
+import controllersGenre from "../../controllers/controlsEditor/genreEditorCTRL.js";
 import { permisionsEditor } from "../../middlewares/permitionsEditor.js";
 import { playListSchema } from "../../schemas/editorShema.js";
 import isValid from "../../middlewares/isValid.js";
@@ -70,38 +71,6 @@ router.delete(
   controllers.deletePlaylist
 );
 
-router.get(
-  "/genres/all",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.allGenres
-);
-
-router.post("/genres/create", controllers.createGenre);
-
-router.get(
-  "/genres/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.findGenreById
-);
-
-router.patch(
-  "/genres/update/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  upload.single("picsURL"),
-
-  controllers.updateGenreById
-);
-
-router.delete(
-  "/genres/delete/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.deleteGenre
-);
-
 // router.get(
 //   "/genre/:id/tracks",
 
@@ -160,7 +129,6 @@ router.get(
   controllers.latestTracks
 );
 
-
 router.patch(
   "/tracks/updateTrackCover",
   authenticateAdmin,
@@ -181,7 +149,6 @@ router.patch(
   permisionsEditor,
   controllers.removeTrackFromChart
 );
-
 
 router.get(
   "/shops/all",
