@@ -114,9 +114,11 @@ const userSignIn = async (req, res) => {
     },
   });
 };
+
 const getCurrentUser = async (req, res) => {
   console.log("getCurrentUser", req.user);
   const {
+    _id,
     firstName,
     lastName,
     fatherName,
@@ -135,6 +137,7 @@ const getCurrentUser = async (req, res) => {
 
   res.json({
     user: {
+      id: _id,
       firstName,
       lastName,
       fatherName,
