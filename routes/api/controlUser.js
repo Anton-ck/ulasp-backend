@@ -176,6 +176,13 @@ router.patch(
   controllers.updatePlaylistsSortedTracks
 );
 
+router.post(
+  "/countlistens",
+  authenticatUser,
+ 
+  controllers.countlistensForUser
+);
+
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);
