@@ -224,22 +224,11 @@ const findPlayListById = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  // const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
 
-  // function isEmptyObject(obj) {
-  //   for (let i in obj) {
-  //     if (obj.hasOwnProperty(i)) {
-  //       return false;
-  //     }
-  //   }
-  //   return true;
-  // }
-
-  // const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
-
-  // const sortedBy = !isEmptySortedTracks
-  //   ? sortPlaylist.sortedTracks
-  //   : { createdAt: -1 };
+  const sortedBy = sortPlaylist.sortedTracks
+    ? { sortIndex: 1 }
+    : { createdAt: -1 };
 
   const searchOptions = {
     $or: [
@@ -254,8 +243,8 @@ const findPlayListById = async (req, res) => {
 
       match: searchOptions,
       options: {
-        // sort: sortedBy,
-        sort: { sortIndex: 1 },
+        sort: sortedBy,
+        // sort: { sortIndex: 1 },
         skip,
         limit,
       },
@@ -270,12 +259,12 @@ const findPlayListById = async (req, res) => {
     path: "trackList",
     match: searchOptions,
     select: "artist trackName trackURL ",
-    // options: { sort: sortedBy },
-    options: {
-      sort: {
-        sortIndex: 1,
-      },
-    },
+    options: { sort: sortedBy },
+    // options: {
+    //   sort: {
+    //     sortIndex: 1,
+    //   },
+    // },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -287,7 +276,6 @@ const findPlayListById = async (req, res) => {
   res.json({ playlist, tracksSRC, totalTracks, totalPages });
 };
 
-// const updatePlaylistsSortedTracks = async (req, res) => {
 //   const { id } = req.params;
 //   const sort = req.body.data;
 
@@ -318,6 +306,10 @@ const updatePlaylistsSortedTracks = async (req, res) => {
       await Track.findByIdAndUpdate(id, {
         sortIndex: getRandomNumber(1, 1000),
       });
+    });
+
+    await PlayList.findByIdAndUpdate(id, {
+      sortedTracks: true,
     });
   }
 
@@ -444,126 +436,6 @@ const latestPlaylists = async (req, res) => {
     }
   ).sort({ createdAt: -1 });
   res.json(latestPlaylists);
-};
-
-const allGenres = async (req, res) => {
-  const { page = 1, limit = req.query.limit, ...query } = req.query;
-  const skip = (page - 1) * limit;
-  const allGenres = await Genre.find(
-    { ...req.query },
-    "-createdAt -updatedAt",
-    {
-      skip,
-      limit,
-    }
-  )
-    .populate("playList")
-    .sort({ genre: 1 });
-
-  res.json(allGenres);
-};
-
-const createGenre = async (req, res) => {
-  const { genre } = req.body;
-  const isExistGenre = await Genre.findOne({
-    genre: {
-      $regex: genre.toString(),
-      $options: "i",
-    },
-  });
-
-  const isExist = isExistStringToLowerCase(genre, isExistGenre?.genre);
-
-  if (genre === "") {
-    throw HttpError(404, `genre is empty`);
-  }
-  if (isExist) {
-    res.status(409).json({
-      message: `${genre} already in use`,
-      code: "4091",
-      object: `${genre}`,
-    });
-    return;
-  }
-
-  const randomPicUrl = await randomCover("genre");
-
-  const newGenre = await Genre.create({
-    ...req.body,
-    genreAvatarURL: randomPicUrl,
-  });
-
-  res.status(201).json({
-    newGenre,
-  });
-};
-
-const findGenreById = async (req, res) => {
-  const { id } = req.params;
-
-  const genre = await Genre.findById(id).populate("playList");
-
-  if (!genre) {
-    throw HttpError(404);
-  }
-
-  res.json(genre);
-};
-
-const updateGenreById = async (req, res) => {
-  const { id } = req.params;
-  const { genre, type } = req.body;
-
-  const isExistGenre = await Genre.findOne({
-    genre,
-    // genre: {
-    //   $regex: genre.toString(),
-    //   $options: "i",
-    // },
-  });
-
-  if (genre === "") {
-    throw HttpError(404, `genre is empty`);
-  }
-  if (isExistGenre) {
-    res.status(409).json({
-      message: `${genre} already in use`,
-      code: "4091",
-      object: `${genre}`,
-    });
-    return;
-  }
-
-  let resizePicURL;
-
-  if (req.file) {
-    resizePicURL = await resizePics(req.file, type);
-  }
-
-  const newGenre = await Genre.findByIdAndUpdate(
-    id,
-    { ...req.body, genreAvatarURL: resizePicURL },
-    {
-      new: true,
-    }
-  );
-  res.json(newGenre);
-};
-
-const deleteGenre = async (req, res) => {
-  const { id } = req.params;
-
-  const genre = await Genre.findById(id);
-
-  if (!genre) {
-    throw HttpError(404, `Genre with ${id} not found`);
-  }
-
-  await Genre.findByIdAndDelete(id);
-
-  res.json({
-    message: `Genre ${genre.genre} was deleted`,
-  });
 };
 
 //написать доки
@@ -1530,11 +1402,7 @@ export default {
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
   latestPlaylists: ctrlWrapper(latestPlaylists),
-  allGenres: ctrlWrapper(allGenres),
-  createGenre: ctrlWrapper(createGenre),
-  findGenreById: ctrlWrapper(findGenreById),
-  updateGenreById: ctrlWrapper(updateGenreById),
-  deleteGenre: ctrlWrapper(deleteGenre),
+
   uploadTrack: ctrlWrapper(uploadTrack),
   updateTrackPicture: ctrlWrapper(updateTrackPicture),
   addTrackToChart: ctrlWrapper(addTrackToChart),

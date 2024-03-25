@@ -56,8 +56,8 @@ const playListSchema = new Schema(
       type: Array,
     },
     sortedTracks: {
-      type: Object,
-      default: null,
+      type: Boolean,
+      default: false,
     },
   },
 
