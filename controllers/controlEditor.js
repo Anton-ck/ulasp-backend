@@ -276,24 +276,6 @@ const findPlayListById = async (req, res) => {
   res.json({ playlist, tracksSRC, totalTracks, totalPages });
 };
 
-//   const { id } = req.params;
-//   const sort = req.body.data;
-
-//   const sortedBy = randomFn(sort.toString());
-
-//   // console.log("sortedBy UPDATE ===>", sortedBy);
-
-//   await PlayList.findByIdAndUpdate(
-//     id,
-//     { sortedTracks: sortedBy },
-//     {
-//       new: true,
-//     }
-//   );
-
-//   res.json({ message: "ok" });
-// };
-
 const updatePlaylistsSortedTracks = async (req, res) => {
   const { id } = req.params;
 
