@@ -224,22 +224,11 @@ const findPlayListById = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  // const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
 
-  // function isEmptyObject(obj) {
-  //   for (let i in obj) {
-  //     if (obj.hasOwnProperty(i)) {
-  //       return false;
-  //     }
-  //   }
-  //   return true;
-  // }
-
-  // const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
-
-  // const sortedBy = !isEmptySortedTracks
-  //   ? sortPlaylist.sortedTracks
-  //   : { createdAt: -1 };
+  const sortedBy = sortPlaylist.sortedTracks
+    ? { sortIndex: 1 }
+    : { createdAt: -1 };
 
   const searchOptions = {
     $or: [
@@ -254,8 +243,8 @@ const findPlayListById = async (req, res) => {
 
       match: searchOptions,
       options: {
-        // sort: sortedBy,
-        sort: { sortIndex: 1 },
+        sort: sortedBy,
+        // sort: { sortIndex: 1 },
         skip,
         limit,
       },
@@ -270,12 +259,12 @@ const findPlayListById = async (req, res) => {
     path: "trackList",
     match: searchOptions,
     select: "artist trackName trackURL ",
-    // options: { sort: sortedBy },
-    options: {
-      sort: {
-        sortIndex: 1,
-      },
-    },
+    options: { sort: sortedBy },
+    // options: {
+    //   sort: {
+    //     sortIndex: 1,
+    //   },
+    // },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -287,7 +276,6 @@ const findPlayListById = async (req, res) => {
   res.json({ playlist, tracksSRC, totalTracks, totalPages });
 };
 
-// const updatePlaylistsSortedTracks = async (req, res) => {
 //   const { id } = req.params;
 //   const sort = req.body.data;
 
@@ -318,6 +306,10 @@ const updatePlaylistsSortedTracks = async (req, res) => {
       await Track.findByIdAndUpdate(id, {
         sortIndex: getRandomNumber(1, 1000),
       });
+    });
+
+    await PlayList.findByIdAndUpdate(id, {
+      sortedTracks: true,
     });
   }
 
@@ -445,10 +437,6 @@ const latestPlaylists = async (req, res) => {
   ).sort({ createdAt: -1 });
   res.json(latestPlaylists);
 };
-
-
-
-
 
 //написать доки
 
@@ -1414,7 +1402,6 @@ export default {
   uploadPics: ctrlWrapper(uploadPics),
   deletePlaylist: ctrlWrapper(deletePlaylist),
   latestPlaylists: ctrlWrapper(latestPlaylists),
-
 
   uploadTrack: ctrlWrapper(uploadTrack),
   updateTrackPicture: ctrlWrapper(updateTrackPicture),

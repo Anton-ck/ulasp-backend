@@ -24,7 +24,8 @@ const allGenres = async (req, res) => {
 };
 
 const createGenre = async (req, res) => {
-  const { genre } = req.body;
+  const { genre, type = "genre" } = req.body;
+
   const isExistGenre = await Genre.findOne({
     genre: {
       $regex: genre.toString(),
@@ -46,7 +47,7 @@ const createGenre = async (req, res) => {
     return;
   }
 
-  const randomPicUrl = await randomCover("genre");
+  const randomPicUrl = await randomCover(type);
 
   const newGenre = await Genre.create({
     ...req.body,
@@ -70,24 +71,9 @@ const findGenreById = async (req, res) => {
   res.json(genre);
 };
 
-const findGenreForUpdate = async (req, res) => {
-  const { genre } = req.body;
-
-  const existGenre = await Genre.find({ genre });
-
-  if (existGenre) {
-    res.status(409).json({
-      message: `${genre} already in use`,
-      code: "4091",
-      object: `${genre}`,
-    });
-    return;
-  }
-};
-
 const updateGenreById = async (req, res) => {
   const { id } = req.params;
-  const { genre, type } = req.body;
+  const { genre, type = "genre" } = req.body;
 
   let isExist;
   if (genre) {
@@ -100,7 +86,6 @@ const updateGenreById = async (req, res) => {
     isExist = isExistStringToLowerCase(genre, isExistGenre?.genre);
   }
 
-  console.log("isExist", isExist);
   if (genre === "" && !req.file) {
     throw HttpError(404, `genre is empty`);
   }
@@ -149,7 +134,6 @@ export default {
   allGenres: ctrlWrapper(allGenres),
   createGenre: ctrlWrapper(createGenre),
   findGenreById: ctrlWrapper(findGenreById),
-  findGenreForUpdate: ctrlWrapper(findGenreForUpdate),
   updateGenreById: ctrlWrapper(updateGenreById),
   deleteGenre: ctrlWrapper(deleteGenre),
 };
