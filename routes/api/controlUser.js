@@ -9,6 +9,7 @@ import {
 import controllers from "../../controllers/controlUser.js";
 import controllersPlaylist from "../../controllers/controlsUser/playlistUserCTRL.js";
 import controllersTracks from "../../controllers/controlsUser/tracksUserCTRL.js";
+import controllersEmail from "../../controllers/controllEmail.js";
 import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
 import { playListUserSchema } from "../../schemas/userSchema.js";
 import {
@@ -55,26 +56,18 @@ router.get(
   controllers.allGenres
 );
 
-router.get(
-  "/shops/all",
-  // authenticatUser,
-  controllers.allShops
-);
-router.get(
-  "/shops/:id",
-  // authenticatUser,
-  controllers.findShopById
-);
+router.get("/shops/all", authenticatUser, controllers.allShops);
+router.get("/shops/:id", authenticatUser, controllers.findShopById);
 
 router.get(
   "/shops/shopitem/:id",
-  // authenticatUser,
+  authenticatUser,
   controllers.getCategoryShopById
 );
 
 router.get(
   "/shops/shopitem/subcategory/:id",
-  // authenticatUser,
+  authenticatUser,
   controllers.getSubCategoryShopById
 );
 
@@ -89,7 +82,7 @@ router.get("/genres/:id", authenticatUser, controllers.findGenreById);
 
 router.get(
   "/genre/:id/tracks",
-  // authenticatUser,
+  authenticatUser,
   controllers.getTracksByGenreId
 );
 
@@ -179,10 +172,23 @@ router.patch(
 router.post(
   "/countlistens",
   authenticatUser,
- 
+
   controllers.countlistensForUser
 );
+//отправка письма акт сверки
+router.post(
+  "/:id/actemail",
+  authenticatUser,
 
+  controllersEmail.sendEmailByAct
+);
+//отправка письма администратору
+router.post(
+  "/:id/emailtoadmin",
+  authenticatUser,
+
+  controllersEmail.sendEmailToAdminFromUser
+);
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
 // router.patch("favorites/:playlistId", authenticatUser, controllers.addFavoritePlaylist);

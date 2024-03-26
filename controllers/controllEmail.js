@@ -14,6 +14,7 @@ const {
   EMAIL_PASSWORD_UKR_NET,
   PASSWORD_UKR_NET,
   SENDGRID_API_KEY,
+  EMAIL_ACCOUNTANT,
 } = process.env;
 
 // sgMail.setApiKey(SENDGRID_API_KEY);
@@ -80,6 +81,74 @@ const sendEmailByAccess = async (req, res) => {
   });
 };
 
+const sendEmailByAct = async (req, res) => {
+  const { id } = req.params;
+  const { actText } = req.body;
+  // console.log("body :>> ", req.body);
+  // console.log("_id", id);
+  const objectId = new mongoose.Types.ObjectId(id);
+  const user = await User.findOne({ _id: objectId });
+
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+  const actEmail = {
+    to: EMAIL_ACCOUNTANT,
+    subject: ` Уласп акт звірки для ${user.contractNumber}`,
+    html: `<h2> Користувач  ${
+      user.firstName && user.lastName
+        ? `${user.firstName} ${user.lastName}`
+        : user.name
+    }! </h2>
+    <div
+    <p>Запросив акт звірки </p>
+    <p>Номер договору: ${user.contractNumber} </p>
+     <p>Ідентифікаційний номер: ${user.taxCode} </p>
+    <p>Email: ${user.email} </p>
+    <p>Деталі: </p>
+    ${actText}
+    </div>
+`,
+  };
+
+  await sendEmail(actEmail);
+
+  res.json({
+    message: "Successful send request for reconciliation report",
+  });
+};
+
+const sendEmailToAdminFromUser = async (req, res) => {
+  const { id } = req.params;
+  const { subject, text } = req.body;
+  // console.log("body :>> ", req.body);
+  // console.log("_id", id);
+  const objectId = new mongoose.Types.ObjectId(id);
+  const user = await User.findOne({ _id: objectId });
+
+  if (!user) {
+    throw HttpError(404, "User not found");
+  }
+  const userToAdminEmail = {
+    to: EMAIL_ADMIN_UKR_NET,
+    subject: ` ${subject} від ${user.contractNumber}`,
+    html: `
+    <div>
+ 
+    ${text}
+    </div>
+`,
+  };
+
+  await sendEmail(userToAdminEmail);
+
+  res.json({
+    message: "Successful send mail for admin",
+  });
+};
+
 export default {
   sendEmailByAccess: ctrlWrapper(sendEmailByAccess),
+  sendEmailByAct: ctrlWrapper(sendEmailByAct),
+  sendEmailToAdminFromUser: ctrlWrapper(sendEmailToAdminFromUser),
 };
