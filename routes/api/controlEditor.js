@@ -28,48 +28,7 @@ router.post(
   controllers.uploadPics
 );
 
-router.post(
-  "/playlist/create",
-  authenticateAdmin,
-  permisionsEditor,
-  upload.single("picsURL"),
-  validateBody(playListSchema),
-  controllers.createPlayList
-);
 
-router.get("/playlist/latest", controllers.latestPlaylists);
-
-router.get(
-  "/playlist/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  isValid,
-  controllers.findPlayListById
-);
-
-router.patch(
-  "/playlist/update/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  isValid,
-  controllers.updatePlaylistById
-);
-
-router.patch(
-  "/playlist/sortupdate/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  isValid,
-  controllers.updatePlaylistsSortedTracks
-);
-
-router.delete(
-  "/playlist/delete/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  isValid,
-  controllers.deletePlaylist
-);
 
 // router.get(
 //   "/genre/:id/tracks",
@@ -77,15 +36,7 @@ router.delete(
 //   controllers.getTracksInGenre
 // );
 
-router.post(
-  "/genre/playlist/create/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  isValid,
-  upload.single("picsURL"),
-  validateBody(playListSchema),
-  controllers.createPlayListByGenre
-);
+
 
 router.post(
   "/tracks/upload/:id",
@@ -246,14 +197,7 @@ router.delete(
   controllers.deleteSubCategoryShop
 );
 
-router.post(
-  "/shoplibrary/playlist/create/:idShopLibrary",
-  authenticateAdmin,
-  permisionsEditor,
-  upload.single("picsURL"),
-  validateBody(playListSchema),
-  controllers.createPlayListInShopLibrary
-);
+
 
 router.delete(
   "/shopsubcategory/:idSubCategory/delete/:idPlaylist",
