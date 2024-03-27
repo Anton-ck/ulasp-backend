@@ -124,9 +124,15 @@ router.post(
   controllers.createUserPlaylist
 );
 
-router.patch(
+router.post(
   "/userPlaylist/addTracks",
+  authenticatUser,
   controllersPlaylist.addTracksToPlaylist
+);
+router.post(
+  "/userPlaylist/addTrack/",
+  authenticatUser,
+  controllersPlaylist.addTrackToPlaylistUser
 );
 
 router.patch(
@@ -188,6 +194,36 @@ router.post(
   authenticatUser,
 
   controllersEmail.sendEmailToAdminFromUser
+);
+
+router.get(
+  "/tracks/add",
+  authenticatUser,
+
+  controllers.getAddedTracksByUsers
+);
+
+//добавление трека в додані
+router.post(
+  "/tracks/add/:id/",
+  authenticatUser,
+
+  controllers.addTracksByUsers
+);
+
+//удаление трека в додані
+router.delete(
+  "/tracks/add/:id/",
+  authenticatUser,
+
+  controllers.deleteTracksByUsers
+);
+//получение списка  плейлистов юзера в которых нет запрашиваемого трека
+router.get(
+  "/userPlaylist/nonTrack/:id",
+  authenticatUser,
+
+  controllers.getPlaylistByUserWithoutTrackId
 );
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
