@@ -796,10 +796,6 @@ const countlistensForUser = async (req, res) => {
 
   const dateOfStart = new Date(req.body.dateOfStart);
   const dateOfEnd = new Date(req.body.dateOfEnd);
-  // console.log("dateOfStart :>> ", dateOfStart.toDateString());
-  // console.log("dateOfStart :>> ", dateOfEnd);
-  // console.log("dateOfEnd :>> ", dateOfEnd.getTime() + 86400000);
-  // console.log("dateOfEnd :>> ", dateOfEnd.getTime());
   const userListenCount = await UserListenCount.findOne({ userId });
 
   if (userListenCount) {
@@ -834,9 +830,110 @@ const countlistensForUser = async (req, res) => {
     res.json([]);
   }
 };
+//добавление трека к добавленым юзером
+const addTracksByUsers = async (req, res) => {
+  const { id } = req.params; // айди трека
+  const { _id: user } = req.user;
 
+  const track = await Track.findById(id);
+  if (!track) {
+    throw HttpError(404, `Track with id ${id} not found`);
+  }
+  if (track.addTrackByUsers.includes(user)) {
+    throw HttpError(400, `User ${user} already added to track ${id}`);
+  }
+
+  await Track.findByIdAndUpdate(track._id, {
+    $push: { addTrackByUsers: user },
+  });
+  res.status(200).json({ message: `Added ${track.trackName} to add` });
+};
+//удаление трека из добавленых юзером
+const deleteTracksByUsers = async (req, res) => {
+  const { id } = req.params; // айди трека
+  const { _id: user } = req.user;
+
+  const track = await Track.findById(id);
+  if (!track) {
+    throw HttpError(404, `Track with id ${id} not found`);
+  }
+  if (!track.addTrackByUsers.includes(user)) {
+    throw HttpError(400, `User ${user} already removed from track ${id}`);
+  }
+
+  await Track.findByIdAndUpdate(track._id, {
+    $pull: { addTrackByUsers: user },
+  });
+  res.status(200).json({ message: `Removed ${track.trackName} from add` });
+};
+
+//получение списка  треков  добавленых юзером
+const getAddedTracksByUsers = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const { _id: user } = req.user;
+  const skip = (page - 1) * limit;
+  const queryOptions = { addTrackByUsers: user, ...query };
+  console.log("pfikb :>> ");
+  const tracks = await Track.find(
+    queryOptions,
+    "artist trackName trackDuration playList",
+    {
+      skip,
+      limit,
+    }
+  )
+    .sort({ createdAt: -1 })
+
+    .populate({
+      path: "playList",
+      select: "playlistGenre",
+      options: {
+        populate: {
+          path: "playlistGenre",
+          select: "genre",
+        },
+      },
+    });
+  const totalTracks = await Track.find(queryOptions).countDocuments();
+  const tracksSRC = await Track.find(
+    queryOptions,
+    "artist trackName trackURL"
+  ).sort({ createdAt: -1 });
+  const totalPages = Math.ceil(totalTracks / limit);
+  const pageNumber = page ? parseInt(page) : null;
+  res.json({
+    tracks,
+
+    tracksSRC,
+    totalTracks,
+    totalPages,
+    pageNumber,
+  });
+};
+//получение списка  плейлистов юзера в которых нет запрашиваемого трека
+const getPlaylistByUserWithoutTrackId = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const { _id: userId } = req.user;
+  const { id } = req.params; // айди трека
+
+  const playlistsWithoutTrack = await UserPlaylist.find(
+    { ...req.query, owner: userId, trackList: { $ne: id } },
+    { createdAt: 0, updatedAt: 0, trackList: 0, favoriteByUsers: 0 },
+    // "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  ).sort({ createdAt: -1 });
+  res.json(playlistsWithoutTrack);
+};
 export default {
+  getPlaylistByUserWithoutTrackId: ctrlWrapper(getPlaylistByUserWithoutTrackId),
+  addTracksByUsers: ctrlWrapper(addTracksByUsers),
+  deleteTracksByUsers: ctrlWrapper(deleteTracksByUsers),
   getAllUsers: ctrlWrapper(getAllUsers),
+  getAddedTracksByUsers: ctrlWrapper(getAddedTracksByUsers),
   // addFavoritePlaylist: ctrlWrapper(addFavoritePlaylist),
   // deleteFavoritePlayList:  ctrlWrapper(deleteFavoritePlayList),
   getFavoritePlaylists: ctrlWrapper(getFavoritePlaylists),

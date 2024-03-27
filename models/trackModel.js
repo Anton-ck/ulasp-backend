@@ -43,6 +43,12 @@ const trackSchema = new Schema(
       type: Number,
       default: null,
     },
+    addTrackByUsers: [
+      //список юзеров которые добавили трек
+      {
+        type: Schema.Types.ObjectId,
+      },
+    ],
   },
   { versionKey: false, timestamps: true }
 );
