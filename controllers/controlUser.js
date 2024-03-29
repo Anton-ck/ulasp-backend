@@ -273,7 +273,6 @@ const updateFavoritesPlaylists = async (req, res) => {
 
   const isFavorite = playlist.favoriteByUsers.includes(user);
   console.log("isFavorite", isFavorite);
-  console.log("playlist", playlist);
 
   if (isFavorite) {
     await PlayList.findByIdAndUpdate(playlist._id, {
@@ -682,8 +681,15 @@ const findUserPlayListById = async (req, res) => {
   const playlist = await UserPlaylist.findById(id).populate({
     path: "trackList",
     options: { sort: { createdAt: -1 }, skip, limit },
+    populate: {
+      path: "playList",
+
+      populate: {
+        path: "playlistGenre",
+        select: "genre",
+      },
+    },
   });
-  // .populate("playlistGenre");
 
   if (!playlist) {
     throw HttpError(404, `Playlist not found`);
@@ -691,7 +697,7 @@ const findUserPlayListById = async (req, res) => {
 
   const trackList = await UserPlaylist.findById(id, "trackList").populate({
     path: "trackList",
-    select: "artist trackName trackURL",
+
     options: { sort: { createdAt: -1 } },
   });
 
@@ -699,7 +705,7 @@ const findUserPlayListById = async (req, res) => {
   const totalPages = Math.ceil(totalTracks / limit);
 
   const tracksSRC = trackList.trackList;
-
+  console.log("trackList findUserPlayListById:>> ", trackList);
   res.json({ playlist, totalTracks, totalPages, tracksSRC });
 };
 
@@ -873,7 +879,7 @@ const getAddedTracksByUsers = async (req, res) => {
   const { _id: user } = req.user;
   const skip = (page - 1) * limit;
   const queryOptions = { addTrackByUsers: user, ...query };
-  console.log("pfikb :>> ");
+
   const tracks = await Track.find(
     queryOptions,
     "artist trackName trackDuration playList",
