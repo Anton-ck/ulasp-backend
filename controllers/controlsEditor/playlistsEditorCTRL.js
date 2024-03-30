@@ -236,6 +236,10 @@ const findPlayListById = async (req, res) => {
 
   const sortPlaylist = await PlayList.findById(id, "sortedTracks");
 
+  if (!sortPlaylist) {
+    throw HttpError(404, `Playlist not found`);
+  }
+
   const sortedBy = sortPlaylist.sortedTracks
     ? { updatedAt: -1, sortIndex: 1 }
     : { createdAt: -1 };
@@ -260,10 +264,6 @@ const findPlayListById = async (req, res) => {
       },
     })
     .populate("playlistGenre");
-
-  if (!playlist) {
-    throw HttpError(404, `Playlist not found`);
-  }
 
   const trackList = await PlayList.findById(id, "trackList").populate({
     path: "trackList",
@@ -319,14 +319,6 @@ const updatePlaylistPublication = async (req, res) => {
       object: `${id}`,
     });
   }
-  //   if (isExistPlaylist) {
-  //     res.status(409).json({
-  //       message: `${isExistPlaylist.playListName} already in use`,
-  //       code: "4091",
-  //       object: `${isExistPlaylist.playListName}`,
-  //     });
-  //   }
-
   const updatedPlaylist = await PlayList.findByIdAndUpdate(
     id,
     { ...req.body },
@@ -341,8 +333,6 @@ const updatePlaylistPublication = async (req, res) => {
 const updatePlaylistById = async (req, res) => {
   const { id } = req.params;
   const { playListName, type = "playlist" } = req.body;
-
-  console.log("playListName", playListName);
 
   let isExist;
   if (playListName) {
@@ -372,8 +362,6 @@ const updatePlaylistById = async (req, res) => {
 
   let resizePicURL;
 
-  console.log(req.file);
-
   if (req.file) {
     resizePicURL = await resizePics(req.file, type);
   }
@@ -390,7 +378,7 @@ const updatePlaylistById = async (req, res) => {
 
 const deletePlaylist = async (req, res) => {
   const { id } = req.params;
-
+  const { deleteTracks } = req.body;
   const playlist = await PlayList.findById(id);
 
   const idPlayListInGenre = await Genre.find({
@@ -457,7 +445,12 @@ const deletePlaylist = async (req, res) => {
   //     "You can't delete this playlist, because you don't owner"
   //   );
   // }
-
+  console.log("playlist.trackList.length", playlist.trackList.length);
+  console.log("deleteTracks", deleteTracks);
+  if (deleteTracks && playlist.trackList.length !== 0) {
+    console.log("Зашли или нет?");
+    await Track.deleteMany({ _id: { $in: playlist.trackList } });
+  }
   await PlayList.findByIdAndDelete(id);
 
   res.json({

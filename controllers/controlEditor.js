@@ -674,10 +674,11 @@ const deleteShop = async (req, res) => {
   const shop = await Shop.findById(id);
 
   if (!shop) {
-    throw HttpError(404, `Genre with ${id} not found`);
+    throw HttpError(404, `Shop with ${id} not found`);
   }
 
-  if (shop.shopChildItems !== 0) {
+  if (shop.shopChildItems.length !== 0) {
+    console.log("Попали в if");
     shop.shopChildItems.map(async (idShopChildItem) => {
       const childItems = await ShopItem.findById(idShopChildItem);
       childItems.shopChildSubType.map(
@@ -690,11 +691,9 @@ const deleteShop = async (req, res) => {
       });
     });
   } else {
-    await Shop.findByIdAndDelete(id);
+    console.log("Попали в else");
+    await Shop.findByIdAndRemove(id);
   }
-
-  await Shop.findByIdAndDelete(id);
-
   res.json({
     message: `Shop ${shop.shopCategoryName} was deleted`,
   });

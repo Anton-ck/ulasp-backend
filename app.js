@@ -12,6 +12,7 @@ import controlAdminRouter from "./routes/api/controlAdmin.js";
 import controlEditorRouter from "./routes/api/controlEditor.js";
 import genreEditorAPI from "./routes/api/controlEditor/genreAPI.js";
 import playlistEditorAPI from "./routes/api/controlEditor/playlistAPI.js";
+import shopsEditorAPI from "./routes/api/controlEditor/shopAPI.js";
 
 import authUserRouter from "./routes/api/authUser.js";
 import controlUserRouter from "./routes/api/controlUser.js";
@@ -33,6 +34,7 @@ app.use("/admin", controlAdminRouter);
 app.use("/editor", controlEditorRouter);
 app.use("/editor", genreEditorAPI);
 app.use("/editor", playlistEditorAPI);
+app.use("/editor", shopsEditorAPI);
 
 app.use("/user", authUserRouter);
 app.use("/user", controlUserRouter);
