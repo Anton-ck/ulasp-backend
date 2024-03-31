@@ -124,13 +124,14 @@ router.post(
   controllers.createUserPlaylist
 );
 
-router.post(
+router.patch(
   "/userPlaylist/addTracks",
   authenticatUser,
   controllersPlaylist.addTracksToPlaylist
 );
+//добавление трека в плейлист юзера
 router.post(
-  "/userPlaylist/addTrack/",
+  "/userPlaylist/addTrack",
   authenticatUser,
   controllersPlaylist.addTrackToPlaylistUser
 );
@@ -211,9 +212,9 @@ router.post(
   controllers.addTracksByUsers
 );
 
-//удаление трека в додані
+//удаление трека из додані
 router.delete(
-  "/tracks/add/:id/",
+  "/tracks/removeFromAdd/:id/",
   authenticatUser,
 
   controllers.deleteTracksByUsers

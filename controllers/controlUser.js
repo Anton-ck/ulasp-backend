@@ -94,10 +94,11 @@ const findPlayListById = async (req, res) => {
 
   const trackList = await PlayList.findById(id, "trackList").populate({
     path: "trackList",
-    select: "artist trackName trackURL",
+    select: "artist trackName trackURL addTrackByUsers",
     options: { sort: sortedBy },
   });
-
+  console.log("playlist :>> ", playlist);
+  console.log("trackList :>> ", trackList);
   const totalTracks = trackList.trackList.length;
   const totalPages = Math.ceil(totalTracks / limit);
 
@@ -880,9 +881,9 @@ const getAddedTracksByUsers = async (req, res) => {
   const skip = (page - 1) * limit;
   const queryOptions = { addTrackByUsers: user, ...query };
 
-  const tracks = await Track.find(
+  const tracksInAdd = await Track.find(
     queryOptions,
-    "artist trackName trackDuration playList",
+    "artist trackName trackDuration trackPictureURL playList addTrackByUsers",
     {
       skip,
       limit,
@@ -903,12 +904,12 @@ const getAddedTracksByUsers = async (req, res) => {
   const totalTracks = await Track.find(queryOptions).countDocuments();
   const tracksSRC = await Track.find(
     queryOptions,
-    "artist trackName trackURL"
+    "artist trackName trackURL "
   ).sort({ createdAt: -1 });
   const totalPages = Math.ceil(totalTracks / limit);
   const pageNumber = page ? parseInt(page) : null;
   res.json({
-    tracks,
+    tracksInAdd,
 
     tracksSRC,
     totalTracks,

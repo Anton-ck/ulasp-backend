@@ -66,6 +66,8 @@ const deleteTracksFromPlaylist = async (req, res) => {
 
 const addTrackToPlaylistUser = async (req, res) => {
   const { id, trackId } = req.body; //плелист и трек
+  console.log("req.body :>> ", req.body);
+
   const { _id: user } = req.user;
   const playList = await UserPlaylist.findOne({ _id: id, owner: user });
   console.log("playList :>> ", playList);
