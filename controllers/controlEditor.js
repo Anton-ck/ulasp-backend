@@ -532,16 +532,7 @@ const latestTracks = async (req, res) => {
   });
 };
 
-const allShops = async (req, res) => {
-  const { page = 1, limit = req.query.limit, ...query } = req.query;
-  const skip = (page - 1) * limit;
-  const allShops = await Shop.find({ ...req.query }, "-createdAt -updatedAt", {
-    skip,
-    limit,
-  }).sort({ createdAt: -1 });
 
-  res.json(allShops);
-};
 
 const createShop = async (req, res) => {
   const { shopCategoryName } = req.body;
@@ -572,69 +563,7 @@ const createShop = async (req, res) => {
   });
 };
 
-const getShopById = async (req, res) => {
-  const { id } = req.params;
-  const allPlaylistsInShopCategory = [];
-  let playlistsInSubCat = [];
 
-  const shop = await Shop.findById(id)
-    .populate("playList")
-    .populate({
-      path: "shopChildItems",
-      options: { populate: "playList" },
-    });
-
-  if (!shop) {
-    throw HttpError(404, `Shop with ${id} not found`);
-  }
-
-  shop.playList.map((playlist) => allPlaylistsInShopCategory.push(playlist));
-
-  //Проходимся по категориям в ресторанах
-  shop.shopChildItems.map((shopChildItem) => {
-    // console.log("shopChildItem", shopChildItem);
-
-    //Проходимся по по всем плейлистам в категорях
-    shopChildItem.playList.map(async (playlist) => {
-      // console.log("playlist", playlist);
-
-      //Добавляем все плейлисты в массив
-      allPlaylistsInShopCategory.push(playlist);
-
-      const shop = await ShopItem.findById(shopChildItem._id).populate({
-        path: "shopChildSubType",
-        options: { populate: "playList" },
-      });
-
-      shop.shopChildSubType.map((shopChildSubType) =>
-        shopChildSubType.playList.map((playlist) =>
-          allPlaylistsInShopCategory.push(playlist)
-        )
-      );
-    });
-
-    // shopChildItem.shopChildSubType.map(async (id) => {
-    //   // console.log(playlistsInSubCat.push(id));
-    //   // playlistsInSubCat.push(id);
-
-    //   const subCat = await ShopSubType.findById(id).populate("playList");
-    //   // pl.push(subCat);
-    //   // console.log(subCat);
-    //   if (subCat.playList.length !== 0) {
-    //     subCat.playList.map((playlist) => {
-    //       playlistsInSubCat.push(playlist._id);
-    //     });
-    //   }
-    // });
-  });
-
-  // console.log("allPlaylistsInShopCategory", allPlaylistsInShopCategory);
-
-  // console.log("playlistsInSubCat", playlistsInSubCat);
-  // console.log(allPlaylistsInShopCategory);
-
-  res.json({ shop, allPlaylistsInShopCategory, playlistsInSubCat });
-};
 
 const updateShopById = async (req, res) => {
   const { id } = req.params;
@@ -690,6 +619,7 @@ const deleteShop = async (req, res) => {
         $pull: { shopChildItems: idShopChildItem },
       });
     });
+    await Shop.findByIdAndRemove(id);
   } else {
     console.log("Попали в else");
     await Shop.findByIdAndRemove(id);
@@ -1009,9 +939,8 @@ export default {
   deleteTrack: ctrlWrapper(deleteTrack),
   getTracksInChart: ctrlWrapper(getTracksInChart),
   latestTracks: ctrlWrapper(latestTracks),
-  allShops: ctrlWrapper(allShops),
   createShop: ctrlWrapper(createShop),
-  getShopById: ctrlWrapper(getShopById),
+
   updateShopById: ctrlWrapper(updateShopById),
   deleteShop: ctrlWrapper(deleteShop),
   createCategoryShop: ctrlWrapper(createCategoryShop),

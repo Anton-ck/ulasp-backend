@@ -101,12 +101,7 @@ router.patch(
   controllers.removeTrackFromChart
 );
 
-router.get(
-  "/shops/all",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.allShops
-);
+
 router.post(
   "/shops/create",
   authenticateAdmin,
@@ -114,12 +109,7 @@ router.post(
   controllers.createShop
 );
 
-router.get(
-  "/shops/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.getShopById
-);
+
 
 router.patch(
   "/shops/update/:id",
