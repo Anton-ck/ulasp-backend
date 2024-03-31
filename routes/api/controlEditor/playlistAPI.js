@@ -19,6 +19,8 @@ router.post(
 
 router.get("/playlist/latest", controllersPlaylist.latestPlaylists);
 
+router.get("/playlist/without/track/:id", controllersPlaylist.getPlaylistsWithOutCurrentTrack);
+
 router.get(
   "/playlist/:id",
   authenticateAdmin,

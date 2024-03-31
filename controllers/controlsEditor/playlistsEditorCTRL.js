@@ -223,6 +223,31 @@ const createPlayListInShopLibrary = async (req, res) => {
   });
 };
 
+const getPlaylistsWithOutCurrentTrack = async (req, res) => {
+  const { id } = req.params;
+
+  const track = await Track.findById(id);
+
+  if (!track) {
+    throw HttpError(404, `Track with id ${id} not found`);
+  }
+
+  const trackPlaylists = track.playList;
+
+  const playlistsWithoutCurrentTrack = await PlayList.find(
+    {
+      _id: { $nin: trackPlaylists },
+    },
+    "playListName playListAvatarURL"
+  );
+
+  res.json(playlistsWithoutCurrentTrack);
+};
+
+
+
+
+
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
@@ -461,6 +486,7 @@ const deletePlaylist = async (req, res) => {
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
+  getPlaylistsWithOutCurrentTrack: ctrlWrapper(getPlaylistsWithOutCurrentTrack),
   findPlayListById: ctrlWrapper(findPlayListById),
   updatePlaylistsSortedTracks: ctrlWrapper(updatePlaylistsSortedTracks),
   updatePlaylistPublication: ctrlWrapper(updatePlaylistPublication),
