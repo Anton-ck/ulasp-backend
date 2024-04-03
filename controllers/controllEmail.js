@@ -8,44 +8,46 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const {
-  EMAIL_ADMIN,
-  EMAIL_PASSWORD,
-  EMAIL_ADMIN_UKR_NET,
-  EMAIL_PASSWORD_UKR_NET,
-  PASSWORD_UKR_NET,
-  SENDGRID_API_KEY,
-  EMAIL_ACCOUNTANT,
+  EMAIL_ADMIN_ULASP,
+  EMAIL_INFO_ULASP,
+  EMAIL_INFO_ULASP_PASSWD,
+  EMAIL_CLIENT_ULASP,
+  EMAIL_CLIENT_ULASP_PASSWD,
 } = process.env;
 
-// sgMail.setApiKey(SENDGRID_API_KEY);
-// const email = {
-//   to: "ulaspadmin@ukr.net",
-//   from: "testnolimiti@gmail.com",
-//   subject: "Verify email",
-//   html: `<p >Click verify email</p>`,
-// };
-
-// EMAIL_ADMIN=ulaspadmin@meta.ua
-// EMAIL_PASSWORD=ulaspAdmin01012000
-// EMAIL_ADMIN_UKR_NET=ulaspadmin@ukr.net
-// EMAIL_PASSWORD_UKR_NET=01ulaspemail01
-// PASSWORD_UKR_NET = tjEXIuZCKciVIEQH
-
 const nodemailerConfig = {
-  host: "smtp.ukr.net",
-  port: 2525,
+  host: "freemail.freehost.com.ua",
+  port: 465,
   secure: true,
   auth: {
-    user: EMAIL_ADMIN_UKR_NET,
-    pass: PASSWORD_UKR_NET,
+    user: EMAIL_CLIENT_ULASP,
+    pass: EMAIL_CLIENT_ULASP_PASSWD,
   },
 };
 
 const transporter = nodemailer.createTransport(nodemailerConfig);
 
 const sendEmail = async (data) => {
-  const email = { ...data, from: EMAIL_ADMIN_UKR_NET };
+  const email = { ...data, from: EMAIL_CLIENT_ULASP };
   await transporter.sendMail(email);
+  return true;
+};
+
+const nodemailerConfigInfo = {
+  host: "freemail.freehost.com.ua",
+  port: 465,
+  secure: true,
+  auth: {
+    user: EMAIL_INFO_ULASP,
+    pass: EMAIL_INFO_ULASP_PASSWD,
+  },
+};
+
+const transporterInfo = nodemailer.createTransport(nodemailerConfigInfo);
+
+const sendEmailInfo = async (data) => {
+  const email = { ...data, from: EMAIL_INFO_ULASP };
+  await transporterInfo.sendMail(email);
   return true;
 };
 
@@ -60,13 +62,13 @@ const sendEmailByAccess = async (req, res) => {
   }
   const accessEmail = {
     to: user.email,
-    subject: " Уласп доступ",
+    subject: "Доступ до музичного сервісу Ulasp Music",
     html: `<h2>Шановний користувач! </h2>
     <div>
 
-    <p>Вам надано доступ до ресурсу УЛАСП: http://music.ulasp.com.ua:9080/</p>
+    <p>Вам надано доступ сервісу Ulasp Music: http://music.ulasp.com.ua:9080/</p>
 </br>
-    Дані для входу:
+    Ваші дані для входу:
 
      <p>Номер договору: ${user.contractNumber} </p>
     <p>Ідентифікаційний номер: ${user.taxCode} </p>
@@ -74,7 +76,7 @@ const sendEmailByAccess = async (req, res) => {
 `,
   };
 
-  await sendEmail(accessEmail);
+  await sendEmailInfo(accessEmail);
 
   res.json({
     message: "Successful access",
@@ -93,8 +95,8 @@ const sendEmailByAct = async (req, res) => {
     throw HttpError(404, "User not found");
   }
   const actEmail = {
-    to: EMAIL_ACCOUNTANT,
-    subject: ` Уласп акт звірки для ${user.contractNumber}`,
+    to: EMAIL_ADMIN_ULASP,
+    subject: `Акт звірки Ulasp Music для ${user.contractNumber}`,
     html: `<h2> Користувач  ${
       user.firstName && user.lastName
         ? `${user.firstName} ${user.lastName}`
@@ -130,7 +132,7 @@ const sendEmailToAdminFromUser = async (req, res) => {
     throw HttpError(404, "User not found");
   }
   const userToAdminEmail = {
-    to: EMAIL_ADMIN_UKR_NET,
+    to: EMAIL_ADMIN_ULASP,
     subject: ` ${subject} від ${user.contractNumber}`,
     html: `
     <div>
