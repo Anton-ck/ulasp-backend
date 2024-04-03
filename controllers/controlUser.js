@@ -863,7 +863,7 @@ const getAddedTracksByUsers = async (req, res) => {
 
   const tracksInAdd = await Track.find(
     queryOptions,
-    "artist trackName trackDuration trackPictureURL playList addTrackByUsers",
+    "artist trackName trackDuration trackPictureURL trackURL playList addTrackByUsers",
     {
       skip,
       limit,
