@@ -61,25 +61,15 @@ const latestPlaylists = async (req, res) => {
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
-  const { page = req.query.page, limit = req.query.limit } = req.query;
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    sort = req.query.sort,
+  } = req.query;
 
   const skip = (page - 1) * limit;
 
-  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
-
-  function isEmptyObject(obj) {
-    for (let i in obj) {
-      if (obj.hasOwnProperty(i)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  const isEmptySortedTracks = isEmptyObject(sortPlaylist.sortedTracks);
-
-  const sortedBy = !isEmptySortedTracks
-    ? sortPlaylist.sortedTracks
-    : { createdAt: -1 };
+  const sortedBy = { trackName: sort } || { createdAt: -1 };
 
   const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
     .populate({
@@ -216,14 +206,38 @@ const allShops = async (req, res) => {
 const findShopById = async (req, res) => {
   const { id } = req.params;
   const allPlaylistsInShopCategory = [];
-  let playlistsInSubCat = [];
 
-  const shop = await Shop.findById(id)
-    .populate("playList")
-    .populate({
+  const shop = await Shop.findById(id, "-createdAt -updatedAt").populate([
+    {
+      path: "playList",
+      select: "playListName playListAvatarURL",
+      match: { published: true },
+    },
+    {
       path: "shopChildItems",
-      options: { populate: "playList" },
-    });
+      select: "shopItemName shopItemAvatarURL playList shopChildSubType",
+      options: {
+        populate: [
+          {
+            path: "playList",
+            select: "playListName playListAvatarURL",
+            match: { published: true },
+          },
+          {
+            path: "shopChildSubType",
+            select: "shopSubTypeName playList",
+            options: {
+              populate: {
+                path: "playList",
+                select: "playListName playListAvatarURL",
+                match: { published: true },
+              },
+            },
+          },
+        ],
+      },
+    },
+  ]);
 
   if (!shop) {
     throw HttpError(404, `Shop with ${id} not found`);
@@ -231,31 +245,19 @@ const findShopById = async (req, res) => {
 
   shop.playList.map((playlist) => allPlaylistsInShopCategory.push(playlist));
 
-  //Проходимся по категориям в ресторанах
   shop.shopChildItems.map((shopChildItem) => {
-    // console.log("shopChildItem", shopChildItem);
-
-    //Проходимся по по всем плейлистам в категорях
     shopChildItem.playList.map(async (playlist) => {
-      // console.log("playlist", playlist);
-
-      //Добавляем все плейлисты в массив
       allPlaylistsInShopCategory.push(playlist);
-
-      const shop = await ShopItem.findById(shopChildItem._id).populate({
-        path: "shopChildSubType",
-        options: { populate: "playList" },
+    });
+    shopChildItem.shopChildSubType.map(async (subtypeitem) => {
+      console.log(subtypeitem);
+      subtypeitem.playList.map(async (playlist) => {
+        allPlaylistsInShopCategory.push(playlist);
       });
-
-      shop.shopChildSubType.map((shopChildSubType) =>
-        shopChildSubType.playList.map((playlist) =>
-          allPlaylistsInShopCategory.push(playlist)
-        )
-      );
     });
   });
 
-  res.json({ shop, allPlaylistsInShopCategory, playlistsInSubCat });
+  res.json({ shop, allPlaylistsInShopCategory });
 };
 
 const updateFavoritesPlaylists = async (req, res) => {
@@ -676,12 +678,16 @@ const createUserPlaylist = async (req, res) => {
 
 const findUserPlayListById = async (req, res) => {
   const { id } = req.params;
-  const { page = req.query.page, limit = req.query.limit } = req.query;
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    sort = req.query.sort,
+  } = req.query;
   const skip = (page - 1) * limit;
 
   const playlist = await UserPlaylist.findById(id).populate({
     path: "trackList",
-    options: { sort: { createdAt: -1 }, skip, limit },
+    options: { sort: { trackName: sort }, skip, limit },
     populate: {
       path: "playList",
 
@@ -699,7 +705,7 @@ const findUserPlayListById = async (req, res) => {
   const trackList = await UserPlaylist.findById(id, "trackList").populate({
     path: "trackList",
 
-    options: { sort: { createdAt: -1 } },
+    options: { sort: { trackName: sort } },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -708,40 +714,6 @@ const findUserPlayListById = async (req, res) => {
   const tracksSRC = trackList.trackList;
   console.log("trackList findUserPlayListById:>> ", trackList);
   res.json({ playlist, totalTracks, totalPages, tracksSRC });
-};
-
-const uploadPics = async (req, res) => {
-  const { type } = req.body;
-  if (!req.file) {
-    throw HttpError(404, "File not found for upload");
-  }
-  const picsURL = await resizePics(req.file, type);
-  const cover = await Pics.create({ picsURL, ...req.body });
-  res.json({
-    cover,
-  });
-};
-
-const updateUserPlaylistById = async (req, res) => {
-  const { id } = req.params;
-  const isExistPlaylist = await UserPlaylist.findById(id);
-
-  if (isExistPlaylist === null) {
-    res.status(404).json({
-      message: `ID ${id} doesn't found`,
-      code: "4041",
-      object: `${id}`,
-    });
-  }
-  const updatedPlaylist = await UserPlaylist.findByIdAndUpdate(
-    id,
-    { ...req.body },
-    {
-      new: true,
-    }
-  );
-
-  res.json(updatedPlaylist);
 };
 
 const deleteUserPlaylist = async (req, res) => {
@@ -764,10 +736,15 @@ const getCategoryShopById = async (req, res) => {
   const { id } = req.params;
   const allPlaylistsInShopCategory = [];
   const shop = await ShopItem.findById(id)
-    .populate("playList")
+    .populate({ path: "playList", match: { published: true } })
     .populate({
       path: "shopChildSubType",
-      options: { populate: "playList" },
+      options: {
+        populate: {
+          path: "playList",
+          match: { published: true },
+        },
+      },
     });
 
   if (!shop) {
@@ -788,7 +765,10 @@ const getCategoryShopById = async (req, res) => {
 const getSubCategoryShopById = async (req, res) => {
   const { id } = req.params;
 
-  const shop = await ShopSubType.findById(id).populate("playList");
+  const shop = await ShopSubType.findById(id).populate({
+    path: "playList",
+    match: { published: true },
+  });
 
   if (!shop) {
     throw HttpError(404, `Shop subcategory with ${id} not found`);
@@ -960,8 +940,6 @@ export default {
   getCreatePlaylists: ctrlWrapper(getCreatePlaylists),
   createUserPlaylist: ctrlWrapper(createUserPlaylist),
   findUserPlayListById: ctrlWrapper(findUserPlayListById),
-  uploadPics: ctrlWrapper(uploadPics),
-  updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
   deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
   updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),
   getCategoryShopById: ctrlWrapper(getCategoryShopById),

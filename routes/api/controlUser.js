@@ -155,18 +155,12 @@ router.delete(
   controllers.deleteUserPlaylist
 );
 
-router.post(
-  "/pics/create",
-  authenticatUser,
-  upload.single("picsURL"),
-  controllers.uploadPics
-);
-
 router.patch(
   "/userPlaylist/update/:id",
   authenticatUser,
+  upload.single("picsURL"),
   isValid,
-  controllers.updateUserPlaylistById
+  controllersPlaylist.updateUserPlaylistById
 );
 
 router.patch(

@@ -3,6 +3,9 @@ import HttpError from "../../helpers/HttpError.js";
 import UserPlaylist from "../../models/userPlayList.js";
 import Track from "../../models/trackModel.js";
 
+import { resizePics } from "../../helpers/resizePics.js";
+import isExistStringToLowerCase from "../../helpers/compareStringToLowerCase.js";
+
 const addTracksToPlaylist = async (req, res) => {
   const { id, tracksIdArray } = req.body;
 
@@ -90,8 +93,61 @@ const addTrackToPlaylistUser = async (req, res) => {
     .json({ message: `Added ${trackId} to ${playList.playListName}` });
 };
 
+const updateUserPlaylistById = async (req, res) => {
+  const { id } = req.params;
+  const { playListName, type = "playlist" } = req.body;
+
+  console.log("id", id);
+
+  console.log("playListName", playListName);
+
+  console.log("req.body", req.body);
+
+  let isExist;
+  if (playListName) {
+    const isExistPlayList = await UserPlaylist.findOne({
+      playListName: {
+        $regex: playListName.toString(),
+        $options: "i",
+      },
+    });
+    isExist = isExistStringToLowerCase(
+      playListName,
+      isExistPlayList?.playListName
+    );
+  }
+
+  if (playListName === "" && !req.file) {
+    throw HttpError(404, `Playlist is empty`);
+  }
+  if (isExist) {
+    res.status(409).json({
+      message: `${playListName} already in use`,
+      code: "4091",
+      object: `${playListName}`,
+    });
+    return;
+  }
+
+  let resizePicURL;
+
+  if (req.file) {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  const updatedPlaylist = await UserPlaylist.findByIdAndUpdate(
+    id,
+    { ...req.body, playListAvatarURL: resizePicURL },
+    {
+      new: true,
+    }
+  );
+  res.json(updatedPlaylist);
+};
+
 export default {
   addTrackToPlaylistUser: ctrlWrapper(addTrackToPlaylistUser),
   addTracksToPlaylist: ctrlWrapper(addTracksToPlaylist),
   deleteTracksFromPlaylist: ctrlWrapper(deleteTracksFromPlaylist),
+  updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
 };
