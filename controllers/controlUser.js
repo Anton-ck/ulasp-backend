@@ -678,12 +678,16 @@ const createUserPlaylist = async (req, res) => {
 
 const findUserPlayListById = async (req, res) => {
   const { id } = req.params;
-  const { page = req.query.page, limit = req.query.limit } = req.query;
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    sort = req.query.sort,
+  } = req.query;
   const skip = (page - 1) * limit;
 
   const playlist = await UserPlaylist.findById(id).populate({
     path: "trackList",
-    options: { sort: { createdAt: -1 }, skip, limit },
+    options: { sort: { trackName: sort }, skip, limit },
     populate: {
       path: "playList",
 
@@ -701,7 +705,7 @@ const findUserPlayListById = async (req, res) => {
   const trackList = await UserPlaylist.findById(id, "trackList").populate({
     path: "trackList",
 
-    options: { sort: { createdAt: -1 } },
+    options: { sort: { trackName: sort } },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -710,28 +714,6 @@ const findUserPlayListById = async (req, res) => {
   const tracksSRC = trackList.trackList;
   console.log("trackList findUserPlayListById:>> ", trackList);
   res.json({ playlist, totalTracks, totalPages, tracksSRC });
-};
-
-const updateUserPlaylistById = async (req, res) => {
-  const { id } = req.params;
-  const isExistPlaylist = await UserPlaylist.findById(id);
-
-  if (isExistPlaylist === null) {
-    res.status(404).json({
-      message: `ID ${id} doesn't found`,
-      code: "4041",
-      object: `${id}`,
-    });
-  }
-  const updatedPlaylist = await UserPlaylist.findByIdAndUpdate(
-    id,
-    { ...req.body },
-    {
-      new: true,
-    }
-  );
-
-  res.json(updatedPlaylist);
 };
 
 const deleteUserPlaylist = async (req, res) => {
@@ -958,7 +940,6 @@ export default {
   getCreatePlaylists: ctrlWrapper(getCreatePlaylists),
   createUserPlaylist: ctrlWrapper(createUserPlaylist),
   findUserPlayListById: ctrlWrapper(findUserPlayListById),
-  updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
   deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
   updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),
   getCategoryShopById: ctrlWrapper(getCategoryShopById),

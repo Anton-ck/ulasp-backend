@@ -158,8 +158,9 @@ router.delete(
 router.patch(
   "/userPlaylist/update/:id",
   authenticatUser,
+  upload.single("picsURL"),
   isValid,
-  controllers.updateUserPlaylistById
+  controllersPlaylist.updateUserPlaylistById
 );
 
 router.patch(

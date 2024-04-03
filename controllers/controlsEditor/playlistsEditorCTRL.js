@@ -244,10 +244,6 @@ const getPlaylistsWithOutCurrentTrack = async (req, res) => {
   res.json(playlistsWithoutCurrentTrack);
 };
 
-
-
-
-
 const findPlayListById = async (req, res) => {
   const { id } = req.params;
 
