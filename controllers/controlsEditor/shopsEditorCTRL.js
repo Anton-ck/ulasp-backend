@@ -101,7 +101,7 @@ const deletePlaylistInShop = async (req, res) => {
   } else {
     throw HttpError(
       404,
-      `Playlist "${playlist.playListName}" in item "${shopItem.shopItemName}" not found`
+      `Playlist "${playlist.playListName}" in item "${shop.shopCategoryName}" not found`
     );
   }
   res.json({

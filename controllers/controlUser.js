@@ -643,38 +643,7 @@ const getCreatePlaylists = async (req, res) => {
   res.json(createPlaylists);
 };
 
-const createUserPlaylist = async (req, res) => {
-  const { playListName, type } = req.body;
-  const { _id: owner } = req?.user;
-  let randomPicUrl;
-  let resizePicURL;
 
-  const playlist = await UserPlaylist.findOne({ playListName });
-
-  if (playlist) {
-    throw HttpError(409, `${playListName} name in use`);
-  }
-
-  if (!req.file) {
-    randomPicUrl = await randomCover("playlist");
-  } else {
-    resizePicURL = await resizePics(req.file, type);
-  }
-
-  let picURL = !req.file ? randomPicUrl : resizePicURL;
-
-  const newPlayList = await UserPlaylist.create({
-    ...req.body,
-    playListAvatarURL: picURL,
-    owner,
-  });
-
-  res.status(201).json({
-    playListName: newPlayList.playListName,
-    owner: newPlayList.owner,
-    playListAvatarURL: newPlayList.playListAvatarURL,
-  });
-};
 
 const findUserPlayListById = async (req, res) => {
   const { id } = req.params;
@@ -938,7 +907,7 @@ export default {
   getTracksByGenreId: ctrlWrapper(getTracksByGenreId),
   countListensTrackByUser: ctrlWrapper(countListensTrackByUser),
   getCreatePlaylists: ctrlWrapper(getCreatePlaylists),
-  createUserPlaylist: ctrlWrapper(createUserPlaylist),
+
   findUserPlayListById: ctrlWrapper(findUserPlayListById),
   deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
   updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),

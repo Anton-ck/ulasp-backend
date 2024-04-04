@@ -121,7 +121,7 @@ router.post(
   authenticatUser,
   upload.single("picsURL"),
   validateBody(playListUserSchema),
-  controllers.createUserPlaylist
+  controllersPlaylist.createUserPlaylist
 );
 
 router.patch(
