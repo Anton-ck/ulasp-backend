@@ -2,7 +2,7 @@ import ctrlWrapper from "../../helpers/ctrlWrapper.js";
 import HttpError from "../../helpers/HttpError.js";
 import UserPlaylist from "../../models/userPlayList.js";
 import Track from "../../models/trackModel.js";
-
+import randomCover from "../../helpers/randomCover.js";
 import { resizePics } from "../../helpers/resizePics.js";
 import isExistStringToLowerCase from "../../helpers/compareStringToLowerCase.js";
 
