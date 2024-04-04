@@ -145,9 +145,86 @@ const updateUserPlaylistById = async (req, res) => {
   res.json(updatedPlaylist);
 };
 
+const createPlayList = async (req, res) => {
+  console.log(req);
+  const { playListName } = req.body;
+  const { _id: owner } = req.user;
+
+  const playlist = await PlayList.findOne({ playListName });
+
+  if (playlist) {
+    throw HttpError(409, "PlayList name in use");
+  }
+
+  const newPlayList = await PlayList.create({ ...req.body, owner });
+
+  res.status(201).json({
+    playListName: newPlayList.playListName,
+    typeOfShop: newPlayList.typeOfShop,
+    shopCategory: newPlayList.shopCategory,
+    owner: newPlayList.owner,
+  });
+};
+
+const createUserPlaylist = async (req, res) => {
+  const { playListName, type } = req.body;
+  const { _id: owner } = req?.user;
+  let randomPicUrl;
+  let resizePicURL;
+
+  const playlist = await UserPlaylist.findOne({ playListName });
+
+  let isExist;
+  if (playListName) {
+    const isExistPlayList = await UserPlaylist.findOne({
+      playListName: {
+        $regex: playListName.toString(),
+        $options: "i",
+      },
+    });
+    isExist = isExistStringToLowerCase(
+      playListName,
+      isExistPlayList?.playListName
+    );
+  }
+
+  if (playListName === "" && !req.file) {
+    throw HttpError(404, `Playlist is empty`);
+  }
+  if (isExist) {
+    res.status(409).json({
+      message: `${playListName} already in use`,
+      code: "4091",
+      object: `${playListName}`,
+    });
+    return;
+  }
+
+  if (!req.file) {
+    randomPicUrl = await randomCover("playlist");
+  } else {
+    resizePicURL = await resizePics(req.file, type);
+  }
+
+  let picURL = !req.file ? randomPicUrl : resizePicURL;
+
+  const newPlayList = await UserPlaylist.create({
+    ...req.body,
+    playListAvatarURL: picURL,
+    owner,
+  });
+
+  res.status(201).json({
+    playListName: newPlayList.playListName,
+    owner: newPlayList.owner,
+    playListAvatarURL: newPlayList.playListAvatarURL,
+  });
+};
+
 export default {
   addTrackToPlaylistUser: ctrlWrapper(addTrackToPlaylistUser),
   addTracksToPlaylist: ctrlWrapper(addTracksToPlaylist),
   deleteTracksFromPlaylist: ctrlWrapper(deleteTracksFromPlaylist),
   updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
+  createUserPlaylist: ctrlWrapper(createUserPlaylist),
 };
