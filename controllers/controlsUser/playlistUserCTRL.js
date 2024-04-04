@@ -26,8 +26,8 @@ const addTracksToPlaylist = async (req, res) => {
     }
   });
 
-  await UserPlaylist.updateMany(
-    { id },
+  await UserPlaylist.findByIdAndUpdate(
+    { _id: id },
     { $push: { trackList: arrayTracksForUpdate } },
     { new: true }
   );
@@ -58,8 +58,8 @@ const deleteTracksFromPlaylist = async (req, res) => {
     throw HttpError(404, `Playlist with id ${id} not found`);
   }
 
-  await UserPlaylist.updateMany(
-    { id },
+  await UserPlaylist.findByIdAndUpdate(
+    { _id: id },
     { $pullAll: { trackList: tracksIdArray } },
     { new: true }
   );
@@ -143,27 +143,6 @@ const updateUserPlaylistById = async (req, res) => {
     }
   );
   res.json(updatedPlaylist);
-};
-
-const createPlayList = async (req, res) => {
-  console.log(req);
-  const { playListName } = req.body;
-  const { _id: owner } = req.user;
-
-  const playlist = await PlayList.findOne({ playListName });
-
-  if (playlist) {
-    throw HttpError(409, "PlayList name in use");
-  }
-
-  const newPlayList = await PlayList.create({ ...req.body, owner });
-
-  res.status(201).json({
-    playListName: newPlayList.playListName,
-    typeOfShop: newPlayList.typeOfShop,
-    shopCategory: newPlayList.shopCategory,
-    owner: newPlayList.owner,
-  });
 };
 
 const createUserPlaylist = async (req, res) => {
