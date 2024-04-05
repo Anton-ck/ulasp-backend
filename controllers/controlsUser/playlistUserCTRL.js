@@ -1,10 +1,72 @@
 import ctrlWrapper from "../../helpers/ctrlWrapper.js";
 import HttpError from "../../helpers/HttpError.js";
+
+import PlayList from "../../models/playlistModel.js";
 import UserPlaylist from "../../models/userPlayList.js";
 import Track from "../../models/trackModel.js";
+
 import randomCover from "../../helpers/randomCover.js";
 import { resizePics } from "../../helpers/resizePics.js";
 import isExistStringToLowerCase from "../../helpers/compareStringToLowerCase.js";
+
+const latestPlaylists = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const latestPlaylists = await PlayList.find(
+    //  { ...req.query },
+    { published: true },
+    "-favoriteByUsers -createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  ).sort({ createdAt: -1 });
+
+  res.json(latestPlaylists);
+};
+
+const findPlayListById = async (req, res) => {
+  const { id } = req.params;
+
+  const {
+    page = req.query.page,
+    limit = req.query.limit,
+    sort = req.query.sort,
+  } = req.query;
+
+  const skip = (page - 1) * limit;
+
+  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+
+  if (!sortPlaylist) {
+    throw HttpError(404, `Playlist not found`);
+  }
+
+  const sortedBy = sortPlaylist.sortedTracks
+    ? { updatedAt: -1, sortIndex: sort }
+    : { createdAt: sort };
+
+  const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
+    .populate({
+      path: "trackList",
+      options: { sort: sortedBy, skip, limit },
+    })
+    .populate("playlistGenre");
+
+  const trackList = await PlayList.findById(id, "trackList").populate({
+    path: "trackList",
+    select: "artist trackName trackURL addTrackByUsers",
+    options: { sort: sortedBy },
+  });
+  console.log("playlist :>> ", playlist);
+  console.log("trackList :>> ", trackList);
+  const totalTracks = trackList.trackList.length;
+  const totalPages = Math.ceil(totalTracks / limit);
+
+  const tracksSRC = trackList.trackList;
+
+  res.json({ playlist, totalTracks, totalPages, tracksSRC });
+};
 
 const addTracksToPlaylist = async (req, res) => {
   const { id, tracksIdArray } = req.body;
@@ -201,6 +263,8 @@ const createUserPlaylist = async (req, res) => {
 };
 
 export default {
+  latestPlaylists: ctrlWrapper(latestPlaylists),
+  findPlayListById: ctrlWrapper(findPlayListById),
   addTrackToPlaylistUser: ctrlWrapper(addTrackToPlaylistUser),
   addTracksToPlaylist: ctrlWrapper(addTracksToPlaylist),
   deleteTracksFromPlaylist: ctrlWrapper(deleteTracksFromPlaylist),

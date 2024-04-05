@@ -21,7 +21,7 @@ import isValid from "../../middlewares/isValid.js";
 const router = express.Router();
 // router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllUsers);
 
-router.get("/playlist/latest", controllers.latestPlaylists);
+router.get("/playlist/latest", controllersPlaylist.latestPlaylists);
 
 // router.get(
 //   "/playlist/count",
@@ -46,7 +46,7 @@ router.get(
   "/playlist/:id",
   authenticatUser,
   isValid,
-  controllers.findPlayListById
+  controllersPlaylist.findPlayListById
 );
 
 router.get(
