@@ -13,6 +13,7 @@ const {
   EMAIL_INFO_ULASP_PASSWD,
   EMAIL_CLIENT_ULASP,
   EMAIL_CLIENT_ULASP_PASSWD,
+  EMAIL_BUCH_ULASP,
 } = process.env;
 
 const nodemailerConfig = {
@@ -95,7 +96,7 @@ const sendEmailByAct = async (req, res) => {
     throw HttpError(404, "User not found");
   }
   const actEmail = {
-    to: EMAIL_ADMIN_ULASP,
+    to: EMAIL_BUCH_ULASP,
     subject: `Акт звірки Ulasp Music для ${user.contractNumber}`,
     html: `<h2> Користувач  ${
       user.firstName && user.lastName
