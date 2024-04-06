@@ -22,14 +22,23 @@ export const loginUserSchema = Joi.object({
 });
 
 export const createCommonUserSchema = Joi.object({
+  contractNumberLogin: Joi.string().min(5).max(30).required(),
   contractNumber: Joi.string().min(5).max(30).required(),
   userFop: Joi.string().default(true),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),
-  contactFace: Joi.string().min(3).max(30),
-  contactFaceTaxCode: Joi.string().min(8).max(10).pattern(onlyNumberRegexp),
-  contactFaceTelNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
-  contactFaceEmail: Joi.string().pattern(emailRegexp).required(),
+  contactFace: Joi.string().min(3).max(30).allow("").optional(),
+  contactFaceTaxCode: Joi.string()
+    // .min(8)
+    // .max(10)
+    .pattern(onlyNumberRegexp)
+    .allow("")
+    .optional(),
+  contactFaceTelNumber: Joi.string()
+    .pattern(phoneNumberUaRegexp)
+    .allow("")
+    .optional(),
+  contactFaceEmail: Joi.string().pattern(emailRegexp).allow("").optional(),
   status: Joi.boolean(),
   lastPay: Joi.string().allow("").optional(),
   comment: Joi.string().allow("").optional(),
