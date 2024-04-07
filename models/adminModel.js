@@ -58,7 +58,7 @@ const adminSchema = new Schema(
     },
     taxCode: {
       type: String,
-      // default: "0000000000",
+      default: "0000000000",
       // required: true,
       match: onlyNumberRegexp,
       // unique: true,

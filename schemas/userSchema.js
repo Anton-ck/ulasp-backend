@@ -22,8 +22,8 @@ export const loginUserSchema = Joi.object({
 });
 
 export const createCommonUserSchema = Joi.object({
-  contractNumberLogin: Joi.string().min(5).max(30).required(),
   contractNumber: Joi.string().min(5).max(30).required(),
+  contractNumberDoc: Joi.string().min(5).max(30).required(),
   userFop: Joi.string().default(true),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
   email: Joi.string().pattern(emailRegexp).required(),

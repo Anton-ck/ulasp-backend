@@ -28,6 +28,12 @@ const userSchema = new Schema(
     password: {
       type: String,
     },
+    contractNumberDoc: {
+      type: String,
+      // default: "",
+      required: [true, "Contract is required"],
+      unique: true,
+    },
     contractNumber: {
       type: String,
       required: [true, "Login is required"],
