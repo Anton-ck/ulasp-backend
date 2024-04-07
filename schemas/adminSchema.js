@@ -51,7 +51,7 @@ export const createEditorSchema = Joi.object({
     .minOfNumeric(1)
     .required(),
   editorRole: Joi.boolean(),
-  taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp).required(),
+  taxCode: Joi.string().pattern(onlyNumberRegexp).allow("").optional(),
   institution: Joi.string().allow("").optional(),
   // dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),
@@ -75,7 +75,12 @@ export const updateAdminInfo = Joi.object({
     .allow("")
     .optional(),
   login: Joi.string().min(3).max(10).pattern(loginAdminRegexp).required(),
-  taxCode: Joi.string().min(10).max(10).pattern(onlyNumberRegexp).required(),
+  taxCode: Joi.string()
+    .min(10)
+    .max(10)
+    .pattern(onlyNumberRegexp)
+    .allow("")
+    .optional(),
   institution: Joi.string().allow("").optional(),
   // dayOfBirthday: Joi.string().pattern(regularDateRegexp).required(),
   telNumber: Joi.string().pattern(phoneNumberUaRegexp).required(),

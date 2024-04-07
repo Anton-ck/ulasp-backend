@@ -58,9 +58,10 @@ const adminSchema = new Schema(
     },
     taxCode: {
       type: String,
-      required: true,
+      default: "0000000000",
+      // required: true,
       match: onlyNumberRegexp,
-      unique: true,
+      // unique: true,
     },
     // dayOfBirthday: {
     //   type: String,

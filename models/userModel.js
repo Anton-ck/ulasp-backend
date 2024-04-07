@@ -28,6 +28,12 @@ const userSchema = new Schema(
     password: {
       type: String,
     },
+    contractNumberDoc: {
+      type: String,
+      // default: "",
+      required: [true, "Contract is required"],
+      unique: true,
+    },
     contractNumber: {
       type: String,
       required: [true, "Login is required"],
@@ -65,25 +71,26 @@ const userSchema = new Schema(
 
     contactFace: {
       type: String,
-      required: true,
+      // required: true,
     },
     contactFaceTaxCode: {
       //ИНН контактного лица
       type: String,
-      required: true,
+      // default: false,
+      // required: true,
       match: onlyNumberRegexp,
-      unique: true,
+      // unique: true,
     },
     contactFaceTelNumber: {
       type: String,
-      required: true,
+      // required: true,
       // unique: true,
     },
     contactFaceEmail: {
       type: String,
-      required: true,
+      // required: true,
       match: emailRegexp,
-      unique: true,
+      // unique: true,
     },
     status: {
       //{block unblock}
