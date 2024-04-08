@@ -364,58 +364,7 @@ const removeTrackFromChart = async (req, res) => {
   res.json({ m: "ok" });
 };
 
-const deleteTrack = async (req, res) => {
-  const { id } = req.params;
-  const track = await Track.findById(id);
-  if (!track) {
-    throw HttpError(404, `Track with ${id} not found`);
-  }
 
-  const trackPath = publicDir + "/" + track?.trackURL;
-  const coverPath = publicDir + "/" + track?.trackPictureURL;
-
-  const howManyCoverUsed = await Track.countDocuments({
-    trackPictureURL: track?.trackPictureURL,
-  });
-
-  await Track.findByIdAndDelete(id);
-
-  if (fs.existsSync(trackPath)) {
-    fs.unlinkSync(trackPath);
-  }
-
-  if (
-    fs.existsSync(coverPath) &&
-    !coverPath.includes("trackCover_default") &&
-    howManyCoverUsed === 1
-  ) {
-    fs.unlinkSync(coverPath);
-  }
-
-  const idTrackInPlaylist = await PlayList.find({
-    trackList: { $in: [id] },
-  });
-
-  if (idTrackInPlaylist) {
-    idTrackInPlaylist.map(
-      async (track) =>
-        await PlayList.updateOne(
-          { _id: track._id },
-          { $pull: { trackList: id } }
-        )
-    );
-  }
-
-  res.status(200).json({
-    message: `Track ${track.artist} ${track.trackName} was deleted `,
-
-    code: "2000",
-    object: {
-      artist: `${track.artist}`,
-      trackName: `${track.trackName}`,
-    },
-  });
-};
 
 const deleteTrackInPlaylist = async (req, res) => {
   const { trackId, playlistId } = req.params;
@@ -532,8 +481,6 @@ const latestTracks = async (req, res) => {
   });
 };
 
-
-
 const createShop = async (req, res) => {
   const { shopCategoryName } = req.body;
 
@@ -562,8 +509,6 @@ const createShop = async (req, res) => {
     newShop,
   });
 };
-
-
 
 const updateShopById = async (req, res) => {
   const { id } = req.params;
@@ -936,7 +881,7 @@ export default {
   addTrackToChart: ctrlWrapper(addTrackToChart),
   removeTrackFromChart: ctrlWrapper(removeTrackFromChart),
   deleteTrackInPlaylist: ctrlWrapper(deleteTrackInPlaylist),
-  deleteTrack: ctrlWrapper(deleteTrack),
+
   getTracksInChart: ctrlWrapper(getTracksInChart),
   latestTracks: ctrlWrapper(latestTracks),
   createShop: ctrlWrapper(createShop),

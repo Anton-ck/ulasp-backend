@@ -51,12 +51,7 @@ router.delete(
   controllers.deleteTrackInPlaylist
 );
 
-router.delete(
-  "/tracks/delete/:id",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.deleteTrack
-);
+
 
 router.post(
   "/tracks/upload",

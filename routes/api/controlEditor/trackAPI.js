@@ -8,6 +8,13 @@ import upload from "../../../middlewares/upload.js";
 import { playListSchema } from "../../../schemas/editorShema.js";
 const router = express.Router();
 
+router.delete(
+  "/tracks/delete/:id",
+  authenticateAdmin,
+  permisionsEditor,
+  controllersTrack.deleteTrack
+);
+
 router.patch(
   "/tracks/addToPlaylists/:id",
   controllersTrack.addTrackToPlaylists
