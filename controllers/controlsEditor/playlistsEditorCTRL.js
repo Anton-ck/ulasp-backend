@@ -14,17 +14,22 @@ import isExistStringToLowerCase from "../../helpers/compareStringToLowerCase.js"
 import { getRandomNumber } from "../../helpers/randomSort.js";
 
 const latestPlaylists = async (req, res) => {
-  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const {
+    page = 1,
+    limit = req.query.limit,
+    withoutPlaylist = req.query.withoutPlaylist,
+    ...query
+  } = req.query;
   const skip = (page - 1) * limit;
 
   const latestPlaylists = await PlayList.find(
-    { ...req.query },
+    { ...req.query, _id: { $nin: withoutPlaylist } },
     "-createdAt -updatedAt",
     {
       skip,
       limit,
     }
-  ).sort({ createdAt: -1 });
+  ).sort({ updatedAt: -1 });
   res.json(latestPlaylists);
 };
 
@@ -226,17 +231,9 @@ const createPlayListInShopLibrary = async (req, res) => {
 const getPlaylistsWithOutCurrentTrack = async (req, res) => {
   const { id } = req.params;
 
-  const track = await Track.findById(id);
-
-  if (!track) {
-    throw HttpError(404, `Track with id ${id} not found`);
-  }
-
-  const trackPlaylists = track.playList;
-
   const playlistsWithoutCurrentTrack = await PlayList.find(
     {
-      _id: { $nin: trackPlaylists },
+      trackList: { $nin: id },
     },
     "playListName playListAvatarURL"
   );
@@ -479,6 +476,52 @@ const deletePlaylist = async (req, res) => {
   });
 };
 
+const replaceTracksToPlaylists = async (req, res) => {
+  const { idPlaylistFrom, tracks, playlists } = req.body;
+
+  let newTracks = [];
+
+  await Promise.all(
+    playlists.map(async (id) => {
+      const playlist = await PlayList.findById(id, "trackList");
+      newTracks = [];
+      tracks.map((trackId) => {
+        if (!playlist.trackList.includes(trackId)) {
+          newTracks.push(trackId);
+        }
+      });
+
+      await PlayList.findByIdAndUpdate(id, {
+        $push: { trackList: newTracks },
+      });
+
+      await Track.updateMany(
+        { _id: newTracks },
+        {
+          $push: {
+            playList: id,
+          },
+        }
+      );
+    })
+  );
+
+  await PlayList.findByIdAndUpdate(idPlaylistFrom, {
+    $pullAll: { trackList: tracks },
+  });
+
+  await Track.updateMany(
+    { _id: tracks },
+    {
+      $pull: {
+        playList: idPlaylistFrom,
+      },
+    }
+  );
+
+  res.json({ message: "Ok" });
+};
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
@@ -490,4 +533,5 @@ export default {
   deletePlaylist: ctrlWrapper(deletePlaylist),
   latestPlaylists: ctrlWrapper(latestPlaylists),
   createPlayListInShopLibrary: ctrlWrapper(createPlayListInShopLibrary),
+  replaceTracksToPlaylists: ctrlWrapper(replaceTracksToPlaylists),
 };

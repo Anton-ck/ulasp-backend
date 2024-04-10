@@ -28,22 +28,11 @@ router.post(
   controllers.uploadPics
 );
 
-
-
 // router.get(
 //   "/genre/:id/tracks",
 
 //   controllers.getTracksInGenre
 // );
-
-
-
-router.post(
-  "/tracks/upload/:id",
-
-  uploadTrack.single("trackURL"),
-  controllers.uploadTrack
-);
 
 router.delete(
   "/playlist/:playlistId/tracks/delete/:trackId",
@@ -51,28 +40,11 @@ router.delete(
   controllers.deleteTrackInPlaylist
 );
 
-
-
-router.post(
-  "/tracks/upload",
-
-  uploadTrack.single("trackURL"),
-
-  controllers.uploadTrack
-);
-
 router.get(
   "/tracks/getTracksInChart",
   // authenticateAdmin,
   // permisionsEditor,
   controllers.getTracksInChart
-);
-
-router.get(
-  "/tracks/latestTracks",
-  authenticateAdmin,
-  permisionsEditor,
-  controllers.latestTracks
 );
 
 router.patch(
@@ -96,15 +68,12 @@ router.patch(
   controllers.removeTrackFromChart
 );
 
-
 router.post(
   "/shops/create",
   authenticateAdmin,
   permisionsEditor,
   controllers.createShop
 );
-
-
 
 router.patch(
   "/shops/update/:id",
@@ -181,8 +150,6 @@ router.delete(
   permisionsEditor,
   controllers.deleteSubCategoryShop
 );
-
-
 
 router.delete(
   "/shopsubcategory/:idSubCategory/delete/:idPlaylist",
