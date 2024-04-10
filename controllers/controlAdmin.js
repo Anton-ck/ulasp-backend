@@ -410,11 +410,22 @@ const countListensByUser = async (req, res) => {
   }
 };
 
+//счетчик песен добавленных юзером
 const countTrackByUser = async (req, res) => {
   const { id } = req.params;
-  console.log("id", id);
+  const objectId = new mongoose.Types.ObjectId(id);
 
-  res.json({ id });
+  const addTrackCount = await Track.find(
+    { addTrackByUsers: objectId },
+    "-addByUsers -createdAt -updatedAt"
+  );
+
+  const countAddTrack = addTrackCount.length;
+  if (countAddTrack > 0) {
+    res.json({ count: countAddTrack }); // Отправляем ответ с количеством треков
+  } else {
+    res.json({ count: 0 }); // Если пользователя не найдено, отправляем ноль
+  }
 };
 
 const countPlaylistByUser = async (req, res) => {
