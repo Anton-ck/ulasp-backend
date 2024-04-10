@@ -19,7 +19,15 @@ router.post(
 
 router.get("/playlist/latest", controllersPlaylist.latestPlaylists);
 
-router.get("/playlist/without/track/:id", controllersPlaylist.getPlaylistsWithOutCurrentTrack);
+router.patch(
+  "/playlist/replaceTracksToPlaylists",
+  controllersPlaylist.replaceTracksToPlaylists
+);
+
+router.get(
+  "/playlist/without/track/:id",
+  controllersPlaylist.getPlaylistsWithOutCurrentTrack
+);
 
 router.get(
   "/playlist/:id",
