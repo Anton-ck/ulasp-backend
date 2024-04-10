@@ -129,6 +129,7 @@ const getCurrentUser = async (req, res) => {
     telNumber,
     email,
     contractNumber,
+    contractNumberDoc,
     dateOfAccess,
     lastPay,
   } = req.user;
@@ -149,6 +150,7 @@ const getCurrentUser = async (req, res) => {
       email,
       lastPay,
       contractNumber,
+      contractNumberDoc,
       dateOfAccess,
     },
   });
