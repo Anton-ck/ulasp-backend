@@ -59,7 +59,7 @@ const userSchema = new Schema(
     telNumber: {
       type: String,
       required: true,
-      unique: true,
+      // unique: true,
       match: phoneNumberUaRegexp,
     },
     email: {
