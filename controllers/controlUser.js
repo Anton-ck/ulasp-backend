@@ -42,10 +42,6 @@ const createPlayList = async (req, res) => {
   });
 };
 
-
-
-
-
 const updatePlaylistsSortedTracks = async (req, res) => {
   const { id } = req.params;
   const sort = req.body.data;
@@ -592,8 +588,6 @@ const getCreatePlaylists = async (req, res) => {
   res.json(createPlaylists);
 };
 
-
-
 const findUserPlayListById = async (req, res) => {
   const { id } = req.params;
   const {
@@ -815,26 +809,9 @@ const getAddedTracksByUsers = async (req, res) => {
     pageNumber,
   });
 };
-//получение списка  плейлистов юзера в которых нет запрашиваемого трека
-const getPlaylistByUserWithoutTrackId = async (req, res) => {
-  const { page = 1, limit = req.query.limit, ...query } = req.query;
-  const skip = (page - 1) * limit;
-  const { _id: userId } = req.user;
-  const { id } = req.params; // айди трека
 
-  const playlistsWithoutTrack = await UserPlaylist.find(
-    { ...req.query, owner: userId, trackList: { $ne: id } },
-    { createdAt: 0, updatedAt: 0, trackList: 0, favoriteByUsers: 0 },
-    // "-createdAt -updatedAt",
-    {
-      skip,
-      limit,
-    }
-  ).sort({ createdAt: -1 });
-  res.json(playlistsWithoutTrack);
-};
 export default {
-  getPlaylistByUserWithoutTrackId: ctrlWrapper(getPlaylistByUserWithoutTrackId),
+
   addTracksByUsers: ctrlWrapper(addTracksByUsers),
   deleteTracksByUsers: ctrlWrapper(deleteTracksByUsers),
   getAllUsers: ctrlWrapper(getAllUsers),

@@ -262,6 +262,27 @@ const createUserPlaylist = async (req, res) => {
   });
 };
 
+//получение списка  плейлистов юзера в которых нет запрашиваемого трека
+const getPlaylistByUserWithoutTrackId = async (req, res) => {
+  const { page = 1, limit = req.query.limit, ...query } = req.query;
+  const skip = (page - 1) * limit;
+  const { _id: userId } = req.user;
+  const { id } = req.params; // айди трека
+
+  const playlistsWithoutTrack = await UserPlaylist.find(
+    { ...req.query, owner: userId, trackList: { $ne: id } },
+    { createdAt: 0, updatedAt: 0, trackList: 0, favoriteByUsers: 0 },
+    // "-createdAt -updatedAt",
+    {
+      skip,
+      limit,
+    }
+  ).sort({ createdAt: -1 });
+
+  const countPlaylists = await UserPlaylist.countDocuments({ owner: userId });
+  res.json({ playlistsWithoutTrack, countPlaylists });
+};
+
 export default {
   latestPlaylists: ctrlWrapper(latestPlaylists),
   findPlayListById: ctrlWrapper(findPlayListById),
@@ -270,4 +291,5 @@ export default {
   deleteTracksFromPlaylist: ctrlWrapper(deleteTracksFromPlaylist),
   updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
   createUserPlaylist: ctrlWrapper(createUserPlaylist),
+  getPlaylistByUserWithoutTrackId: ctrlWrapper(getPlaylistByUserWithoutTrackId),
 };
