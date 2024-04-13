@@ -218,7 +218,7 @@ router.get(
   "/userPlaylist/nonTrack/:id",
   authenticatUser,
 
-  controllers.getPlaylistByUserWithoutTrackId
+  controllersPlaylist.getPlaylistByUserWithoutTrackId
 );
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 
