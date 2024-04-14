@@ -73,7 +73,7 @@ const userSignIn = async (req, res) => {
   console.log("user", user);
 
   if (!user) {
-    throw HttpError(401, "Login or taxCode is wrong");
+    throw HttpError(401, "Contract Number or taxCode is wrong");
   }
 
   const payload = {
@@ -82,7 +82,7 @@ const userSignIn = async (req, res) => {
 
   const passwordCompare = await bcrypt.compare(password, user.password);
   if (!passwordCompare) {
-    throw HttpError(401, "Login or password is wrong");
+    throw HttpError(401, "Contract Number or taxCode is wrong");
   }
   if (!user.access) {
     throw HttpError(403, "Access Denied");
