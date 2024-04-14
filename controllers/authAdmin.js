@@ -57,7 +57,7 @@ const adminSignIn = async (req, res) => {
 
   const admin = await Admin.findOne({ login });
   if (!admin) {
-    throw HttpError(401, "Login  or password is wrong");
+    throw HttpError(400, "Login  or password is wrong");
   }
   console.log("admin :>> ", admin);
   const passwordCompare = await bcrypt.compare(password, admin.password);
