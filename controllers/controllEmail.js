@@ -97,18 +97,25 @@ const sendEmailByAct = async (req, res) => {
   }
   const actEmail = {
     to: EMAIL_BUCH_ULASP,
-    subject: `Акт звірки Ulasp Music для ${user.contractNumber}`,
+
+    subject: `Акт звірки Ulasp Music для ${
+      user.contractNumberDoc || user.contractNumber
+    }`,
     html: `<h2> Користувач  ${
       user.firstName && user.lastName
         ? `${user.firstName} ${user.lastName}`
         : user.name
     }! </h2>
-    <div
-    <p>Запросив акт звірки </p>
-    <p>Номер договору: ${user.contractNumber} </p>
-     <p>Ідентифікаційний номер: ${user.taxCode} </p>
-    <p>Email: ${user.email} </p>
-    <p>Деталі: </p>
+    <div style="font-size: 16px"
+    <p style="font-size: 14px">Запросив акт звірки </p>
+    <p style="font-size: 14px">Номер договору: ${
+      user.contractNumberDoc || user.contractNumber
+    } </p>
+     <p style="font-size: 14px">Ідентифікаційний номер: ${user.taxCode} </p>
+   <p style="font-size: 14px">E-mail для відповіді : <a href="mailto:${
+     user.email
+   }">${user.email}</a></p>
+    <p style="font-size: 14px">Деталі: </p>
     ${actText}
     </div>
 `,
@@ -134,12 +141,18 @@ const sendEmailToAdminFromUser = async (req, res) => {
   }
   const userToAdminEmail = {
     to: EMAIL_ADMIN_ULASP,
-    subject: ` ${subject} від ${user.contractNumber}`,
+    subject: ` ${subject} від ${user.contractNumberDoc || user.contractNumber}`,
     html: `
+    
+   
+    <br/>
     <div>
- 
+  <p style="font-size: 14px">
     ${text}
+    </p>
     </div>
+
+     <p style="font-size: 14px">E-mail для відповіді : <a href="mailto:${user.email}">${user.email}</a></p>
 `,
   };
 
