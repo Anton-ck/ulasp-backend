@@ -111,6 +111,8 @@ const userSignIn = async (req, res) => {
       email: user.email,
       lastPay: user.lastPay,
       dateOfAccess: user.dateOfAccess,
+      access: user.access,
+      status: user.status,
     },
   });
 };
@@ -132,6 +134,8 @@ const getCurrentUser = async (req, res) => {
     contractNumberDoc,
     dateOfAccess,
     lastPay,
+    access,
+    status,
   } = req.user;
 
   const avatar = isExistAvatar(avatarURL);
@@ -152,6 +156,8 @@ const getCurrentUser = async (req, res) => {
       contractNumber,
       contractNumberDoc,
       dateOfAccess,
+      access,
+      status,
     },
   });
 };
