@@ -29,7 +29,10 @@ const createTrackInDB = async (
 
   //   const tracksDir = file.path.split("/").slice(-2)[0];
 
-  const tracksDir = trackDir.split("/").slice(-1)[0];
+  // const tracksDir = trackDir.split("/").slice(-1)[0];
+
+    const tracksDir = trackDir.split(/[\\\/]/g).slice(-1)[0];
+
 
 
   const trackURL = path.join(tracksDir, trackFileName);
