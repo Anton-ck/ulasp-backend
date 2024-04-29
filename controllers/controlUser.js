@@ -81,7 +81,10 @@ const allGenres = async (req, res) => {
 const findGenreById = async (req, res) => {
   const { id } = req.params;
 
-  const genre = await Genre.findById(id).populate("playList");
+  const genre = await Genre.findById(id).populate({
+    path: "playList",
+    match: { published: true },
+  });
 
   if (!genre) {
     throw HttpError(404);
@@ -277,59 +280,32 @@ const updateUserFavoritesPlaylists = async (req, res) => {
 const getFavoritePlaylists = async (req, res) => {
   const { page = 1, limit = 8 } = req.query;
   const { _id: user } = req.user;
-  console.log("user getFavoritePlaylists ", user);
   const skip = (page - 1) * limit;
 
-  try {
-    const favorites = await Promise.all([
-      PlayList.find(
-        { favoriteByUsers: user },
-        "-favoriteByUsers -createdAt -updatedAt"
-      )
-        .skip(skip)
-        .limit(limit),
-      UserPlaylist.find(
-        { favoriteByUsers: user },
-        "-favoriteByUsers -createdAt -updatedAt"
-      )
-        .skip(skip)
-        .limit(limit),
-    ]);
+  const favorites = await Promise.all([
+    PlayList.find(
+      { favoriteByUsers: user, published: true },
+      "-favoriteByUsers -createdAt -updatedAt"
+    )
+      .skip(skip)
+      .limit(limit),
+    UserPlaylist.find(
+      { favoriteByUsers: user },
+      "-favoriteByUsers -createdAt -updatedAt"
+    )
+      .skip(skip)
+      .limit(limit),
+  ]);
 
-    const mergedFavorites = [].concat(...favorites);
+  const mergedFavorites = [].concat(...favorites);
 
-    const totalPlayLists = await Promise.all([
-      PlayList.countDocuments({ favoriteByUsers: user }),
-      UserPlaylist.countDocuments({ favoriteByUsers: user }),
-    ]).then((counts) => counts.reduce((total, count) => total + count, 0));
+  const totalPlayLists = await Promise.all([
+    PlayList.countDocuments({ favoriteByUsers: user, published: true }),
+    UserPlaylist.countDocuments({ favoriteByUsers: user }),
+  ]).then((counts) => counts.reduce((total, count) => total + count, 0));
 
-    res.json({ totalPlayLists, favorites: mergedFavorites });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+  res.json({ totalPlayLists, favorites: mergedFavorites });
 };
-
-// const getFavoritePlaylists = async (req, res) => {
-//   const { page = 1, limit = 8 } = req.query;
-//   const { _id: user } = req.user;
-
-//   const skip = (page - 1) * limit;
-
-//   const favorites = await PlayList.find(
-//     { favoriteByUsers: user },
-//     "-favoriteByUsers -createdAt -updatedAt"
-//   )
-//     .skip(skip)
-//     .limit(limit);
-//   console.log("favorites", favorites);
-
-//   const totalPlayLists = await PlayList.countDocuments({
-//     favoriteByUsers: user,
-//   });
-
-//   res.json({ totalPlayLists, favorites });
-// };
 
 const updateAddPlaylists = async (req, res) => {
   const { id } = req.params;
@@ -371,7 +347,7 @@ const getAddPlaylists = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  const findQuery = { addByUsers: user, ...query };
+  const findQuery = { addByUsers: user, published: true, ...query };
 
   const add = await PlayList.find(
     findQuery,
@@ -379,7 +355,6 @@ const getAddPlaylists = async (req, res) => {
   )
     .skip(skip)
     .limit(limit);
-  console.log("add", add);
   // if (!add || add.length === 0) {
   //   return res.status(404).json({ error: "No add playlists" });
   // }
@@ -388,51 +363,6 @@ const getAddPlaylists = async (req, res) => {
 
   res.json({ totalPlayLists, add });
 };
-
-// const getTracksByGenreId = async (req, res) => {
-//   const { id } = req.params;
-
-//   const genre = await Genre.findById(id).populate("playList");
-
-//   // Получить все треки из этих плейлистов
-//   const tracksPromises = genre.playList.map(async (playlist) => {
-//     const tracks = await Track.find({ playList: playlist._id });
-//     return tracks;
-//   });
-
-//   // Дождаться завершения всех запросов и объединить результаты
-//   const tracks = await Promise.all(tracksPromises).then((results) => {
-//     return results.flat();
-//   });
-
-//   res.json(tracks);
-// };
-
-// const getTracksByGenreId = async (req, res) => {
-
-//   const { id } = req.params;
-
-//   const genre = await Genre.findById(id).populate("playList");
-
-// Use a Set to keep track of unique track IDs
-// const uniqueTrackIds = new Set();
-
-// // Retrieve tracks from each playlist and add them to the Set
-// for (const playlist of genre.playList) {
-//   const tracks = await Track.find({ playList: playlist._id });
-//   tracks.forEach((track) => {
-//     uniqueTrackIds.add(track._id.toString());
-//   });
-// }
-
-// // Convert the Set back to an array
-// const uniqueTracksArray = Array.from(uniqueTrackIds);
-
-// Fetch all unique tracks using the array of unique IDs
-//   const tracks = await Track.find({ _id: { $in: uniqueTracksArray } });
-
-//   res.json(tracks);
-// };
 
 const getTracksByGenreId = async (req, res) => {
   const { id } = req.params;
@@ -811,7 +741,6 @@ const getAddedTracksByUsers = async (req, res) => {
 };
 
 export default {
-
   addTracksByUsers: ctrlWrapper(addTracksByUsers),
   deleteTracksByUsers: ctrlWrapper(deleteTracksByUsers),
   getAllUsers: ctrlWrapper(getAllUsers),
