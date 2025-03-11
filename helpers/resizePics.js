@@ -2,6 +2,8 @@ import fs from "fs/promises";
 import Jimp from "jimp";
 import path from "path";
 
+import decodeFromWindows1252 from "../helpers/decodeWindows1252.js";
+
 const tempDirResize = path.resolve("tmp/resize");
 const picsDir = path.resolve("public", "covers");
 const avatarsDir = path.resolve("public", "avatars");
@@ -11,6 +13,9 @@ const shopCovers = path.resolve("public", "shopCovers");
 
 export const resizePics = async (file, type) => {
   const { path: tempDir, originalname, fieldname } = file;
+
+  console.log("TEST ====>>>", decodeFromWindows1252(originalname));
+  console.log("DATE NOW", Date.now());
 
   let picsFolder;
 

@@ -295,11 +295,13 @@ const findPlayListById = async (req, res) => {
     // },
   });
 
+
   const totalTracks = trackList.trackList.length;
 
   const totalPages = Math.ceil(totalTracks / limit);
 
   const tracksSRC = trackList.trackList;
+
 
   res.json({ playlist, tracksSRC, totalTracks, totalPages });
 };
