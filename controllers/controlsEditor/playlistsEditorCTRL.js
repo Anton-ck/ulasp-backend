@@ -295,37 +295,77 @@ const findPlayListById = async (req, res) => {
     // },
   });
 
-
   const totalTracks = trackList.trackList.length;
 
   const totalPages = Math.ceil(totalTracks / limit);
 
   const tracksSRC = trackList.trackList;
 
-
   res.json({ playlist, tracksSRC, totalTracks, totalPages });
 };
+
+// const updatePlaylistsSortedTracks = async (req, res) => {
+//   const { id } = req.params;
+
+//   const playList = await PlayList.findById(id);
+
+//   if (playList) {
+//     const tracksInPlaylist = playList.trackList;
+
+//     tracksInPlaylist.map(async (id) => {
+//       await Track.findByIdAndUpdate(id, {
+//         sortIndex: getRandomNumber(1, 100000),
+//       });
+//     });
+
+//     await PlayList.findByIdAndUpdate(id, {
+//       sortedTracks: true,
+//     });
+//   }
+
+//   res.json({ message: "ok" });
+// };
 
 const updatePlaylistsSortedTracks = async (req, res) => {
   const { id } = req.params;
 
-  const playList = await PlayList.findById(id);
+  const playList = await PlayList.findById(id).populate("trackList");
 
-  if (playList) {
-    const tracksInPlaylist = playList.trackList;
-
-    tracksInPlaylist.map(async (id) => {
-      await Track.findByIdAndUpdate(id, {
-        sortIndex: getRandomNumber(1, 100000),
-      });
-    });
-
-    await PlayList.findByIdAndUpdate(id, {
-      sortedTracks: true,
-    });
+  if (!playList) {
+    throw HttpError(404, `Playlist not found`);
   }
 
-  res.json({ message: "ok" });
+  const tracksInPlaylist = playList.trackList;
+
+
+  function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
+
+  const shuffledSongs = shuffleArray(tracksInPlaylist);
+
+  const bulkOps = shuffledSongs.map((song, index) => ({
+    updateOne: {
+      filter: { _id: song.id },
+      update: {
+        $set: { sortIndex: index + getRandomNumber(index, index * 100) },
+      },
+    },
+  }));
+
+  if (bulkOps.length > 0) {
+    await Track.bulkWrite(bulkOps);
+  }
+
+  await PlayList.findByIdAndUpdate(id, {
+    sortedTracks: true,
+  });
+
+  res.json({ success: true });
 };
 
 const updatePlaylistPublication = async (req, res) => {
