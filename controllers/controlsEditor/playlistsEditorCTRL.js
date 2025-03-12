@@ -13,6 +13,11 @@ import { resizePics } from "../../helpers/resizePics.js";
 import isExistStringToLowerCase from "../../helpers/compareStringToLowerCase.js";
 import { getRandomNumber } from "../../helpers/randomSort.js";
 
+import {
+  randomSortingService,
+  updatePublicationService,
+} from "../../services/editor/playlistsService.js";
+
 const latestPlaylists = async (req, res) => {
   const {
     page = 1,
@@ -259,7 +264,7 @@ const findPlayListById = async (req, res) => {
   }
 
   const sortedBy = sortPlaylist.sortedTracks
-    ? { updatedAt: -1, sortIndex: 1 }
+    ? { sortIndex: 1 }
     : { createdAt: -1 };
 
   const searchOptions = {
@@ -276,7 +281,6 @@ const findPlayListById = async (req, res) => {
       match: searchOptions,
       options: {
         sort: sortedBy,
-        // sort: { updatedAt: -1, sortIndex: 1 },
         skip,
         limit,
       },
@@ -288,11 +292,6 @@ const findPlayListById = async (req, res) => {
     match: searchOptions,
     select: "artist trackName trackURL ",
     options: { sort: sortedBy },
-    // options: {
-    //   sort: {
-    //     sortIndex: 1,
-    //   },
-    // },
   });
 
   const totalTracks = trackList.trackList.length;
@@ -304,88 +303,18 @@ const findPlayListById = async (req, res) => {
   res.json({ playlist, tracksSRC, totalTracks, totalPages });
 };
 
-// const updatePlaylistsSortedTracks = async (req, res) => {
-//   const { id } = req.params;
-
-//   const playList = await PlayList.findById(id);
-
-//   if (playList) {
-//     const tracksInPlaylist = playList.trackList;
-
-//     tracksInPlaylist.map(async (id) => {
-//       await Track.findByIdAndUpdate(id, {
-//         sortIndex: getRandomNumber(1, 100000),
-//       });
-//     });
-
-//     await PlayList.findByIdAndUpdate(id, {
-//       sortedTracks: true,
-//     });
-//   }
-
-//   res.json({ message: "ok" });
-// };
-
 const updatePlaylistsSortedTracks = async (req, res) => {
   const { id } = req.params;
 
-  const playList = await PlayList.findById(id).populate("trackList");
-
-  if (!playList) {
-    throw HttpError(404, `Playlist not found`);
-  }
-
-  const tracksInPlaylist = playList.trackList;
-
-
-  function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-  }
-
-  const shuffledSongs = shuffleArray(tracksInPlaylist);
-
-  const bulkOps = shuffledSongs.map((song, index) => ({
-    updateOne: {
-      filter: { _id: song.id },
-      update: {
-        $set: { sortIndex: index + getRandomNumber(index, index * 100) },
-      },
-    },
-  }));
-
-  if (bulkOps.length > 0) {
-    await Track.bulkWrite(bulkOps);
-  }
-
-  await PlayList.findByIdAndUpdate(id, {
-    sortedTracks: true,
-  });
+  randomSortingService(id);
 
   res.json({ success: true });
 };
 
 const updatePlaylistPublication = async (req, res) => {
   const { id } = req.params;
-  const isExistPlaylist = await PlayList.findById(id);
 
-  if (isExistPlaylist === null) {
-    res.status(404).json({
-      message: `ID ${id} don't found`,
-      code: "4041",
-      object: `${id}`,
-    });
-  }
-  const updatedPlaylist = await PlayList.findByIdAndUpdate(
-    id,
-    { ...req.body },
-    {
-      new: true,
-    }
-  );
+  const updatedPlaylist = updatePublicationService(id, req.body);
 
   res.json(updatedPlaylist);
 };
