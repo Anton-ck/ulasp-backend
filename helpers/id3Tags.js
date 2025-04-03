@@ -1,5 +1,5 @@
-import * as mm from "music-metadata";
-import { inspect } from "util";
+import * as mm from 'music-metadata';
+import { inspect } from 'util';
 
 const getId3Tags = async (url) => {
   const metadata = await mm.parseFile(url, { duration: true });

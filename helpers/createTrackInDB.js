@@ -1,18 +1,19 @@
-import Track from "../models/trackModel.js";
-import PlayList from "../models/playlistModel.js";
-import getId3Tags from "./id3Tags.js";
-import decodeFromIso8859 from "./decode8859-1.js";
-import albumArt from "album-art";
-import { resizeTrackCover } from "./resizePics.js";
-import HttpError from "./HttpError.js";
-import path from "path";
+import Track from '../models/trackModel.js';
+import PlayList from '../models/playlistModel.js';
+import getId3Tags from './id3Tags.js';
+import decodeFromIso8859 from './decode8859-1.js';
+import albumArt from 'album-art';
+import { resizeTrackCover } from './resizePics.js';
+import HttpError from './HttpError.js';
+import path from 'path';
+import defaultTrackCover from '../common/resources/defaultCovers.js';
 
 const createTrackInDB = async (
   file,
   FileNameLatin,
   playlistId,
   req,
-  trackDir
+  trackDir,
 ) => {
   const { filename } = file;
 
@@ -24,23 +25,14 @@ const createTrackInDB = async (
   }
 
   if (!file) {
-    throw HttpError(404, "File not found for upload");
+    throw HttpError(404, 'File not found for upload');
   }
 
-  //   const tracksDir = file.path.split("/").slice(-2)[0];
-
-  // const tracksDir = trackDir.split("/").slice(-1)[0];
-
-    const tracksDir = trackDir.split(/[\\\/]/g).slice(-1)[0];
-
-
+  const tracksDir = trackDir.split(/[\\\/]/g).slice(-1)[0];
 
   const trackURL = path.join(tracksDir, trackFileName);
 
-
-  const fileName = path.parse(FileNameLatin).name.split("__");
-
-  const defaultCoverURL = "trackCovers/55x36_trackCover_default.jpg";
+  const fileName = path.parse(FileNameLatin).name.split('__');
 
   const metadata = await getId3Tags(path.join(trackDir, trackFileName));
 
@@ -55,9 +47,9 @@ const createTrackInDB = async (
   if (resArtist) {
     const trackPicture = await albumArt(resArtist, {
       album: album,
-      size: "large",
+      size: 'large',
     });
-    resizeTrackCoverURL = await resizeTrackCover(trackPicture, "trackCover");
+    resizeTrackCoverURL = await resizeTrackCover(trackPicture, 'trackCover');
   }
 
   const newTrack = await Track.create({
@@ -70,22 +62,22 @@ const createTrackInDB = async (
       trackURL,
       artist: artist
         ? resArtist
-        : `${fileName[0] ? fileName[0] : ""}${" "}${
-            fileName[1] ? fileName[1] : ""
+        : `${fileName[0] ? fileName[0] : ''}${' '}${
+            fileName[1] ? fileName[1] : ''
           }`,
       trackName: title
         ? resTitle
-        : `${fileName[2] ? fileName[2] : ""}${" "}${
-            fileName[3] ? fileName[3] : ""
+        : `${fileName[2] ? fileName[2] : ''}${' '}${
+            fileName[3] ? fileName[3] : ''
           }`,
 
       $push: { trackGenre: genre ? genre[0] : null },
       trackDuration: duration ? duration : null,
       trackPictureURL: resizeTrackCoverURL
         ? resizeTrackCoverURL
-        : defaultCoverURL || null,
+        : defaultTrackCover || null,
     },
-    { new: true }
+    { new: true },
   );
   if (playlistId) {
     await PlayList.findByIdAndUpdate(playlistId, {
