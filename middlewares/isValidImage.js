@@ -10,13 +10,12 @@ const isImageUrlValid = async (url) => {
   if (!url) return false;
   try {
     const response = await fetch(url, { method: 'HEAD' });
-    return response.ok; // Вернет true, если статус 200-299
+    return response.ok;
   } catch (error) {
     return false;
   }
 };
 
-// Middleware для проверки битых картинок и обновления базы
 const isValidImageUrl = async (req, res, next) => {
   const bulkOps = [];
 
@@ -27,7 +26,6 @@ const isValidImageUrl = async (req, res, next) => {
 
     console.log('songs ===>>>>', songs.length);
 
-    // Асинхронно проверяем все ссылки
     await Promise.all(
       songs.map(async ({ _id, trackPictureURL }) => {
         const isValid = await isImageUrlValid(

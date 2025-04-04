@@ -1,22 +1,22 @@
-import HttpError from "../../helpers/HttpError.js";
-import ctrlWrapper from "../../helpers/ctrlWrapper.js";
+import HttpError from '../../helpers/HttpError.js';
+import ctrlWrapper from '../../helpers/ctrlWrapper.js';
 
-import PlayList from "../../models/playlistModel.js";
-import Genre from "../../models/genreModel.js";
-import Track from "../../models/trackModel.js";
-import Shop from "../../models/shopModel.js";
-import ShopItem from "../../models/shopItemModel.js";
-import ShopSubType from "../../models/shopSubTypeModel.js";
+import PlayList from '../../models/playlistModel.js';
+import Genre from '../../models/genreModel.js';
+import Track from '../../models/trackModel.js';
+import Shop from '../../models/shopModel.js';
+import ShopItem from '../../models/shopItemModel.js';
+import ShopSubType from '../../models/shopSubTypeModel.js';
 
-import randomCover from "../../helpers/randomCover.js";
-import { resizePics } from "../../helpers/resizePics.js";
-import isExistStringToLowerCase from "../../helpers/compareStringToLowerCase.js";
-import { getRandomNumber } from "../../helpers/randomSort.js";
+import randomCover from '../../helpers/randomCover.js';
+import { resizePics } from '../../helpers/resizePics.js';
+import isExistStringToLowerCase from '../../helpers/compareStringToLowerCase.js';
+import { getRandomNumber } from '../../helpers/randomSort.js';
 
 import {
   randomSortingService,
   updatePublicationService,
-} from "../../services/editor/playlistsService.js";
+} from '../../services/editor/playlistsService.js';
 
 const latestPlaylists = async (req, res) => {
   const {
@@ -29,37 +29,39 @@ const latestPlaylists = async (req, res) => {
 
   const latestPlaylists = await PlayList.find(
     { ...req.query, _id: { $nin: withoutPlaylist } },
-    "-createdAt -updatedAt",
+    '-createdAt -updatedAt',
     {
       skip,
       limit,
-    }
+    },
   ).sort({ updatedAt: -1 });
   res.json(latestPlaylists);
 };
 
 const createPlayList = async (req, res) => {
-  const { playListName, type = "playlist" } = req.body;
+  const { playListName, type = 'playlist' } = req.body;
   const { _id: owner } = req?.admin;
   let randomPicUrl;
   let resizePicURL;
 
+  console.log('playListName', playListName);
+
   const isExistPlaylist = await PlayList.findOne({
     playListName: {
       $regex: playListName.toString(),
-      $options: "i",
+      $options: 'i',
     },
   });
 
   const isExist = isExistStringToLowerCase(
     playListName,
-    isExistPlaylist?.playListName
+    isExistPlaylist?.playListName,
   );
 
   if (isExist) {
     res.status(409).json({
       message: `${playListName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${playListName}`,
     });
     return;
@@ -75,6 +77,7 @@ const createPlayList = async (req, res) => {
 
   const newPlayList = await PlayList.create({
     ...req.body,
+    playListName: playListName.trim(),
     playListAvatarURL: picURL,
     owner,
   });
@@ -99,26 +102,26 @@ const createPlayListByGenre = async (req, res) => {
   const isExistPlaylist = await PlayList.findOne({
     playListName: {
       $regex: playListName.toString(),
-      $options: "i",
+      $options: 'i',
     },
   });
 
   const isExist = isExistStringToLowerCase(
     playListName,
-    isExistPlaylist?.playListName
+    isExistPlaylist?.playListName,
   );
 
   if (isExist) {
     res.status(409).json({
       message: `${playListName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${playListName}`,
     });
     return;
   }
 
   if (!req.file) {
-    randomPicUrl = await randomCover("playlist");
+    randomPicUrl = await randomCover('playlist');
   } else {
     resizePicURL = await resizePics(req.file, type);
   }
@@ -136,7 +139,7 @@ const createPlayListByGenre = async (req, res) => {
     {
       $push: { playList: newPlayList.id },
     },
-    { new: true }
+    { new: true },
   );
 
   await PlayList.findByIdAndUpdate(newPlayList.id, {
@@ -167,14 +170,14 @@ const createPlayListInShopLibrary = async (req, res) => {
   if (isExistPlaylist) {
     res.status(409).json({
       message: `${playListName} name in use`,
-      code: "4091",
+      code: '4091',
       object: `${playListName}`,
     });
     return;
   }
 
   if (!req.file) {
-    randomPicUrl = await randomCover("playlist");
+    randomPicUrl = await randomCover('playlist');
   } else {
     resizePicURL = await resizePics(req.file, type);
   }
@@ -189,37 +192,37 @@ const createPlayListInShopLibrary = async (req, res) => {
 
   if (newPlayList) {
     switch (valueMediaLibrary) {
-      case "subCategoryShop":
+      case 'subCategoryShop':
         await ShopSubType.findByIdAndUpdate(
           idShopLibrary,
           {
             $push: { playList: newPlayList.id },
           },
-          { new: true }
+          { new: true },
         );
         break;
-      case "shopItem":
+      case 'shopItem':
         await ShopItem.findByIdAndUpdate(
           idShopLibrary,
           {
             $push: { playList: newPlayList.id },
           },
-          { new: true }
+          { new: true },
         );
         break;
-      case "shop":
+      case 'shop':
         await Shop.findByIdAndUpdate(
           idShopLibrary,
           {
             $push: { playList: newPlayList.id },
           },
-          { new: true }
+          { new: true },
         );
         break;
       default:
         res.status(404).json({
           message: `This category ${valueMediaLibrary} is not supported`,
-          code: "4041",
+          code: '4041',
           object: `${valueMediaLibrary}`,
         });
         return;
@@ -240,7 +243,7 @@ const getPlaylistsWithOutCurrentTrack = async (req, res) => {
     {
       trackList: { $nin: id },
     },
-    "playListName playListAvatarURL"
+    'playListName playListAvatarURL',
   );
 
   res.json(playlistsWithoutCurrentTrack);
@@ -257,7 +260,7 @@ const findPlayListById = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+  const sortPlaylist = await PlayList.findById(id, 'sortedTracks');
 
   if (!sortPlaylist) {
     throw HttpError(404, `Playlist not found`);
@@ -269,14 +272,14 @@ const findPlayListById = async (req, res) => {
 
   const searchOptions = {
     $or: [
-      { artist: { $regex: search || "", $options: "i" } },
-      { trackName: { $regex: search || "", $options: "i" } },
+      { artist: { $regex: search || '', $options: 'i' } },
+      { trackName: { $regex: search || '', $options: 'i' } },
     ],
   };
 
-  const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
+  const playlist = await PlayList.findById(id, '-createdAt -updatedAt')
     .populate({
-      path: "trackList",
+      path: 'trackList',
 
       match: searchOptions,
       options: {
@@ -285,12 +288,12 @@ const findPlayListById = async (req, res) => {
         limit,
       },
     })
-    .populate("playlistGenre");
+    .populate('playlistGenre');
 
-  const trackList = await PlayList.findById(id, "trackList").populate({
-    path: "trackList",
+  const trackList = await PlayList.findById(id, 'trackList').populate({
+    path: 'trackList',
     match: searchOptions,
-    select: "artist trackName trackURL ",
+    select: 'artist trackName trackURL ',
     options: { sort: sortedBy },
   });
 
@@ -321,29 +324,29 @@ const updatePlaylistPublication = async (req, res) => {
 
 const updatePlaylistById = async (req, res) => {
   const { id } = req.params;
-  const { playListName, type = "playlist" } = req.body;
+  const { playListName, type = 'playlist' } = req.body;
 
   let isExist;
   if (playListName) {
     const isExistPlayList = await PlayList.findOne({
       playListName: {
         $regex: playListName.toString(),
-        $options: "i",
+        $options: 'i',
       },
     });
     isExist = isExistStringToLowerCase(
       playListName,
-      isExistPlayList?.playListName
+      isExistPlayList?.playListName,
     );
   }
 
-  if (playListName === "" && !req.file) {
+  if (playListName === '' && !req.file) {
     throw HttpError(404, `Playlist is empty`);
   }
   if (isExist) {
     res.status(409).json({
       message: `${playListName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${playListName}`,
     });
     return;
@@ -357,10 +360,14 @@ const updatePlaylistById = async (req, res) => {
 
   const updatedPlaylist = await PlayList.findByIdAndUpdate(
     id,
-    { ...req.body, playListAvatarURL: resizePicURL },
+    {
+      ...req.body,
+      playListName: playListName.trim(),
+      playListAvatarURL: resizePicURL,
+    },
     {
       new: true,
-    }
+    },
   );
   res.json(updatedPlaylist);
 };
@@ -385,22 +392,22 @@ const deletePlaylist = async (req, res) => {
   const idPlayListsInShopSubType = await ShopSubType.find({
     playList: { $in: [id] },
   });
-  console.log("idPlayListsInShopSubType", idPlayListsInShopSubType);
-  console.log("idPlayListInGenre", idPlayListInGenre);
-  console.log("idPlayListsInShopItem", idPlayListsInShopItem);
+  console.log('idPlayListsInShopSubType', idPlayListsInShopSubType);
+  console.log('idPlayListInGenre', idPlayListInGenre);
+  console.log('idPlayListsInShopItem', idPlayListsInShopItem);
 
   //не правильно названны переменные
   if (idPlayListInGenre) {
     idPlayListInGenre.map(
       async (genre) =>
-        await Genre.updateOne({ _id: genre._id }, { $pull: { playList: id } })
+        await Genre.updateOne({ _id: genre._id }, { $pull: { playList: id } }),
     );
   }
 
   if (idPlayListsInShop) {
     idPlayListsInShop.map(
       async (shop) =>
-        await Shop.updateOne({ _id: shop._id }, { $pull: { playList: id } })
+        await Shop.updateOne({ _id: shop._id }, { $pull: { playList: id } }),
     );
   }
 
@@ -409,8 +416,8 @@ const deletePlaylist = async (req, res) => {
       async (shopitem) =>
         await ShopItem.updateOne(
           { _id: shopitem._id },
-          { $pull: { playList: id } }
-        )
+          { $pull: { playList: id } },
+        ),
     );
   }
 
@@ -419,8 +426,8 @@ const deletePlaylist = async (req, res) => {
       async (shopsubtype) =>
         await ShopSubType.updateOne(
           { _id: shopsubtype._id },
-          { $pull: { playList: id } }
-        )
+          { $pull: { playList: id } },
+        ),
     );
   }
 
@@ -434,10 +441,10 @@ const deletePlaylist = async (req, res) => {
   //     "You can't delete this playlist, because you don't owner"
   //   );
   // }
-  console.log("playlist.trackList.length", playlist.trackList.length);
-  console.log("deleteTracks", deleteTracks);
+  console.log('playlist.trackList.length', playlist.trackList.length);
+  console.log('deleteTracks', deleteTracks);
   if (deleteTracks && playlist.trackList.length !== 0) {
-    console.log("Зашли или нет?");
+    console.log('Зашли или нет?');
     await Track.deleteMany({ _id: { $in: playlist.trackList } });
   }
   await PlayList.findByIdAndDelete(id);
@@ -454,7 +461,7 @@ const replaceTracksToPlaylists = async (req, res) => {
 
   await Promise.all(
     playlists.map(async (id) => {
-      const playlist = await PlayList.findById(id, "trackList");
+      const playlist = await PlayList.findById(id, 'trackList');
       newTracks = [];
       tracks.map((trackId) => {
         if (!playlist.trackList.includes(trackId)) {
@@ -472,9 +479,9 @@ const replaceTracksToPlaylists = async (req, res) => {
           $push: {
             playList: id,
           },
-        }
+        },
       );
-    })
+    }),
   );
 
   await PlayList.findByIdAndUpdate(idPlaylistFrom, {
@@ -487,10 +494,10 @@ const replaceTracksToPlaylists = async (req, res) => {
       $pull: {
         playList: idPlaylistFrom,
       },
-    }
+    },
   );
 
-  res.json({ message: "Ok" });
+  res.json({ message: 'Ok' });
 };
 
 export default {
