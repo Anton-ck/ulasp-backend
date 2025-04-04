@@ -1,28 +1,24 @@
-import multer from "multer";
-import path from "path";
-import * as fs from "fs";
-import generateLatinTranslation from "../helpers/translateToLatin.js";
-const trackDir = path.resolve("public/tracks");
+import multer from 'multer';
+import path from 'path';
+import * as fs from 'fs';
+import generateLatinTranslation from '../helpers/translateToLatin.js';
 
-const isExistDestinationDir = (trackDir) => {
-  if (!fs.existsSync(trackDir)) {
-    fs.mkdirSync(trackDir, { recursive: true });
+const trackDir = path.resolve('public/tracks');
+
+const isExistDestinationDir = (dir) => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
   }
-  return trackDir;
+  return dir;
 };
 
 const FileNameToUtf8 = (file) => {
   if (!file) {
-    return;
+    throw new Error('File not found');
   }
-  const translatedFileName = Buffer.from(file.originalname, "latin1")
-    .toString("utf8")
-    .replaceAll(/[ #]/g, "__");
-
-  // const fileName = file.originalname
-  //   .toString("cp1251")
-  //   // .toString("utf8")
-  //   .replaceAll(" ", "__");
+  const translatedFileName = Buffer.from(file.originalname, 'latin1')
+    .toString('utf8')
+    .replaceAll(/[ #]/g, '__');
 
   const fileName = generateLatinTranslation(translatedFileName);
 
@@ -44,13 +40,12 @@ const uploadTrack = multer({
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     const fileName = FileNameToUtf8(file);
-    console.log("fileName.translatedFileName", fileName);
-    const trackPath = trackDir + "/" + fileName.fileName;
+    const trackPath = `${trackDir}/${fileName.fileName}`;
 
     const optionsWithError = {
       existFileError: true,
       existFileName: fileName,
-      file: file,
+      file,
       path: trackPath,
       trackDir,
     };
@@ -58,7 +53,7 @@ const uploadTrack = multer({
     const optionsWithOutError = {
       existFileError: false,
       existFileName: fileName,
-      file: file,
+      file,
       path: trackPath,
       trackDir,
     };
@@ -73,7 +68,7 @@ const uploadTrack = multer({
         null,
         false,
         (req.uploadTrackError = codeError.fileExist),
-        (req.uploadTrack = optionsWithError)
+        (req.uploadTrack = optionsWithError),
       );
     } else {
       cb(null, true, (req.uploadTrack = optionsWithOutError));
