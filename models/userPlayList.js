@@ -1,57 +1,56 @@
-import { Schema, SchemaType, model } from "mongoose";
+import { Schema, SchemaType, model } from 'mongoose';
 
-import handleMongooseError from "../helpers/handleMongooseError.js";
+import handleMongooseError from '../helpers/handleMongooseError.js';
 
 const userPlaylistSchema = new Schema(
   {
     playListName: {
       type: String,
       required: true,
-      unique: true,
     },
     playListAvatarURL: {
       type: String,
       default: null,
     },
-      
+
     trackList: [
       {
         type: Schema.Types.ObjectId,
-        ref: "track",
+        ref: 'track',
         trackList: [],
       },
     ],
 
-     playlistGenre: [
+    playlistGenre: [
       {
         type: Schema.Types.ObjectId,
-        ref: "genre",
+        ref: 'genre',
       },
     ],
-          
+
     owner: {
       type: Schema.Types.ObjectId,
-      ref: "admin" || "user",
+      ref: 'admin' || 'user',
       required: true,
     },
 
-     favoriteByUsers: [
+    favoriteByUsers: [
       {
         type: Schema.Types.ObjectId,
       },
     ],
-     sortedTracks: {
+    sortedTracks: {
       type: Object,
       default: null,
     },
   },
 
-  { versionKey: false, timestamps: true }
+  { versionKey: false, timestamps: true },
 );
 
-userPlaylistSchema.post("findOneAndUpdate", handleMongooseError);
-userPlaylistSchema.post("save", handleMongooseError);
+userPlaylistSchema.post('findOneAndUpdate', handleMongooseError);
+userPlaylistSchema.post('save', handleMongooseError);
 
-const UserPlaylist = model("userplaylist", userPlaylistSchema );
+const UserPlaylist = model('userplaylist', userPlaylistSchema);
 
 export default UserPlaylist;

@@ -1,19 +1,20 @@
-import { User, Fop, Company } from "../models/userModel.js";
-import PlayList from "../models/playlistModel.js";
-import Track from "../models/trackModel.js";
-import Genre from "../models/genreModel.js";
-import Shop from "../models/shopModel.js";
-import ShopItem from "../models/shopItemModel.js";
-import ShopSubType from "../models/shopSubTypeModel.js";
-import Admin from "../models/adminModel.js";
-import HttpError from "../helpers/HttpError.js";
-import ctrlWrapper from "../helpers/ctrlWrapper.js";
-import jwt from "jsonwebtoken";
-import { UserListenCount } from "../models/userListenCountModel.js";
-import mongoose from "mongoose";
-import UserPlaylist from "../models/userPlayList.js";
-import randomCover from "../helpers/randomCover.js";
-import { resizePics } from "../helpers/resizePics.js";
+import { User, Fop, Company } from '../models/userModel.js';
+import PlayList from '../models/playlistModel.js';
+import Track from '../models/trackModel.js';
+import Genre from '../models/genreModel.js';
+import Shop from '../models/shopModel.js';
+import ShopItem from '../models/shopItemModel.js';
+import ShopSubType from '../models/shopSubTypeModel.js';
+import Admin from '../models/adminModel.js';
+import HttpError from '../helpers/HttpError.js';
+import ctrlWrapper from '../helpers/ctrlWrapper.js';
+import jwt from 'jsonwebtoken';
+import { UserListenCount } from '../models/userListenCountModel.js';
+import mongoose from 'mongoose';
+import UserPlaylist from '../models/userPlayList.js';
+import randomCover from '../helpers/randomCover.js';
+import { resizePics } from '../helpers/resizePics.js';
+import { randomFn } from '../helpers/randomSort.js';
 
 const getAllUsers = async (req, res) => {
   const result = await User.find();
@@ -28,9 +29,9 @@ const createPlayList = async (req, res) => {
 
   const playlist = await PlayList.findOne({ playListName });
 
-  if (playlist) {
-    throw HttpError(409, "PlayList name in use");
-  }
+  // if (playlist) {
+  //   throw HttpError(409, 'PlayList name in use');
+  // }
 
   const newPlayList = await PlayList.create({ ...req.body, owner });
 
@@ -55,10 +56,10 @@ const updatePlaylistsSortedTracks = async (req, res) => {
     { sortedTracks: sortedBy },
     {
       new: true,
-    }
+    },
   );
 
-  res.json({ message: "ok" });
+  res.json({ message: 'ok' });
 };
 
 const allGenres = async (req, res) => {
@@ -66,13 +67,13 @@ const allGenres = async (req, res) => {
   const skip = (page - 1) * limit;
   const allGenres = await Genre.find(
     { ...req.query },
-    "-createdAt -updatedAt",
+    '-createdAt -updatedAt',
     {
       skip,
       limit,
-    }
+    },
   )
-    .populate("playList")
+    .populate('playList')
     .sort({ genre: 1 });
 
   res.json(allGenres);
@@ -82,7 +83,7 @@ const findGenreById = async (req, res) => {
   const { id } = req.params;
 
   const genre = await Genre.findById(id).populate({
-    path: "playList",
+    path: 'playList',
     match: { published: true },
   });
 
@@ -97,7 +98,7 @@ const latestTracks = async (req, res) => {
   const {
     page = req.query.page,
     limit = req.query.limit,
-    search = req.query.query || "",
+    search = req.query.query || '',
 
     ...query
   } = req.query;
@@ -105,28 +106,28 @@ const latestTracks = async (req, res) => {
 
   const queryOptions = {
     $or: [
-      { artist: { $regex: search.toString(), $options: "i" } },
-      { trackName: { $regex: search.toString(), $options: "i" } },
+      { artist: { $regex: search.toString(), $options: 'i' } },
+      { trackName: { $regex: search.toString(), $options: 'i' } },
     ],
     ...req.query,
   };
 
-  const latestTracks = await Track.find(queryOptions, "-createdAt -updatedAt", {
+  const latestTracks = await Track.find(queryOptions, '-createdAt -updatedAt', {
     skip,
     limit,
   })
     .sort({ createdAt: -1 })
 
     .populate({
-      path: "playList",
-      options: { populate: "playlistGenre" },
+      path: 'playList',
+      options: { populate: 'playlistGenre' },
     });
 
   const totalTracks = await Track.find(queryOptions).countDocuments();
 
   const tracksSRC = await Track.find(
     queryOptions,
-    "artist trackName trackURL"
+    'artist trackName trackURL',
   ).sort({ createdAt: -1 });
   const totalPages = Math.ceil(totalTracks / limit);
   const pageNumber = page ? parseInt(page) : null;
@@ -143,7 +144,7 @@ const latestTracks = async (req, res) => {
 const allShops = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
   const skip = (page - 1) * limit;
-  const allShops = await Shop.find({ ...req.query }, "-createdAt -updatedAt", {
+  const allShops = await Shop.find({ ...req.query }, '-createdAt -updatedAt', {
     skip,
     limit,
   }).sort({ createdAt: -1 });
@@ -155,29 +156,29 @@ const findShopById = async (req, res) => {
   const { id } = req.params;
   const allPlaylistsInShopCategory = [];
 
-  const shop = await Shop.findById(id, "-createdAt -updatedAt").populate([
+  const shop = await Shop.findById(id, '-createdAt -updatedAt').populate([
     {
-      path: "playList",
-      select: "playListName playListAvatarURL",
+      path: 'playList',
+      select: 'playListName playListAvatarURL',
       match: { published: true },
     },
     {
-      path: "shopChildItems",
-      select: "shopItemName shopItemAvatarURL playList shopChildSubType",
+      path: 'shopChildItems',
+      select: 'shopItemName shopItemAvatarURL playList shopChildSubType',
       options: {
         populate: [
           {
-            path: "playList",
-            select: "playListName playListAvatarURL",
+            path: 'playList',
+            select: 'playListName playListAvatarURL',
             match: { published: true },
           },
           {
-            path: "shopChildSubType",
-            select: "shopSubTypeName playList",
+            path: 'shopChildSubType',
+            select: 'shopSubTypeName playList',
             options: {
               populate: {
-                path: "playList",
-                select: "playListName playListAvatarURL",
+                path: 'playList',
+                select: 'playListName playListAvatarURL',
                 match: { published: true },
               },
             },
@@ -210,20 +211,20 @@ const findShopById = async (req, res) => {
 
 const updateFavoritesPlaylists = async (req, res) => {
   const { id } = req.params;
-  console.log("playlistId", req.params.id);
+  console.log('playlistId', req.params.id);
   const { _id: user } = req.user;
-  console.log(" id", user);
+  console.log(' id', user);
 
   const playlist = await PlayList.findById(id);
 
   if (!playlist) {
     return res
       .status(404)
-      .json({ error: "Playlist with such id is not found" });
+      .json({ error: 'Playlist with such id is not found' });
   }
 
   const isFavorite = playlist.favoriteByUsers.includes(user);
-  console.log("isFavorite", isFavorite);
+  console.log('isFavorite', isFavorite);
 
   if (isFavorite) {
     await PlayList.findByIdAndUpdate(playlist._id, {
@@ -244,21 +245,21 @@ const updateFavoritesPlaylists = async (req, res) => {
 
 const updateUserFavoritesPlaylists = async (req, res) => {
   const { id } = req.params;
-  console.log("playlistId", req.params.id);
+  console.log('playlistId', req.params.id);
   const { _id: user } = req.user;
-  console.log(" id", user);
+  console.log(' id', user);
 
   const playlist = await UserPlaylist.findById(id);
 
   if (!playlist) {
     return res
       .status(404)
-      .json({ error: "Playlist with such id is not found" });
+      .json({ error: 'Playlist with such id is not found' });
   }
 
   const isFavorite = playlist.favoriteByUsers.includes(user);
-  console.log("isFavorite", isFavorite);
-  console.log("userplaylist", playlist);
+  console.log('isFavorite', isFavorite);
+  console.log('userplaylist', playlist);
 
   if (isFavorite) {
     await UserPlaylist.findByIdAndUpdate(playlist._id, {
@@ -285,13 +286,13 @@ const getFavoritePlaylists = async (req, res) => {
   const favorites = await Promise.all([
     PlayList.find(
       { favoriteByUsers: user, published: true },
-      "-favoriteByUsers -createdAt -updatedAt"
+      '-favoriteByUsers -createdAt -updatedAt',
     )
       .skip(skip)
       .limit(limit),
     UserPlaylist.find(
       { favoriteByUsers: user },
-      "-favoriteByUsers -createdAt -updatedAt"
+      '-favoriteByUsers -createdAt -updatedAt',
     )
       .skip(skip)
       .limit(limit),
@@ -309,21 +310,21 @@ const getFavoritePlaylists = async (req, res) => {
 
 const updateAddPlaylists = async (req, res) => {
   const { id } = req.params;
-  console.log("playlistId", req.params.id);
+  console.log('playlistId', req.params.id);
   const { _id: user } = req.user;
-  console.log(" id", user);
+  console.log(' id', user);
 
   const playlist = await PlayList.findById(id);
 
   if (!playlist) {
     return res
       .status(404)
-      .json({ error: "Playlist with such id is not found" });
+      .json({ error: 'Playlist with such id is not found' });
   }
 
   const isAdd = playlist.addByUsers.includes(user);
-  console.log("isAdd", isAdd);
-  console.log("playlist", playlist);
+  console.log('isAdd', isAdd);
+  console.log('playlist', playlist);
 
   if (isAdd) {
     await PlayList.findByIdAndUpdate(playlist._id, {
@@ -351,7 +352,7 @@ const getAddPlaylists = async (req, res) => {
 
   const add = await PlayList.find(
     findQuery,
-    "-addByUsers -createdAt -updatedAt"
+    '-addByUsers -createdAt -updatedAt',
   )
     .skip(skip)
     .limit(limit);
@@ -377,21 +378,21 @@ const getTracksByGenreId = async (req, res) => {
   const skip = (page - 1) * limit;
 
   const genreTracks = await Genre.findById(id).populate({
-    path: "playList",
-    options: { populate: "playlistGenre" },
+    path: 'playList',
+    options: { populate: 'playlistGenre' },
   });
 
   const genreId = genreTracks._id;
   const genreName = genreTracks.genre;
 
   genreTracks.playList.map(async (playlist) =>
-    allTracks.push(playlist.trackList)
+    allTracks.push(playlist.trackList),
   );
 
   const tracksArray = allTracks.flat().map((el) => el._id);
 
   const uniqueTracksArray = tracksArray.filter(
-    (track, index, array) => array.indexOf(track) === index
+    (track, index, array) => array.indexOf(track) === index,
   );
   // console.log("uniqueTracksArray", uniqueTracksArray);
 
@@ -407,28 +408,28 @@ const getTracksByGenreId = async (req, res) => {
       trackPictureURL: 1,
       trackURL: 1,
     },
-    { skip, limit }
+    { skip, limit },
   );
 
   const genreTracksPlayer = await Genre.findById(id).populate({
-    path: "playList",
+    path: 'playList',
   });
 
   genreTracksPlayer.playList.map(async (playlist) =>
-    allTracksPlayer.push(playlist.trackList)
+    allTracksPlayer.push(playlist.trackList),
   );
 
   const tracksArrayPlayer = allTracksPlayer.flat().map((el) => el._id);
 
   const uniqueTracksArrayPlayer = tracksArrayPlayer.filter(
-    (track, index, array) => array.indexOf(track) === index
+    (track, index, array) => array.indexOf(track) === index,
   );
 
   const tracksSRC = await Track.find(
     {
       _id: { $in: uniqueTracksArrayPlayer },
     },
-    "artist trackName trackURL"
+    'artist trackName trackURL',
   );
 
   const totalTracks = tracksSRC.length;
@@ -459,7 +460,7 @@ const countListensTrackByUser = async (req, res) => {
   // console.log("userListenCount", userListenCount);
   // Находим или создаем запись о прослушивании трека для этого пользователя
   let track = userListenCount.tracks.find(
-    (track) => track.trackId.toString() === trackId
+    (track) => track.trackId.toString() === trackId,
   );
 
   //Получаем данные по треку
@@ -469,7 +470,7 @@ const countListensTrackByUser = async (req, res) => {
       artist: 1,
       trackName: 1,
       trackDuration: 1,
-    }
+    },
   );
 
   if (!track) {
@@ -486,7 +487,7 @@ const countListensTrackByUser = async (req, res) => {
   // Находим или создаем запись о прослушивании трека за текущий день
   let listensForToday = track.listens.find(
     (listen) =>
-      new Date(listen.date).toDateString() === currentDate.toDateString()
+      new Date(listen.date).toDateString() === currentDate.toDateString(),
   );
 
   if (!listensForToday) {
@@ -509,11 +510,11 @@ const getCreatePlaylists = async (req, res) => {
 
   const createPlaylists = await UserPlaylist.find(
     { ...req.query, owner: userId },
-    "-createdAt -updatedAt",
+    '-createdAt -updatedAt',
     {
       skip,
       limit,
-    }
+    },
   ).sort({ createdAt: -1 });
   res.json(createPlaylists);
 };
@@ -528,14 +529,14 @@ const findUserPlayListById = async (req, res) => {
   const skip = (page - 1) * limit;
 
   const playlist = await UserPlaylist.findById(id).populate({
-    path: "trackList",
+    path: 'trackList',
     options: { sort: { trackName: sort }, skip, limit },
     populate: {
-      path: "playList",
+      path: 'playList',
 
       populate: {
-        path: "playlistGenre",
-        select: "genre",
+        path: 'playlistGenre',
+        select: 'genre',
       },
     },
   });
@@ -544,8 +545,8 @@ const findUserPlayListById = async (req, res) => {
     throw HttpError(404, `Playlist not found`);
   }
 
-  const trackList = await UserPlaylist.findById(id, "trackList").populate({
-    path: "trackList",
+  const trackList = await UserPlaylist.findById(id, 'trackList').populate({
+    path: 'trackList',
 
     options: { sort: { trackName: sort } },
   });
@@ -554,36 +555,20 @@ const findUserPlayListById = async (req, res) => {
   const totalPages = Math.ceil(totalTracks / limit);
 
   const tracksSRC = trackList.trackList;
-  console.log("trackList findUserPlayListById:>> ", trackList);
+  console.log('trackList findUserPlayListById:>> ', trackList);
   res.json({ playlist, totalTracks, totalPages, tracksSRC });
-};
-
-const deleteUserPlaylist = async (req, res) => {
-  const { id } = req.params;
-
-  const playlist = await UserPlaylist.findById(id);
-
-  if (!playlist) {
-    throw HttpError(404, `Playlist with ${id} not found`);
-  }
-
-  await UserPlaylist.findByIdAndDelete(id);
-
-  res.json({
-    message: `Playlist ${playlist.playListName} was deleted`,
-  });
 };
 
 const getCategoryShopById = async (req, res) => {
   const { id } = req.params;
   const allPlaylistsInShopCategory = [];
   const shop = await ShopItem.findById(id)
-    .populate({ path: "playList", match: { published: true } })
+    .populate({ path: 'playList', match: { published: true } })
     .populate({
-      path: "shopChildSubType",
+      path: 'shopChildSubType',
       options: {
         populate: {
-          path: "playList",
+          path: 'playList',
           match: { published: true },
         },
       },
@@ -597,8 +582,8 @@ const getCategoryShopById = async (req, res) => {
 
   shop.shopChildSubType.map((shopChildSubType) =>
     shopChildSubType.playList.map((playlist) =>
-      allPlaylistsInShopCategory.push(playlist)
-    )
+      allPlaylistsInShopCategory.push(playlist),
+    ),
   );
 
   res.json({ shop, allPlaylistsInShopCategory });
@@ -608,7 +593,7 @@ const getSubCategoryShopById = async (req, res) => {
   const { id } = req.params;
 
   const shop = await ShopSubType.findById(id).populate({
-    path: "playList",
+    path: 'playList',
     match: { published: true },
   });
 
@@ -631,7 +616,7 @@ const countlistensForUser = async (req, res) => {
     const filteredTracks = userListenCount.tracks.map((track) => {
       const filteredListens = track.listens.filter((listen) => {
         const listenDate = new Date(listen.date);
-        console.log(" listenDate :>> ", listenDate);
+        console.log(' listenDate :>> ', listenDate);
         if (dateOfEnd.getTime() === dateOfStart.getTime()) {
           return listen.date.toDateString() === dateOfStart.toDateString();
         }
@@ -651,7 +636,7 @@ const countlistensForUser = async (req, res) => {
     });
 
     const filterTracksByDate = filteredTracks.filter(
-      (track) => track.listens.length > 0
+      (track) => track.listens.length > 0,
     );
 
     res.json(filterTracksByDate);
@@ -705,28 +690,28 @@ const getAddedTracksByUsers = async (req, res) => {
 
   const tracksInAdd = await Track.find(
     queryOptions,
-    "artist trackName trackDuration trackPictureURL trackURL playList addTrackByUsers",
+    'artist trackName trackDuration trackPictureURL trackURL playList addTrackByUsers',
     {
       skip,
       limit,
-    }
+    },
   )
     .sort({ createdAt: -1 })
 
     .populate({
-      path: "playList",
-      select: "playlistGenre",
+      path: 'playList',
+      select: 'playlistGenre',
       options: {
         populate: {
-          path: "playlistGenre",
-          select: "genre",
+          path: 'playlistGenre',
+          select: 'genre',
         },
       },
     });
   const totalTracks = await Track.find(queryOptions).countDocuments();
   const tracksSRC = await Track.find(
     queryOptions,
-    "artist trackName trackURL "
+    'artist trackName trackURL ',
   ).sort({ createdAt: -1 });
   const totalPages = Math.ceil(totalTracks / limit);
   const pageNumber = page ? parseInt(page) : null;
@@ -764,7 +749,7 @@ export default {
   getCreatePlaylists: ctrlWrapper(getCreatePlaylists),
 
   findUserPlayListById: ctrlWrapper(findUserPlayListById),
-  deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
+
   updateUserFavoritesPlaylists: ctrlWrapper(updateUserFavoritesPlaylists),
   getCategoryShopById: ctrlWrapper(getCategoryShopById),
   getSubCategoryShopById: ctrlWrapper(getSubCategoryShopById),

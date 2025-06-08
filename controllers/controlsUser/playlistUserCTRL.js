@@ -1,13 +1,13 @@
-import ctrlWrapper from "../../helpers/ctrlWrapper.js";
-import HttpError from "../../helpers/HttpError.js";
+import ctrlWrapper from '../../helpers/ctrlWrapper.js';
+import HttpError from '../../helpers/HttpError.js';
 
-import PlayList from "../../models/playlistModel.js";
-import UserPlaylist from "../../models/userPlayList.js";
-import Track from "../../models/trackModel.js";
+import PlayList from '../../models/playlistModel.js';
+import UserPlaylist from '../../models/userPlayList.js';
+import Track from '../../models/trackModel.js';
 
-import randomCover from "../../helpers/randomCover.js";
-import { resizePics } from "../../helpers/resizePics.js";
-import isExistStringToLowerCase from "../../helpers/compareStringToLowerCase.js";
+import randomCover from '../../helpers/randomCover.js';
+import { resizePics } from '../../helpers/resizePics.js';
+import isExistStringToLowerCase from '../../helpers/compareStringToLowerCase.js';
 
 const latestPlaylists = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
@@ -15,11 +15,11 @@ const latestPlaylists = async (req, res) => {
   const latestPlaylists = await PlayList.find(
     //  { ...req.query },
     { published: true },
-    "-favoriteByUsers -createdAt -updatedAt",
+    '-favoriteByUsers -createdAt -updatedAt',
     {
       skip,
       limit,
-    }
+    },
   ).sort({ createdAt: -1 });
 
   res.json(latestPlaylists);
@@ -36,7 +36,7 @@ const findPlayListById = async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  const sortPlaylist = await PlayList.findById(id, "sortedTracks");
+  const sortPlaylist = await PlayList.findById(id, 'sortedTracks');
 
   if (!sortPlaylist) {
     throw HttpError(404, `Playlist not found`);
@@ -46,20 +46,20 @@ const findPlayListById = async (req, res) => {
     ? { updatedAt: -1, sortIndex: sort }
     : { createdAt: sort };
 
-  const playlist = await PlayList.findById(id, "-createdAt -updatedAt")
+  const playlist = await PlayList.findById(id, '-createdAt -updatedAt')
     .populate({
-      path: "trackList",
+      path: 'trackList',
       options: { sort: sortedBy, skip, limit },
     })
-    .populate("playlistGenre");
+    .populate('playlistGenre');
 
-  const trackList = await PlayList.findById(id, "trackList").populate({
-    path: "trackList",
-    select: "artist trackName trackURL addTrackByUsers",
+  const trackList = await PlayList.findById(id, 'trackList').populate({
+    path: 'trackList',
+    select: 'artist trackName trackURL addTrackByUsers',
     options: { sort: sortedBy },
   });
-  console.log("playlist :>> ", playlist);
-  console.log("trackList :>> ", trackList);
+  console.log('playlist :>> ', playlist);
+  console.log('trackList :>> ', trackList);
   const totalTracks = trackList.trackList.length;
   const totalPages = Math.ceil(totalTracks / limit);
 
@@ -91,21 +91,21 @@ const addTracksToPlaylist = async (req, res) => {
   await UserPlaylist.findByIdAndUpdate(
     { _id: id },
     { $push: { trackList: arrayTracksForUpdate } },
-    { new: true }
+    { new: true },
   );
 
   const resultSuccess = await Track.find(
     {
       _id: { $in: arrayTracksForUpdate },
     },
-    "artist trackName"
+    'artist trackName',
   );
 
   const resultReject = await Track.find(
     {
       _id: { $in: existTracksInPlaylist },
     },
-    "artist trackName"
+    'artist trackName',
   );
 
   res.status(201).json({ resultReject, resultSuccess });
@@ -123,23 +123,23 @@ const deleteTracksFromPlaylist = async (req, res) => {
   await UserPlaylist.findByIdAndUpdate(
     { _id: id },
     { $pullAll: { trackList: tracksIdArray } },
-    { new: true }
+    { new: true },
   );
 
-  res.json({ message: "Success" });
+  res.json({ message: 'Success' });
 };
 
 const addTrackToPlaylistUser = async (req, res) => {
   const { id, trackId } = req.body; //плелист и трек
-  console.log("req.body :>> ", req.body);
+  console.log('req.body :>> ', req.body);
 
   const { _id: user } = req.user;
   const playList = await UserPlaylist.findOne({ _id: id, owner: user });
-  console.log("playList :>> ", playList);
+  console.log('playList :>> ', playList);
   if (!playList) {
     throw HttpError(
       404,
-      `Playlist with id ${id} not found or you don't have access to it`
+      `Playlist with id ${id} not found or you don't have access to it`,
     );
   }
 
@@ -157,35 +157,35 @@ const addTrackToPlaylistUser = async (req, res) => {
 
 const updateUserPlaylistById = async (req, res) => {
   const { id } = req.params;
-  const { playListName, type = "playlist" } = req.body;
+  const { playListName, type = 'playlist' } = req.body;
 
-  console.log("id", id);
+  console.log('id', id);
 
-  console.log("playListName", playListName);
+  console.log('playListName', playListName);
 
-  console.log("req.body", req.body);
+  console.log('req.body', req.body);
 
   let isExist;
   if (playListName) {
     const isExistPlayList = await UserPlaylist.findOne({
       playListName: {
         $regex: playListName.toString(),
-        $options: "i",
+        $options: 'i',
       },
     });
     isExist = isExistStringToLowerCase(
       playListName,
-      isExistPlayList?.playListName
+      isExistPlayList?.playListName,
     );
   }
 
-  if (playListName === "" && !req.file) {
+  if (playListName === '' && !req.file) {
     throw HttpError(404, `Playlist is empty`);
   }
   if (isExist) {
     res.status(409).json({
       message: `${playListName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${playListName}`,
     });
     return;
@@ -202,7 +202,7 @@ const updateUserPlaylistById = async (req, res) => {
     { ...req.body, playListAvatarURL: resizePicURL },
     {
       new: true,
-    }
+    },
   );
   res.json(updatedPlaylist);
 };
@@ -220,29 +220,30 @@ const createUserPlaylist = async (req, res) => {
     const isExistPlayList = await UserPlaylist.findOne({
       playListName: {
         $regex: playListName.toString(),
-        $options: "i",
+        $options: 'i',
       },
+      owner,
     });
     isExist = isExistStringToLowerCase(
       playListName,
-      isExistPlayList?.playListName
+      isExistPlayList?.playListName,
     );
   }
 
-  if (playListName === "" && !req.file) {
+  if (playListName === '' && !req.file) {
     throw HttpError(404, `Playlist is empty`);
   }
   if (isExist) {
     res.status(409).json({
       message: `${playListName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${playListName}`,
     });
     return;
   }
 
   if (!req.file) {
-    randomPicUrl = await randomCover("playlist");
+    randomPicUrl = await randomCover('playlist');
   } else {
     resizePicURL = await resizePics(req.file, type);
   }
@@ -262,6 +263,22 @@ const createUserPlaylist = async (req, res) => {
   });
 };
 
+const deleteUserPlaylist = async (req, res) => {
+  const { id } = req.params;
+
+  const playlist = await UserPlaylist.findById(id);
+
+  if (!playlist) {
+    throw HttpError(404, `Playlist with ${id} not found`);
+  }
+
+  await UserPlaylist.findByIdAndDelete(id);
+
+  res.json({
+    message: `Playlist ${playlist.playListName} was deleted`,
+  });
+};
+
 //получение списка  плейлистов юзера в которых нет запрашиваемого трека
 const getPlaylistByUserWithoutTrackId = async (req, res) => {
   const { page = 1, limit = req.query.limit, ...query } = req.query;
@@ -276,7 +293,7 @@ const getPlaylistByUserWithoutTrackId = async (req, res) => {
     {
       skip,
       limit,
-    }
+    },
   ).sort({ createdAt: -1 });
 
   const countPlaylists = await UserPlaylist.countDocuments({ owner: userId });
@@ -291,5 +308,6 @@ export default {
   deleteTracksFromPlaylist: ctrlWrapper(deleteTracksFromPlaylist),
   updateUserPlaylistById: ctrlWrapper(updateUserPlaylistById),
   createUserPlaylist: ctrlWrapper(createUserPlaylist),
+  deleteUserPlaylist: ctrlWrapper(deleteUserPlaylist),
   getPlaylistByUserWithoutTrackId: ctrlWrapper(getPlaylistByUserWithoutTrackId),
 };

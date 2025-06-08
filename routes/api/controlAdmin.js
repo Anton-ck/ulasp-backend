@@ -1,209 +1,213 @@
-import express from "express";
+import express from 'express';
 
-import validateBody from "../../middlewares/validateBody.js";
-import isEmptyBody from "../../middlewares/isEmptyBody.js";
-import { authenticateAdmin } from "../../middlewares/authenticate.js";
-import controllers from "../../controllers/controlAdmin.js";
-import controllersEmail from "../../controllers/controllEmail.js";
-import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
+import validateBody from '../../middlewares/validateBody.js';
+import isEmptyBody from '../../middlewares/isEmptyBody.js';
+import { authenticateAdmin } from '../../middlewares/authenticate.js';
+import controllers from '../../controllers/controlAdmin.js';
+import controllersEmail from '../../controllers/controllEmail.js';
+import { permisionsAdmin } from '../../middlewares/permitionsAdmin.js';
 import {
   createEditorSchema,
   updateAdminInfo,
   updateAdminPassword,
-} from "../../schemas/adminSchema.js";
+} from '../../schemas/adminSchema.js';
 
 import {
   createFopUserSchema,
   createCompanyUserSchema,
-} from "../../schemas/userSchema.js";
-import isValid from "../../middlewares/isValid.js";
+} from '../../schemas/userSchema.js';
+import isValid from '../../middlewares/isValid.js';
 
 const router = express.Router();
 
+router.get('/users/listenscount', controllers.allUsersByListenCount);
+
+router.get('/recalculate', controllers.recalculateTotalListens);
+
 router.post(
-  "/create-editor",
+  '/create-editor',
   authenticateAdmin,
   permisionsAdmin,
   isEmptyBody,
   validateBody(createEditorSchema),
-  controllers.createEditorRole
+  controllers.createEditorRole,
 );
 
-router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllAdmin);
+router.get('/', authenticateAdmin, permisionsAdmin, controllers.getAllAdmin);
 
 router.get(
-  "/users",
+  '/users',
   authenticateAdmin,
   permisionsAdmin,
-  controllers.getAllUsers
+  controllers.getAllUsers,
 );
 router.get(
-  "/tracks/count",
+  '/tracks/count',
   authenticateAdmin,
   permisionsAdmin,
-  controllers.countTracks
+  controllers.countTracks,
 );
 //подсчет пользователей
 router.get(
-  "/users/count",
+  '/users/count',
   authenticateAdmin,
   permisionsAdmin,
-  controllers.countClients
+  controllers.countClients,
 );
 //подсчет прослушанных песен
 router.post(
-  "/users/countlistens",
+  '/users/countlistens',
   authenticateAdmin,
   permisionsAdmin,
-  controllers.countListensByUser
+  controllers.countListensByUser,
 );
 //подсчет новых клиентов - которым не отправлено письмо status = false и не открыт доступ access = false
 router.get(
-  "/newclients/count",
+  '/newclients/count',
   authenticateAdmin,
   permisionsAdmin,
-  controllers.countNewClients
+  controllers.countNewClients,
 );
 //подсчет  клиентов -online = true
 router.get(
-  "/onlineclients/count",
+  '/onlineclients/count',
   authenticateAdmin,
   permisionsAdmin,
-  controllers.countOnlineClients
+  controllers.countOnlineClients,
 );
 //отправка письма с доступом -  переключение достпупа access =Оn status=true
 router.post(
-  "/users/:id/accessemail",
+  '/users/:id/accessemail',
   authenticateAdmin,
   permisionsAdmin,
-  controllersEmail.sendEmailByAccess
+  controllersEmail.sendEmailByAccess,
 );
 router.get(
-  "/newclientsbymonth/count",
+  '/newclientsbymonth/count',
   authenticateAdmin,
   permisionsAdmin,
-  controllers.countNewClientsByMonth
-);
-
-router.get(
-  "/users/:id",
-  authenticateAdmin,
-  permisionsAdmin,
-  controllers.getUserById
-);
-router.get(
-  "/users/:id/trackcount",
-  authenticateAdmin,
-  permisionsAdmin,
-  controllers.countTrackByUser
-);
-router.get(
-  "/users/:id/playlistcount",
-  authenticateAdmin,
-  permisionsAdmin,
-  controllers.countPlaylistByUser
+  controllers.countNewClientsByMonth,
 );
 
 router.get(
-  "/:id",
+  '/users/:id',
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.getUserById,
+);
+router.get(
+  '/users/:id/trackcount',
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countTrackByUser,
+);
+router.get(
+  '/users/:id/playlistcount',
+  authenticateAdmin,
+  permisionsAdmin,
+  controllers.countPlaylistByUser,
+);
+
+router.get(
+  '/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.getAdminById
+  controllers.getAdminById,
 );
 
 router.patch(
-  "/:id",
+  '/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   isEmptyBody,
   validateBody(updateAdminInfo),
-  controllers.updateAdminInfo
+  controllers.updateAdminInfo,
 );
 router.patch(
-  "/users/:id",
+  '/users/:id',
   authenticateAdmin,
   permisionsAdmin,
   // isValid,
-  controllers.updateUserInfo
+  controllers.updateUserInfo,
 );
 router.delete(
-  "/:id",
+  '/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.deleteAdmin
+  controllers.deleteAdmin,
 );
 
 router.patch(
-  "/password/:id",
+  '/password/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
   isEmptyBody,
   validateBody(updateAdminPassword),
-  controllers.updateAdminPassword
+  controllers.updateAdminPassword,
 );
 
 router.post(
-  "/create-fop",
+  '/create-fop',
   authenticateAdmin,
   isEmptyBody,
   validateBody(createFopUserSchema),
-  controllers.createUser
+  controllers.createUser,
 );
 router.post(
-  "/create-company",
+  '/create-company',
   authenticateAdmin,
   isEmptyBody,
   validateBody(createCompanyUserSchema),
-  controllers.createUser
+  controllers.createUser,
 );
 
 router.delete(
-  "/users/:id",
+  '/users/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.deleteUser
+  controllers.deleteUser,
 );
 
 router.patch(
-  "/users/status/:id",
+  '/users/status/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.toggleUserStatus
+  controllers.toggleUserStatus,
 );
 
 router.patch(
-  "/editors/login/:id",
+  '/editors/login/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.updateEditorLoginPassword
+  controllers.updateEditorLoginPassword,
 );
 router.patch(
-  "/editors/status/:id",
+  '/editors/status/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.toggleEditorStatus
+  controllers.toggleEditorStatus,
 );
 router.patch(
-  "/editors/access/:id",
+  '/editors/access/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.toggleEditorAccess
+  controllers.toggleEditorAccess,
 );
 router.patch(
-  "/users/access/:id",
+  '/users/access/:id',
   authenticateAdmin,
   permisionsAdmin,
   isValid,
-  controllers.toggleUserAccess
+  controllers.toggleUserAccess,
 );
 
 export default router;
