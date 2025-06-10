@@ -1,27 +1,27 @@
-import express from "express";
-import upload from "../../middlewares/upload.js";
-import validateBody from "../../middlewares/validateBody.js";
-import isEmptyBody from "../../middlewares/isEmptyBody.js";
+import express from 'express';
+import upload from '../../middlewares/upload.js';
+import validateBody from '../../middlewares/validateBody.js';
+import isEmptyBody from '../../middlewares/isEmptyBody.js';
 import {
   authenticatUser,
   authenticateAdmin,
-} from "../../middlewares/authenticate.js";
-import controllers from "../../controllers/controlUser.js";
-import controllersPlaylist from "../../controllers/controlsUser/playlistUserCTRL.js";
-import controllersTracks from "../../controllers/controlsUser/tracksUserCTRL.js";
-import controllersEmail from "../../controllers/controllEmail.js";
-import { permisionsAdmin } from "../../middlewares/permitionsAdmin.js";
-import { playListUserSchema } from "../../schemas/userSchema.js";
+} from '../../middlewares/authenticate.js';
+import controllers from '../../controllers/controlUser.js';
+import controllersPlaylist from '../../controllers/controlsUser/playlistUserCTRL.js';
+import controllersTracks from '../../controllers/controlsUser/tracksUserCTRL.js';
+import controllersEmail from '../../controllers/controllEmail.js';
+import { permisionsAdmin } from '../../middlewares/permitionsAdmin.js';
+import { playListUserSchema } from '../../schemas/userSchema.js';
 import {
   createFopUserSchema,
   createCompanyUserSchema,
-} from "../../schemas/userSchema.js";
-import isValid from "../../middlewares/isValid.js";
+} from '../../schemas/userSchema.js';
+import isValid from '../../middlewares/isValid.js';
 
 const router = express.Router();
-// router.get("/", authenticateAdmin, permisionsAdmin, controllers.getAllUsers);
+router.get('/', authenticateAdmin, permisionsAdmin, controllers.getAllUsers);
 
-router.get("/playlist/latest", controllersPlaylist.latestPlaylists);
+router.get('/playlist/latest', controllersPlaylist.latestPlaylists);
 
 // router.get(
 //   "/playlist/count",
@@ -29,196 +29,196 @@ router.get("/playlist/latest", controllersPlaylist.latestPlaylists);
 //   controllers.playlistsCount
 // );
 router.get(
-  "/playlist/favorites",
+  '/playlist/favorites',
   authenticatUser,
 
-  controllers.getFavoritePlaylists
+  controllers.getFavoritePlaylists,
 );
 
 router.get(
-  "/playlist/add",
+  '/playlist/add',
   authenticatUser,
 
-  controllers.getAddPlaylists
+  controllers.getAddPlaylists,
 );
 
 router.get(
-  "/playlist/:id",
+  '/playlist/:id',
   authenticatUser,
   isValid,
-  controllersPlaylist.findPlayListById
+  controllersPlaylist.findPlayListById,
 );
 
 router.get(
-  "/genres/all",
+  '/genres/all',
   authenticatUser,
 
-  controllers.allGenres
+  controllers.allGenres,
 );
 
-router.get("/shops/all", authenticatUser, controllers.allShops);
-router.get("/shops/:id", authenticatUser, controllers.findShopById);
+router.get('/shops/all', authenticatUser, controllers.allShops);
+router.get('/shops/:id', authenticatUser, controllers.findShopById);
 
 router.get(
-  "/shops/shopitem/:id",
+  '/shops/shopitem/:id',
   authenticatUser,
-  controllers.getCategoryShopById
+  controllers.getCategoryShopById,
 );
 
 router.get(
-  "/shops/shopitem/subcategory/:id",
+  '/shops/shopitem/subcategory/:id',
   authenticatUser,
-  controllers.getSubCategoryShopById
+  controllers.getSubCategoryShopById,
 );
 
-router.get("/tracks/latestTracks", authenticatUser, controllers.latestTracks);
+router.get('/tracks/latestTracks', authenticatUser, controllers.latestTracks);
 
 router.get(
-  "/tracks/tracksForUserPlaylists",
-  controllersTracks.getAllTracksForUserPlaylists
+  '/tracks/tracksForUserPlaylists',
+  controllersTracks.getAllTracksForUserPlaylists,
 );
 
-router.get("/genres/:id", authenticatUser, controllers.findGenreById);
+router.get('/genres/:id', authenticatUser, controllers.findGenreById);
 
 router.get(
-  "/genre/:id/tracks",
+  '/genre/:id/tracks',
   authenticatUser,
-  controllers.getTracksByGenreId
+  controllers.getTracksByGenreId,
 );
 
 router.patch(
-  "/playlist/favorites/:id",
+  '/playlist/favorites/:id',
   authenticatUser,
-  controllers.updateFavoritesPlaylists
+  controllers.updateFavoritesPlaylists,
 );
 
 router.patch(
-  "/userPlaylist/favorites/:id",
+  '/userPlaylist/favorites/:id',
   authenticatUser,
-  controllers.updateUserFavoritesPlaylists
+  controllers.updateUserFavoritesPlaylists,
 );
 
 router.patch(
-  "/playlist/add/:id",
+  '/playlist/add/:id',
   authenticatUser,
-  controllers.updateAddPlaylists
+  controllers.updateAddPlaylists,
 );
 
 router.post(
-  "/tracks/countlisten/:id",
+  '/tracks/countlisten/:id',
   authenticatUser,
-  controllers.countListensTrackByUser
+  controllers.countListensTrackByUser,
 );
 
 router.get(
-  "/userPlaylist/all",
+  '/userPlaylist/all',
   authenticatUser,
-  controllers.getCreatePlaylists
+  controllers.getCreatePlaylists,
 );
 
 router.post(
-  "/userPlaylist/create",
+  '/userPlaylist/create',
   authenticatUser,
-  upload.single("picsURL"),
+  upload.single('picsURL'),
   validateBody(playListUserSchema),
-  controllersPlaylist.createUserPlaylist
+  controllersPlaylist.createUserPlaylist,
 );
 
 router.patch(
-  "/userPlaylist/addTracks",
+  '/userPlaylist/addTracks',
   authenticatUser,
-  controllersPlaylist.addTracksToPlaylist
+  controllersPlaylist.addTracksToPlaylist,
 );
 //добавление трека в плейлист юзера
 router.post(
-  "/userPlaylist/addTrack",
+  '/userPlaylist/addTrack',
   authenticatUser,
-  controllersPlaylist.addTrackToPlaylistUser
+  controllersPlaylist.addTrackToPlaylistUser,
 );
 
 router.patch(
-  "/userPlaylist/removeTracks",
-  controllersPlaylist.deleteTracksFromPlaylist
+  '/userPlaylist/removeTracks',
+  controllersPlaylist.deleteTracksFromPlaylist,
 );
 
 router.get(
-  "/userPlaylist/:id",
+  '/userPlaylist/:id',
   authenticatUser,
   isValid,
-  controllers.findUserPlayListById
+  controllers.findUserPlayListById,
 );
 
 router.delete(
-  "/userPlaylist/delete/:id",
+  '/userPlaylist/delete/:id',
   authenticatUser,
   isValid,
-  controllers.deleteUserPlaylist
+  controllersPlaylist.deleteUserPlaylist,
 );
 
 router.patch(
-  "/userPlaylist/update/:id",
+  '/userPlaylist/update/:id',
   authenticatUser,
-  upload.single("picsURL"),
+  upload.single('picsURL'),
   isValid,
-  controllersPlaylist.updateUserPlaylistById
+  controllersPlaylist.updateUserPlaylistById,
 );
 
 router.patch(
-  "/playlist/sortupdate/:id",
+  '/playlist/sortupdate/:id',
   authenticatUser,
   isValid,
-  controllers.updatePlaylistsSortedTracks
+  controllers.updatePlaylistsSortedTracks,
 );
 
 router.post(
-  "/countlistens",
+  '/countlistens',
   authenticatUser,
 
-  controllers.countlistensForUser
+  controllers.countlistensForUser,
 );
 //отправка письма акт сверки
 router.post(
-  "/:id/actemail",
+  '/:id/actemail',
   authenticatUser,
 
-  controllersEmail.sendEmailByAct
+  controllersEmail.sendEmailByAct,
 );
 //отправка письма администратору
 router.post(
-  "/:id/emailtoadmin",
+  '/:id/emailtoadmin',
   authenticatUser,
 
-  controllersEmail.sendEmailToAdminFromUser
+  controllersEmail.sendEmailToAdminFromUser,
 );
 
 router.get(
-  "/tracks/add",
+  '/tracks/add',
   authenticatUser,
 
-  controllers.getAddedTracksByUsers
+  controllers.getAddedTracksByUsers,
 );
 
 //добавление трека в додані
 router.post(
-  "/tracks/add/:id/",
+  '/tracks/add/:id/',
   authenticatUser,
 
-  controllers.addTracksByUsers
+  controllers.addTracksByUsers,
 );
 
 //удаление трека из додані
 router.delete(
-  "/tracks/removeFromAdd/:id/",
+  '/tracks/removeFromAdd/:id/',
   authenticatUser,
 
-  controllers.deleteTracksByUsers
+  controllers.deleteTracksByUsers,
 );
 //получение списка  плейлистов юзера в которых нет запрашиваемого трека
 router.get(
-  "/userPlaylist/nonTrack/:id",
+  '/userPlaylist/nonTrack/:id',
   authenticatUser,
 
-  controllersPlaylist.getPlaylistByUserWithoutTrackId
+  controllersPlaylist.getPlaylistByUserWithoutTrackId,
 );
 // router.delete("favorites/:playlistId", authenticatUser, controllers.deleteFavoritePlayList);
 

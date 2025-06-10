@@ -1,12 +1,12 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 
-import handleMongooseError from "../helpers/handleMongooseError.js";
+import handleMongooseError from '../helpers/handleMongooseError.js';
 import {
   emailRegexp,
   nameRegexp,
   onlyNumberRegexp,
   phoneNumberUaRegexp,
-} from "../helpers/regExp.js";
+} from '../helpers/regExp.js';
 
 //general Schema FOP and company
 
@@ -31,21 +31,21 @@ const userSchema = new Schema(
     contractNumberDoc: {
       type: String,
       // default: "",
-      required: [true, "Contract is required"],
+      required: [true, 'Contract is required'],
       unique: true,
     },
     contractNumber: {
       type: String,
-      required: [true, "Login is required"],
+      required: [true, 'Login is required'],
       unique: true,
     },
     accessToken: {
       type: String,
-      default: "",
+      default: '',
     },
     refreshToken: {
       type: String,
-      default: "",
+      default: '',
     },
     avatarURL: {
       type: String,
@@ -108,12 +108,12 @@ const userSchema = new Schema(
     dateOfAccess: {
       type: String,
       // required: true,
-      default: "",
+      default: '',
     },
     lastPay: {
       type: String,
       // required: true,
-      default: "",
+      default: '',
     },
     // quantityPlaylists: {
     //   type: Number,
@@ -127,13 +127,13 @@ const userSchema = new Schema(
     // },
     institution: {
       type: String,
-      default: "",
+      default: '',
     },
 
     comment: {
       type: String,
 
-      default: "",
+      default: '',
     },
     online: {
       //{on off}
@@ -142,7 +142,7 @@ const userSchema = new Schema(
       default: false,
     },
   },
-  { versionKey: false, timestamps: true, discriminatorKey: "kind" }
+  { versionKey: false, timestamps: true, discriminatorKey: 'kind' },
 );
 
 const fopSchema = new Schema(
@@ -159,7 +159,7 @@ const fopSchema = new Schema(
     },
     fatherName: {
       type: String,
-      default: "",
+      default: '',
       match: nameRegexp,
     },
 
@@ -175,7 +175,7 @@ const fopSchema = new Schema(
     //   required: true,
     // },
   },
-  { versionKey: false, timestamps: true }
+  { versionKey: false, timestamps: true },
 );
 
 const companySchema = new Schema(
@@ -193,13 +193,23 @@ const companySchema = new Schema(
       unique: true,
     },
   },
-  { versionKey: false, timestamps: true }
+  { versionKey: false, timestamps: true },
 );
+
+userSchema.virtual('listenCount', {
+  ref: 'userListenCount',
+  localField: '_id',
+  foreignField: 'userId',
+  justOne: true,
+});
+
+userSchema.set('toObject', { virtuals: true });
+userSchema.set('toJSON', { virtuals: true });
 
 // userSchema.post("save", handleMongooseError);
 // fopSchema.post("save", handleMongooseError);
 // companySchema.post("save", handleMongooseError);
 
-export const User = model("user", userSchema);
-export const Fop = User.discriminator("fop", fopSchema);
-export const Company = User.discriminator("company", companySchema);
+export const User = model('user', userSchema);
+export const Fop = User.discriminator('fop', fopSchema);
+export const Company = User.discriminator('company', companySchema);

@@ -1,6 +1,6 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 
-import handleMongooseError from "../helpers/handleMongooseError.js";
+import handleMongooseError from '../helpers/handleMongooseError.js';
 
 const genreSchema = new Schema(
   {
@@ -16,17 +16,17 @@ const genreSchema = new Schema(
     playList: [
       {
         type: Schema.Types.ObjectId,
-        ref: "playlist",
+        ref: 'playlist',
         playList: [],
         default: null,
       },
     ],
   },
-  { versionKey: false, timestamps: true }
+  { versionKey: false, timestamps: true },
 );
 
-genreSchema.post("save", handleMongooseError);
+genreSchema.post('save', handleMongooseError);
 
-const Genre = model("genre", genreSchema);
+const Genre = model('genre', genreSchema);
 
 export default Genre;

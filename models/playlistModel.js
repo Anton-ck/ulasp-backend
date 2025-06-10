@@ -1,6 +1,6 @@
-import { Schema, SchemaType, model } from "mongoose";
+import { Schema, SchemaType, model } from 'mongoose';
 
-import handleMongooseError from "../helpers/handleMongooseError.js";
+import handleMongooseError from '../helpers/handleMongooseError.js';
 
 const playListSchema = new Schema(
   {
@@ -24,7 +24,7 @@ const playListSchema = new Schema(
     trackList: [
       {
         type: Schema.Types.ObjectId,
-        ref: "track",
+        ref: 'track',
         trackList: [],
       },
     ],
@@ -33,7 +33,7 @@ const playListSchema = new Schema(
     playlistGenre: [
       {
         type: Schema.Types.ObjectId,
-        ref: "genre",
+        ref: 'genre',
       },
     ],
     published: {
@@ -42,7 +42,7 @@ const playListSchema = new Schema(
     },
     owner: {
       type: Schema.Types.ObjectId,
-      ref: "admin" || "user",
+      ref: 'admin' || 'user',
       required: true,
     },
 
@@ -61,12 +61,12 @@ const playListSchema = new Schema(
     },
   },
 
-  { versionKey: false, timestamps: true }
+  { versionKey: false, timestamps: true },
 );
 
-playListSchema.post("findOneAndUpdate", handleMongooseError);
-playListSchema.post("save", handleMongooseError);
+playListSchema.post('findOneAndUpdate', handleMongooseError);
+playListSchema.post('save', handleMongooseError);
 
-const PlayList = model("playlist", playListSchema);
+const PlayList = model('playlist', playListSchema);
 
 export default PlayList;

@@ -1,14 +1,14 @@
-import PlayList from "../../models/playlistModel.js";
-import Track from "../../models/trackModel.js";
-import HttpError from "../../helpers/HttpError.js";
+import PlayList from '../../models/playlistModel.js';
+import Track from '../../models/trackModel.js';
+import HttpError from '../../helpers/HttpError.js';
 
-import { shuffleArray } from "../../helpers/randomSort.js";
+import { shuffleArray } from '../../helpers/randomSort.js';
 
 export const randomSortingService = async (id) => {
-  const playList = await PlayList.findById(id).populate("trackList");
+  const playList = await PlayList.findById(id).populate('trackList');
 
   if (!playList) {
-    throw HttpError(404, `Playlist not found`);
+    throw HttpError(404, 'Playlist not found');
   }
 
   const { trackList } = playList;
@@ -33,13 +33,13 @@ export const randomSortingService = async (id) => {
   });
 };
 
-export const updatePublicationService = async (id, body) => {
+export const updatePublicationService = async (id, body, res) => {
   const isExistPlaylist = await PlayList.findById(id);
 
   if (isExistPlaylist === null) {
     res.status(404).json({
       message: `ID ${id} don't found`,
-      code: "4041",
+      code: '4041',
       object: `${id}`,
     });
   }
@@ -48,7 +48,7 @@ export const updatePublicationService = async (id, body) => {
     { ...body },
     {
       new: true,
-    }
+    },
   );
 
   return updatedPlaylist;

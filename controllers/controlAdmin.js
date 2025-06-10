@@ -1,13 +1,13 @@
-import bcrypt from "bcrypt";
-import { User, Fop, Company } from "../models/userModel.js";
-import Track from "../models/trackModel.js";
-import PlayList from "../models/playlistModel.js";
-import Admin from "../models/adminModel.js";
-import HttpError from "../helpers/HttpError.js";
-import ctrlWrapper from "../helpers/ctrlWrapper.js";
-import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import { UserListenCount } from "../models/userListenCountModel.js";
+import bcrypt from 'bcrypt';
+import { User, Fop, Company } from '../models/userModel.js';
+import Track from '../models/trackModel.js';
+import PlayList from '../models/playlistModel.js';
+import Admin from '../models/adminModel.js';
+import HttpError from '../helpers/HttpError.js';
+import ctrlWrapper from '../helpers/ctrlWrapper.js';
+import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
+import { UserListenCount } from '../models/userListenCountModel.js';
 
 const createEditorRole = async (req, res) => {
   const { login, password } = req.body;
@@ -15,7 +15,7 @@ const createEditorRole = async (req, res) => {
   const editor = await Admin.findOne({ login });
 
   if (editor) {
-    throw HttpError(409, "login in use");
+    throw HttpError(409, 'login in use');
   }
 
   const hashPassword = await bcrypt.hash(password, 10);
@@ -42,7 +42,7 @@ const createEditorRole = async (req, res) => {
 const getAllAdmin = async (req, res) => {
   const result = await Admin.find(
     { ...req.query },
-    "-createdAt -updatedAt -accessToken -refreshToken -password"
+    '-createdAt -updatedAt -accessToken -refreshToken -password',
   );
 
   res.json({
@@ -55,7 +55,7 @@ const getAdminById = async (req, res) => {
 
   const admin = await Admin.findById(
     id,
-    "-createdAt -updatedAt -accessToken -refreshToken -password"
+    '-createdAt -updatedAt -accessToken -refreshToken -password',
   );
 
   if (!admin) {
@@ -71,9 +71,8 @@ const updateAdminInfo = async (req, res) => {
     new: true,
   });
 
-  console.log(result);
   if (!result) {
-    throw HttpError(404, "Not found");
+    throw HttpError(404, 'Not found');
   }
   res.json({
     id: result.id,
@@ -96,14 +95,16 @@ const deleteAdmin = async (req, res) => {
 
   const admin = await Admin.findById(id);
   if (!admin) {
-    throw HttpError(404, "Not found");
+    throw HttpError(404, 'Not found');
   }
   const result = await admin.deleteOne();
 
+  const { _id, firstName, editorRole } = result;
+
   res.status(200).json({
-    message: `${result.editorRole ? "Editor" : "Admin"} '${
-      result.firstName
-    }' with ID ${result._id} was deleted`,
+    message: `${
+      editorRole ? 'Editor' : 'Admin'
+    } '${firstName}' with ID ${_id} was deleted`,
   });
 };
 
@@ -116,10 +117,12 @@ const updateAdminPassword = async (req, res) => {
     password: hashPassword,
   });
 
+  const { _id, firstName, editorRole } = result;
+
   res.status(200).json({
-    message: `Password for ${result.editorRole ? "Editor" : "Admin"} '${
-      result.firstName
-    }' with ID ${result._id} has been changed`,
+    message: `Password for ${
+      editorRole ? 'Editor' : 'Admin'
+    } '${firstName}' with ID ${_id} has been changed`,
   });
 };
 const updateEditorLoginPassword = async (req, res) => {
@@ -127,17 +130,17 @@ const updateEditorLoginPassword = async (req, res) => {
 
   const { login, password } = req.body;
 
-  console.log("req.body :>> ", login, password);
+  console.log('req.body :>> ', login, password);
   let updateFields = { login };
-  if (password !== "") {
+  if (password !== '') {
     const hashPassword = await bcrypt.hash(password, 10);
     updateFields.password = hashPassword;
   }
 
   const result = await Admin.findByIdAndUpdate(id, updateFields, { new: true });
-  console.log("result :>> ", result);
+  console.log('result :>> ', result);
   res.status(200).json({
-    message: `Password for ${result.editorRole ? "Editor" : "Admin"} '${
+    message: `Password for ${result.editorRole ? 'Editor' : 'Admin'} '${
       result.firstName
     }' with ID ${result._id} has been changed`,
   });
@@ -148,13 +151,13 @@ const createUser = async (req, res) => {
   const user = await User.findOne({ contractNumber });
 
   if (user) {
-    throw HttpError(409, "contractNumber in use");
+    throw HttpError(409, 'contractNumber in use');
   }
   const hashtaxCode = await bcrypt.hash(taxCode, 10);
 
   let newUser = {};
-  console.log("newUser", newUser);
-  if (userFop === "fop") {
+  console.log('newUser', newUser);
+  if (userFop === 'fop') {
     newUser = await Fop.create({
       ...req.body,
       password: hashtaxCode,
@@ -175,7 +178,20 @@ const createUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
-  const allUsers = await User.find({ ...req.body }).sort({ createdAt: -1 });
+  // const allUsers = await User.find({ ...req.body }).sort({ createdAt: -1 });
+
+  const users = await User.find({ ...req.body })
+    .sort({ createdAt: -1 })
+    .populate({
+      path: 'listenCount',
+      select: 'totalListens -_id -userId',
+    })
+    .lean();
+
+  const allUsers = users.map((user) => ({
+    ...user,
+    listenCount: user.listenCount?.totalListens || 0,
+  }));
 
   res.json({
     allUsers,
@@ -187,7 +203,7 @@ const getUserById = async (req, res) => {
 
   const user = await User.findById(
     id,
-    "-createdAt -updatedAt -accessToken -refreshToken -password"
+    '-createdAt -updatedAt -accessToken -refreshToken -password',
   );
 
   if (!user) {
@@ -208,9 +224,9 @@ const deleteUser = async (req, res) => {
 
   const result = await User.findByIdAndDelete(id);
 
-  res.status(200).json({ message: "User deleted " });
+  res.status(200).json({ message: 'User deleted ' });
   if (!result) {
-    res.status(500).json({ message: "An error occurred" });
+    res.status(500).json({ message: 'An error occurred' });
   }
 };
 
@@ -220,7 +236,7 @@ const toggleUserStatus = async (req, res) => {
   const user = await User.findById(id);
 
   if (!user) {
-    return res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: 'User not found' });
   }
 
   user.status = !user.status;
@@ -238,7 +254,7 @@ const toggleUserAccess = async (req, res) => {
   const user = await User.findById(id);
 
   if (!user) {
-    return res.status(404).json({ error: "User not found" });
+    return res.status(404).json({ error: 'User not found' });
   }
 
   user.access = !user.access;
@@ -252,17 +268,17 @@ const toggleUserAccess = async (req, res) => {
 
 const updateUserInfo = async (req, res) => {
   const { id } = req.params;
-  console.log("id", id);
-  console.log("req.body", req.body);
+  console.log('id', id);
+  console.log('req.body', req.body);
   let userDataOld = {};
-  if (req.body.userFop === "fop") {
+  if (req.body.userFop === 'fop') {
     userDataOld = await Fop.findById(id);
   } else {
     userDataOld = await Company.findById(id);
   }
 
   let result = {};
-  if (req.body.userFop === "fop") {
+  if (req.body.userFop === 'fop') {
     result = await Fop.findByIdAndUpdate(id, req.body, {
       new: true,
     });
@@ -278,7 +294,7 @@ const updateUserInfo = async (req, res) => {
   }
 
   if (!result) {
-    throw HttpError(404, "Not found");
+    throw HttpError(404, 'Not found');
   }
   res.json({
     result,
@@ -315,7 +331,7 @@ const updateUserInfo = async (req, res) => {
 const countTracks = async (req, res) => {
   const countTracks = await Track.find().count();
 
-  res.json({ countTracks: countTracks });
+  res.json({ countTracks });
 };
 
 //счетчик новых клиентов
@@ -348,12 +364,12 @@ const countNewClientsByMonth = async (req, res) => {
   const startOfMonth = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
-    1
+    1,
   );
   const endOfMonth = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth() + 1,
-    0
+    0,
   );
 
   const countNewClientsByMonth = await User.countDocuments({
@@ -367,7 +383,7 @@ const countNewClientsByMonth = async (req, res) => {
 };
 //отчет по прослушанным песням пользователя
 const countListensByUser = async (req, res) => {
-  const userId = req.body.userId;
+  const { userId } = req.body;
 
   const dateOfStart = new Date(req.body.dateOfStart);
   const dateOfEnd = new Date(req.body.dateOfEnd);
@@ -381,7 +397,7 @@ const countListensByUser = async (req, res) => {
     const filteredTracks = userListenCount.tracks.map((track) => {
       const filteredListens = track.listens.filter((listen) => {
         const listenDate = new Date(listen.date);
-        console.log(" listenDate :>> ", listenDate);
+        console.log(' listenDate :>> ', listenDate);
         if (dateOfEnd.getTime() === dateOfStart.getTime()) {
           return listen.date.toDateString() === dateOfStart.toDateString();
         }
@@ -401,7 +417,7 @@ const countListensByUser = async (req, res) => {
     });
 
     const filterTracksByDate = filteredTracks.filter(
-      (track) => track.listens.length > 0
+      (track) => track.listens.length > 0,
     );
 
     res.json(filterTracksByDate);
@@ -410,6 +426,80 @@ const countListensByUser = async (req, res) => {
   }
 };
 
+const allUsersByListenCount = async (req, res) => {
+  const userResult = await User.find({ ...req.query });
+  const userListenCount = await UserListenCount.findOne({
+    userId: '660fa1fdc4abe84dc4771f5b',
+  });
+
+  const u = await UserListenCount.find();
+
+  // const result = await UserListenCount.aggregate([
+  //   { $unwind: '$tracks' },
+  //   { $unwind: '$tracks.listens' },
+  //   {
+  //     $group: {
+  //       _id: '$userId',
+  //       totalListens: { $sum: '$tracks.listens.countOfListenes' },
+  //     },
+  //   },
+  // ]);
+
+  const result = await User.aggregate([
+    {
+      $lookup: {
+        from: 'userlistencounts', // имя коллекции в MongoDB
+        localField: '_id',
+        foreignField: 'userId',
+        as: 'listensData',
+      },
+    },
+    { $unwind: { path: '$listensData', preserveNullAndEmptyArrays: true } },
+    {
+      $unwind: {
+        path: '$listensData.tracks',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: '$listensData.tracks.listens',
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $group: {
+        _id: '$_id',
+        contractNumberDoc: { $first: '$contractNumberDoc' },
+        email: { $first: '$email' },
+        institution: { $first: '$institution' },
+        totalListens: {
+          $sum: {
+            $ifNull: ['$listensData.tracks.listens.countOfListenes', 0],
+          },
+        },
+      },
+    },
+    { $sort: { totalListens: -1 } }, // сортировка по убыванию
+  ]);
+
+  // const r = userListenCount.map(
+  //   (t) => t.listens.reduce((acc, current) => acc + current),
+  //   0,
+  // );
+
+  // console.log(
+  //   '===>>>>',
+  //   userListenCount.tracks.map((track) => track.listens).flatMap((e) => e),
+  // );
+
+  res.json({
+    result,
+  });
+};
+
+// .reduce((acc, current) => acc + current.countOfListenes, 0),
+
 //счетчик песен добавленных юзером
 const countTrackByUser = async (req, res) => {
   const { id } = req.params;
@@ -417,7 +507,7 @@ const countTrackByUser = async (req, res) => {
 
   const addTrackCount = await Track.find(
     { addTrackByUsers: objectId },
-    "-addByUsers -createdAt -updatedAt"
+    '-addByUsers -createdAt -updatedAt',
   );
 
   const countAddTrack = addTrackCount.length;
@@ -435,7 +525,7 @@ const countPlaylistByUser = async (req, res) => {
   // console.log("objectId", objectId);
   const add = await PlayList.find(
     { addByUsers: objectId },
-    "-addByUsers -createdAt -updatedAt"
+    '-addByUsers -createdAt -updatedAt',
   );
 
   const countAdd = add.length;
@@ -449,7 +539,7 @@ const toggleEditorStatus = async (req, res) => {
   const user = await Admin.findById(id);
 
   if (!user) {
-    return res.status(404).json({ error: "Not found" });
+    return res.status(404).json({ error: 'Not found' });
   }
 
   user.status = !user.status;
@@ -467,9 +557,9 @@ const toggleEditorAccess = async (req, res) => {
   const user = await Admin.findById(id);
 
   if (!user) {
-    return res.status(404).json({ error: "Not found" });
+    return res.status(404).json({ error: 'Not found' });
   }
-  console.log(" user.access :>> ", user.access);
+  console.log(' user.access :>> ', user.access);
   user.access = !user.access;
   await user.save();
 
@@ -477,6 +567,42 @@ const toggleEditorAccess = async (req, res) => {
     message: `Access for user '${user.firstName} ${user.lastName}' with ID ${user._id} has been toggled`,
     newAccess: user.access,
   });
+};
+
+const recalculateTotalListens = async (req, res) => {
+  const results = await UserListenCount.aggregate([
+    {
+      $project: {
+        userId: 1,
+        totalListens: {
+          $sum: {
+            $map: {
+              input: '$tracks',
+              as: 'track',
+              in: {
+                $sum: '$$track.listens.countOfListenes',
+              },
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  const bulkOps = results.map((doc) => ({
+    updateOne: {
+      filter: { _id: doc._id },
+      update: { $set: { totalListens: doc.totalListens } },
+    },
+  }));
+
+  if (bulkOps.length > 0) {
+    await UserListenCount.bulkWrite(bulkOps);
+
+    res.json({ message: `✅ Updated ${bulkOps.length} documents` });
+  } else {
+    res.json({ message: '⚠️ Nothing to update' });
+  }
 };
 
 export default {
@@ -504,4 +630,6 @@ export default {
   countListensByUser: ctrlWrapper(countListensByUser),
   countTrackByUser: ctrlWrapper(countTrackByUser),
   countPlaylistByUser: ctrlWrapper(countPlaylistByUser),
+  allUsersByListenCount: ctrlWrapper(allUsersByListenCount),
+  recalculateTotalListens: ctrlWrapper(recalculateTotalListens),
 };

@@ -1,6 +1,6 @@
-import { Schema, model } from "mongoose";
+import { Schema, model } from 'mongoose';
 
-import handleMongooseError from "../helpers/handleMongooseError.js";
+import handleMongooseError from '../helpers/handleMongooseError.js';
 
 import {
   emailRegexp,
@@ -8,7 +8,7 @@ import {
   nameRegexp,
   onlyNumberRegexp,
   phoneNumberUaRegexp,
-} from "../helpers/regExp.js";
+} from '../helpers/regExp.js';
 const adminSchema = new Schema(
   {
     firstName: {
@@ -27,22 +27,22 @@ const adminSchema = new Schema(
     },
     login: {
       type: String,
-      required: [true, "Login is required"],
+      required: [true, 'Login is required'],
       match: loginAdminRegexp,
       unique: true,
     },
     password: {
       type: String,
       minlength: 6,
-      required: [true, "Set password for admin"],
+      required: [true, 'Set password for admin'],
     },
     accessToken: {
       type: String,
-      default: "",
+      default: '',
     },
     refreshToken: {
       type: String,
-      default: "",
+      default: '',
     },
     avatarURL: {
       type: String,
@@ -58,7 +58,7 @@ const adminSchema = new Schema(
     },
     taxCode: {
       type: String,
-      default: "0000000000",
+      default: '0000000000',
       // required: true,
       match: onlyNumberRegexp,
       // unique: true,
@@ -69,7 +69,7 @@ const adminSchema = new Schema(
     // },
     institution: {
       type: String,
-      default: "",
+      default: '',
     },
 
     telNumber: {
@@ -86,7 +86,7 @@ const adminSchema = new Schema(
     },
     comment: {
       type: String,
-      default: "",
+      default: '',
     },
     status: {
       //{block unblock}
@@ -101,12 +101,12 @@ const adminSchema = new Schema(
       default: false,
     },
   },
-  { versionKey: false, timestamps: true }
+  { versionKey: false, timestamps: true },
 );
 
-adminSchema.post("findOneAndUpdate", handleMongooseError);
-adminSchema.post("save", handleMongooseError);
+adminSchema.post('findOneAndUpdate', handleMongooseError);
+adminSchema.post('save', handleMongooseError);
 
-const Admin = model("admin", adminSchema);
+const Admin = model('admin', adminSchema);
 
 export default Admin;
