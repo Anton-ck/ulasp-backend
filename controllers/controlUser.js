@@ -498,6 +498,8 @@ const countListensTrackByUser = async (req, res) => {
     listensForToday.countOfListenes++;
   }
 
+  userListenCount.totalListens += 1;
+
   await userListenCount.save();
 
   res.json(userListenCount);

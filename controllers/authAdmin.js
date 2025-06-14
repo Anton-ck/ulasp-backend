@@ -1,26 +1,26 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-import Admin from "../models/adminModel.js";
-import HttpError from "../helpers/HttpError.js";
-import ctrlWrapper from "../helpers/ctrlWrapper.js";
-import { resizeAvatar } from "../helpers/resizePics.js";
-import isExistAvatar from "../helpers/isExistAvatar.js";
+import Admin from '../models/adminModel.js';
+import HttpError from '../helpers/HttpError.js';
+import ctrlWrapper from '../helpers/ctrlWrapper.js';
+import { resizeAvatar } from '../helpers/resizePics.js';
+import isExistAvatar from '../helpers/isExistAvatar.js';
 
 dotenv.config();
 
 const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
 
-const accessTokenExpires = "7d";
-const refreshTokenExpires = "7d";
+const accessTokenExpires = '7d';
+const refreshTokenExpires = '7d';
 
 const signUpAdmin = async (req, res) => {
   const { login, password } = req.body;
   const admin = await Admin.findOne({ login });
 
   if (admin) {
-    throw HttpError(409, "login in use");
+    throw HttpError(409, 'login in use');
   }
   const hashPassword = await bcrypt.hash(password, 10);
 
@@ -57,12 +57,12 @@ const adminSignIn = async (req, res) => {
 
   const admin = await Admin.findOne({ login });
   if (!admin) {
-    throw HttpError(401, "Login  or password is wrong");
+    throw HttpError(401, 'Login  or password is wrong');
   }
-  console.log("admin :>> ", admin);
+  console.log('admin :>> ', admin);
   const passwordCompare = await bcrypt.compare(password, admin.password);
   if (!admin || !passwordCompare) {
-    throw HttpError(401, "Login  or password is wrong");
+    throw HttpError(401, 'Login  or password is wrong');
   }
 
   const payload = {
@@ -124,7 +124,7 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 
     const isExist = await Admin.findOne({ refreshToken: token });
     if (!isExist) {
-      next(HttpError(403), "Token invalid");
+      next(HttpError(403), 'Token invalid');
     }
 
     const payload = {
@@ -148,7 +148,6 @@ const getRefreshTokenAdmin = async (req, res, next) => {
 };
 
 const getCurrentAdmin = async (req, res) => {
-  console.log("getCurrentAdmin", req.admin);
   const {
     login,
     firstName,
@@ -164,8 +163,6 @@ const getCurrentAdmin = async (req, res) => {
   } = req.admin;
 
   const avatar = isExistAvatar(avatarURL);
-
-  console.log(avatar);
 
   if (adminRole) {
     res.json({
@@ -204,14 +201,14 @@ const getCurrentAdmin = async (req, res) => {
 
 const logoutAdmin = async (req, res) => {
   const { _id } = req.admin;
-  await Admin.findByIdAndUpdate(_id, { accessToken: "", refreshToken: "" });
+  await Admin.findByIdAndUpdate(_id, { accessToken: '', refreshToken: '' });
   res.status(204).json();
 };
 
 const updateAdminAvatar = async (req, res) => {
   const { _id } = req.admin;
   if (!req.file) {
-    throw HttpError(404, "File not found for upload");
+    throw HttpError(404, 'File not found for upload');
   }
   const avatarURL = await resizeAvatar(req.file);
 
