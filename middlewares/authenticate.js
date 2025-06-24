@@ -66,8 +66,6 @@ export const authenticatUser = async (req, res, next) => {
   const { authorization = '' } = req.headers;
   const [bearer, token] = authorization.split(' ');
 
-  console.log('token', token);
-
   if (bearer !== 'Bearer') {
     next(HttpError(401));
     return;
@@ -81,6 +79,11 @@ export const authenticatUser = async (req, res, next) => {
     if (!user) {
       next(HttpError(401));
     }
+
+    await User.findByIdAndUpdate(id, {
+      online: true,
+      lastSeen: Date.now(),
+    });
 
     req.user = user;
 
