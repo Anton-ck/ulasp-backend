@@ -1,26 +1,26 @@
-import express from "express";
+import express from 'express';
 
 import {
   loginUserSchema,
   createFopUserSchema,
   createCompanyUserSchema,
-} from "../../schemas/userSchema.js";
+} from '../../schemas/userSchema.js';
 
-import validateBody from "../../middlewares/validateBody.js";
-import isEmptyBody from "../../middlewares/isEmptyBody.js";
+import validateBody from '../../middlewares/validateBody.js';
+import isEmptyBody from '../../middlewares/isEmptyBody.js';
 
-import upload from "../../middlewares/upload.js";
-import { authenticatUser } from "../../middlewares/authenticate.js";
-import controllers from "../../controllers/authUser.js";
-import controllersUser from "../../controllers/controlUser.js";
+import upload from '../../middlewares/upload.js';
+import { authenticatUser } from '../../middlewares/authenticate.js';
+import controllers from '../../controllers/authUser.js';
+import controllersUser from '../../controllers/controlUser.js';
 
 const router = express.Router();
 
 router.post(
-  "/signin",
+  '/signin',
   isEmptyBody,
   validateBody(loginUserSchema),
-  controllers.userSignIn
+  controllers.userSignIn,
 );
 
 // router.post(
@@ -34,20 +34,22 @@ router.post(
 //   controllers.createUser
 // );
 
-router.get("/current", authenticatUser, controllers.getCurrentUser);
+router.post('/refresh', controllers.getRefreshToken);
 
-router.post("/logout", authenticatUser, controllers.logoutUser);
+router.get('/current', authenticatUser, controllers.getCurrentUser);
+
+router.post('/logout', authenticatUser, controllers.logoutUser);
 
 router.post(
-  "/playlist/create",
+  '/playlist/create',
   authenticatUser,
-  controllersUser.createPlayList
+  controllersUser.createPlayList,
 );
 router.patch(
-  "/avatars",
+  '/avatars',
   authenticatUser,
-  upload.single("avatarURL"),
-  controllers.updateUserAvatar
+  upload.single('avatarURL'),
+  controllers.updateUserAvatar,
 );
 
 export default router;

@@ -15,11 +15,15 @@ import trackEditorAPI from './routes/api/controlEditor/trackAPI.js';
 import authUserRouter from './routes/api/authUser.js';
 import controlUserRouter from './routes/api/controlUser.js';
 
+import startOnlineCleanup from './services/common/onlineCleanup.js';
+
 dotenv.config();
 
 const app = express();
 
 const formatsLogger = app.get('env') === 'development' ? 'dev' : 'short';
+
+startOnlineCleanup();
 
 app.use(logger(formatsLogger));
 app.use(cors());

@@ -44,8 +44,8 @@ const userSchema = new Schema(
       default: '',
     },
     refreshToken: {
-      type: String,
-      default: '',
+      type: [String],
+      default: [''],
     },
     avatarURL: {
       type: String,
@@ -140,6 +140,10 @@ const userSchema = new Schema(
       type: Boolean,
       required: true,
       default: false,
+    },
+    lastSeen: {
+      type: Date,
+      default: null,
     },
   },
   { versionKey: false, timestamps: true, discriminatorKey: 'kind' },

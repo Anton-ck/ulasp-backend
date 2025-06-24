@@ -24,8 +24,6 @@ const isValidImageUrl = async (req, res, next) => {
       trackPictureURL: { $exists: true, $ne: defaultTrackCover },
     }).lean();
 
-    console.log('songs ===>>>>', songs.length);
-
     await Promise.all(
       songs.map(async ({ _id, trackPictureURL }) => {
         const isValid = await isImageUrlValid(

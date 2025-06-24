@@ -1,16 +1,17 @@
-import app from "./app.js";
-import mongoose from "mongoose";
+import app from './app.js';
+import mongoose from 'mongoose';
 
 const { DB_HOST, PORT } = process.env;
 
-mongoose.set("strictQuery", true);
+mongoose.set('strictQuery', true);
 
 mongoose
   .connect(DB_HOST)
   .then(() =>
     app.listen(PORT, () => {
       console.log(`Database connection successful, port: ${PORT}`);
-    })
+      console.log('Сервер запущен в', new Date().toString());
+    }),
   )
   .catch((error) => {
     console.log(error.message);
