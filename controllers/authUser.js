@@ -1,25 +1,27 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import * as fs from "fs";
-import Jimp from "jimp";
-import path from "path";
-import { fileURLToPath } from "url";
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+import * as fs from 'fs';
+import Jimp from 'jimp';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-import { User, Fop, Company } from "../models/userModel.js";
-import HttpError from "../helpers/HttpError.js";
-import ctrlWrapper from "../helpers/ctrlWrapper.js";
-import { resizeAvatar } from "../helpers/resizePics.js";
-import isExistAvatar from "../helpers/isExistAvatar.js";
+import { User, Fop, Company } from '../models/userModel.js';
+import HttpError from '../helpers/HttpError.js';
+import ctrlWrapper from '../helpers/ctrlWrapper.js';
+import { resizeAvatar } from '../helpers/resizePics.js';
+import isExistAvatar from '../helpers/isExistAvatar.js';
+import {
+  generateToken,
+  generateRefreshToken,
+} from '../helpers/generateTokens.js';
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
-const { ACCESS_SECRET_KEY, REFRESH_SECRET_KEY } = process.env;
-
-const accessTokenExpires = "7d";
+const { REFRESH_SECRET_KEY } = process.env;
 
 // const createUser = async (req, res) => {
 //   const { contractNumber, taxCode, userFop } = req.body;
@@ -68,12 +70,12 @@ const userSignIn = async (req, res) => {
   const { contractNumber, password } = req.body;
 
   const user = await User.findOne({ contractNumber });
-  console.log("contractNumber", contractNumber);
-  console.log("password", password);
-  console.log("user", user);
+  // console.log('contractNumber', contractNumber);
+  // console.log('password', password);
+  // console.log('user', user);
 
   if (!user) {
-    throw HttpError(401, "Contract Number or taxCode is wrong");
+    throw HttpError(401, 'Contract Number or taxCode is wrong');
   }
 
   const payload = {
@@ -82,20 +84,38 @@ const userSignIn = async (req, res) => {
 
   const passwordCompare = await bcrypt.compare(password, user.password);
   if (!passwordCompare) {
-    throw HttpError(401, "Contract Number or taxCode is wrong");
+    throw HttpError(401, 'Contract Number or taxCode is wrong');
   }
   if (!user.access) {
-    throw HttpError(403, "Access Denied");
+    throw HttpError(403, 'Access Denied');
   }
-  const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
-    expiresIn: accessTokenExpires,
+
+  // Отфильтровать живые токены
+  const validRefreshTokens = user.refreshToken.filter((token) => {
+    const now = Math.floor(Date.now() / 1000);
+    try {
+      const decoded = jwt.decode(token);
+      return decoded?.exp && decoded.exp > now;
+    } catch {
+      return false;
+    }
   });
-  await User.findByIdAndUpdate(user._id, { accessToken, online: true });
+  const accessToken = generateToken(payload);
+  const refreshToken = generateRefreshToken(payload);
+
+  validRefreshTokens.push(refreshToken);
+
+  await User.findByIdAndUpdate(user._id, {
+    accessToken,
+    online: true,
+    $set: { refreshToken: validRefreshTokens },
+  });
 
   const avatar = isExistAvatar(user.avatarURL);
 
   res.json({
     accessToken,
+    refreshToken,
 
     user: {
       contractNumber: user.contractNumber,
@@ -118,7 +138,7 @@ const userSignIn = async (req, res) => {
 };
 
 const getCurrentUser = async (req, res) => {
-  console.log("getCurrentUser", req.user);
+  console.log('getCurrentUser', req.user);
   const {
     _id,
     firstName,
@@ -165,16 +185,17 @@ const getCurrentUser = async (req, res) => {
 const logoutUser = async (req, res) => {
   const { _id } = req.user;
   await User.findByIdAndUpdate(_id, {
-    accessToken: "",
-    refreshToken: "",
+    // accessToken: '',
+    // refreshToken: '',
     online: false,
   });
   res.status(204).json();
 };
+
 const updateUserAvatar = async (req, res) => {
   const { _id } = req.user;
   if (!req.file) {
-    throw HttpError(404, "File not found for upload");
+    throw HttpError(404, 'File not found for upload');
   }
   const avatarURL = await resizeAvatar(req.file);
 
@@ -182,39 +203,47 @@ const updateUserAvatar = async (req, res) => {
 
   res.json({ avatarURL });
 };
-// const getRefreshTokenAdmin = async (req, res, next) => {
-//   const { refreshToken: token } = req.body;
-//   try {
-//     const { id } = jwt.verify(token, REFRESH_SECRET_KEY);
 
-//     const isExist = await Admin.findOne({ refreshToken: token });
-//     if (!isExist) {
-//       next(HttpError(403), "Token invalid");
-//     }
+const getRefreshToken = async (req, res, next) => {
+  const { refreshToken: userRefreshToken } = req.body;
 
-//     const payload = {
-//       id,
-//     };
+  const { id } = jwt.verify(userRefreshToken, REFRESH_SECRET_KEY);
 
-//     const accessToken = jwt.sign(payload, ACCESS_SECRET_KEY, {
-//       expiresIn: accessTokenExpires,
-//     });
+  const user = await User.findById(id, {
+    refreshToken: userRefreshToken,
+  });
 
-//     const refreshToken = jwt.sign(payload, REFRESH_SECRET_KEY, {
-//       expiresIn: "7d",
-//     });
+  if (!user.refreshToken[0]) {
+    next(HttpError(403), 'Token invalid');
+  }
 
-//     await Admin.findByIdAndUpdate(isExist._id, { accessToken, refreshToken });
+  const payload = {
+    id,
+  };
 
-//     res.json({ accessToken, refreshToken });
-//   } catch (error) {
-//     next(HttpError(403), error.message);
-//   }
-// };
+  const accessToken = generateToken(payload);
+  const refreshToken = generateRefreshToken(payload);
+
+  const indexRefresh = user.refreshToken.indexOf(userRefreshToken);
+
+  await User.findByIdAndUpdate(
+    id,
+    {
+      $set: {
+        [`refreshToken.${indexRefresh}`]: refreshToken,
+      },
+    },
+
+    { new: true },
+  );
+
+  res.json({ accessToken, refreshToken });
+};
 
 export default {
   userSignIn: ctrlWrapper(userSignIn),
   updateUserAvatar: ctrlWrapper(updateUserAvatar),
   logoutUser: ctrlWrapper(logoutUser),
   getCurrentUser: ctrlWrapper(getCurrentUser),
+  getRefreshToken: ctrlWrapper(getRefreshToken),
 };

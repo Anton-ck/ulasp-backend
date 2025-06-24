@@ -1,19 +1,19 @@
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-import Admin from "../models/adminModel.js";
-import { User } from "../models/userModel.js";
-import HttpError from "../helpers/HttpError.js";
+import Admin from '../models/adminModel.js';
+import { User } from '../models/userModel.js';
+import HttpError from '../helpers/HttpError.js';
 
 dotenv.config();
 
 const { ACCESS_SECRET_KEY } = process.env;
 
 export const authenticateAdmin = async (req, res, next) => {
-  const { authorization = "" } = req.headers;
-  const [bearer, accessToken] = authorization.split(" ");
+  const { authorization = '' } = req.headers;
+  const [bearer, accessToken] = authorization.split(' ');
 
-  if (bearer !== "Bearer") {
+  if (bearer !== 'Bearer') {
     next(HttpError(401));
     return;
   }
@@ -35,27 +35,55 @@ export const authenticateAdmin = async (req, res, next) => {
   }
 };
 
-export const authenticatUser = async (req, res, next) => {
-  const { authorization = "" } = req.headers;
-  const [bearer, accessToken] = authorization.split(" ");
-  console.log('accessToken', accessToken)
+// export const authenticatUser = async (req, res, next) => {
+//   const { authorization = "" } = req.headers;
+//   const [bearer, accessToken] = authorization.split(" ");
+//   console.log('accessToken', accessToken)
 
-  if (bearer !== "Bearer") {
+//   if (bearer !== "Bearer") {
+//     next(HttpError(401));
+//     return;
+//   }
+
+//   try {
+//     const { id } = jwt.verify(accessToken, ACCESS_SECRET_KEY);
+//     console.log('id', id)
+//     const user = await User.findById(id);
+//     console.log('user id', user)
+//     if (!user || !user.accessToken || user.accessToken !== accessToken) {
+//       next(HttpError(401));
+//     }
+
+//     req.user = user;
+
+//     next();
+//   } catch (error) {
+//     next(HttpError(401));
+//   }
+// };
+
+export const authenticatUser = async (req, res, next) => {
+  const { authorization = '' } = req.headers;
+  const [bearer, token] = authorization.split(' ');
+
+  console.log('token', token);
+
+  if (bearer !== 'Bearer') {
     next(HttpError(401));
     return;
   }
 
   try {
-    const { id } = jwt.verify(accessToken, ACCESS_SECRET_KEY);
-    console.log('id', id)
+    const { id } = jwt.verify(token, ACCESS_SECRET_KEY);
+
     const user = await User.findById(id);
-    console.log('user id', user)
-    if (!user || !user.accessToken || user.accessToken !== accessToken) {
+
+    if (!user) {
       next(HttpError(401));
     }
 
     req.user = user;
-  
+
     next();
   } catch (error) {
     next(HttpError(401));
