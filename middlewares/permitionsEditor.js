@@ -1,17 +1,17 @@
-import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
 
-import Admin from "../models/adminModel.js";
+import Admin from '../models/adminModel.js';
 
-import HttpError from "../helpers/HttpError.js";
+import HttpError from '../helpers/HttpError.js';
 
 dotenv.config();
 
 const { ACCESS_SECRET_KEY } = process.env;
 
 export const permisionsEditor = async (req, res, next) => {
-  const { authorization = "" } = req.headers;
-  const [bearer, accessToken] = authorization.split(" ");
+  const { authorization = '' } = req.headers;
+  const [bearer, accessToken] = authorization.split(' ');
 
   try {
     const { id } = jwt.verify(accessToken, ACCESS_SECRET_KEY);

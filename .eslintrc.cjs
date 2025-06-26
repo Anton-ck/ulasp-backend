@@ -2,6 +2,7 @@ module.exports = {
   extends: 'airbnb-base',
   rules: {
     'import/extensions': 'off',
+    'object-curly-newline': ['off'],
   },
   // env: { browser: true, es2024: true },
 };

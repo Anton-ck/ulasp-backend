@@ -37,7 +37,7 @@ router.get(
   authenticateAdmin,
   permisionsEditor,
   isValid,
-  isValidImageUrl,
+
   controllersPlaylist.findPlayListById,
 );
 
@@ -93,5 +93,7 @@ router.post(
   validateBody(playListSchema),
   controllersPlaylist.createPlayListInShopLibrary,
 );
+
+router.post('/trackupdate', controllersPlaylist.updateTracksPictureInPlaylist);
 
 export default router;

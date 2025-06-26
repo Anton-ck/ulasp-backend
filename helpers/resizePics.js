@@ -2,8 +2,6 @@ import fs from 'fs/promises';
 import Jimp from 'jimp';
 import path from 'path';
 
-import decodeFromWindows1252 from './decodeWindows1252.js';
-
 const tempDirResize = path.resolve('tmp', 'resize');
 const picsDir = path.resolve('public', 'covers');
 const avatarsDir = path.resolve('public', 'avatars');
@@ -13,9 +11,6 @@ const shopCovers = path.resolve('public', 'shopCovers');
 
 export const resizePics = async (file, type) => {
   const { path: tempDir, originalname, fieldname } = file;
-
-  console.log('TEST ====>>>', decodeFromWindows1252(originalname));
-  console.log('DATE NOW', Date.now());
 
   let picsFolder;
 
@@ -90,7 +85,17 @@ export const resizeAvatar = async (file) => {
 };
 
 export const resizeTrackCover = async (link, type) => {
-  const fileName = link.slice(link.length / 2, link.length);
+  console.log('LINK', link);
+
+  let fileName;
+
+  fileName = link.split('/').pop();
+
+  if (fileName.includes('.')) {
+    const [name] = fileName.split('.');
+
+    fileName = name;
+  }
 
   const resizeImg = await Jimp.read(link);
   const extentionFile = resizeImg._originalMime.split('/')[1];

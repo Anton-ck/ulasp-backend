@@ -18,6 +18,7 @@ import {
   updatePublicationService,
 } from '../../services/editor/playlistsService.js';
 
+import updTracksPicture from '../../services/editor/updateTrackPictureService.js';
 const latestPlaylists = async (req, res) => {
   const {
     page = 1,
@@ -500,6 +501,15 @@ const replaceTracksToPlaylists = async (req, res) => {
   res.json({ message: 'Ok' });
 };
 
+const updateTracksPictureInPlaylist = async (req, res) => {
+  const { id } = req.body;
+
+  console.log('ID', id);
+  updTracksPicture(id);
+
+  res.json({ m: 'ok' });
+};
+
 export default {
   createPlayList: ctrlWrapper(createPlayList),
   createPlayListByGenre: ctrlWrapper(createPlayListByGenre),
@@ -512,4 +522,5 @@ export default {
   latestPlaylists: ctrlWrapper(latestPlaylists),
   createPlayListInShopLibrary: ctrlWrapper(createPlayListInShopLibrary),
   replaceTracksToPlaylists: ctrlWrapper(replaceTracksToPlaylists),
+  updateTracksPictureInPlaylist: ctrlWrapper(updateTracksPictureInPlaylist),
 };
