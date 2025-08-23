@@ -1,16 +1,16 @@
-import path from "path";
-import * as fs from "fs";
+import path from 'path';
+import * as fs from 'fs';
 
-import HttpError from "../../helpers/HttpError.js";
-import ctrlWrapper from "../../helpers/ctrlWrapper.js";
+import HttpError from '../../helpers/HttpError.js';
+import ctrlWrapper from '../../helpers/ctrlWrapper.js';
 
-import PlayList from "../../models/playlistModel.js";
-import UserPlaylist from "../../models/userPlayList.js";
-import Track from "../../models/trackModel.js";
+import PlayList from '../../models/playlistModel.js';
+import UserPlaylist from '../../models/userPlayList.js';
+import Track from '../../models/trackModel.js';
 
-import createTrackInDB from "../../helpers/createTrackInDB.js";
+import createTrackInDB from '../../helpers/createTrackInDB.js';
 
-const publicDir = path.resolve("public/");
+const publicDir = path.resolve('public/');
 
 //Все треки
 const latestTracks = async (req, res) => {
@@ -18,13 +18,13 @@ const latestTracks = async (req, res) => {
     page = req.query.page,
     limit = req.query.limit,
     sort = req.query.sort,
-    search = req.query.query || "",
+    search = req.query.query || '',
     ...query
   } = req.query;
 
   const skip = (page - 1) * limit;
   let queryOptions;
-  switch (search === "") {
+  switch (search === '') {
     case true:
       queryOptions = {
         ...req.query,
@@ -34,8 +34,8 @@ const latestTracks = async (req, res) => {
       // queryOptions = { ...req.query, $text: { $search: search } };
       queryOptions = {
         $or: [
-          { artist: { $regex: search.toString(), $options: "i" } },
-          { trackName: { $regex: search.toString(), $options: "i" } },
+          { artist: { $regex: search.toString(), $options: 'i' } },
+          { trackName: { $regex: search.toString(), $options: 'i' } },
         ],
         ...req.query,
       };
@@ -47,18 +47,22 @@ const latestTracks = async (req, res) => {
       };
   }
 
-  const latestTracks = await Track.find(queryOptions, "-createdAt -updatedAt", {
-    skip,
-    limit,
-  })
+  const latestTracks = await Track.find(
+    queryOptions,
+    '-sortIndex -addTrackByUsers -trackGenre -createdAt -updatedAt',
+    {
+      skip,
+      limit,
+    },
+  )
     .populate({
-      path: "playList",
-      select: "playListName",
+      path: 'playList',
+      select: 'playListName',
 
       options: {
         populate: {
-          path: "playlistGenre",
-          select: "genre",
+          path: 'playlistGenre',
+          select: 'genre',
         },
       },
     })
@@ -70,7 +74,7 @@ const latestTracks = async (req, res) => {
 
   const tracksSRC = await Track.find(
     queryOptions,
-    "artist trackName trackURL"
+    'artist trackName trackURL',
   ).sort({ createdAt: sort });
   const totalPages = Math.ceil(totalTracks / limit);
   const pageNumber = page ? parseInt(page) : null;
@@ -94,7 +98,7 @@ const uploadTrack = async (req, res) => {
   const FileNameCyrillic = existFileName.translatedFileName;
 
   if (wrongExt) {
-    throw HttpError(400, "Wrong extension type! Extensions should be *.mp3");
+    throw HttpError(400, 'Wrong extension type! Extensions should be *.mp3');
   }
 
   const playlistId = req?.params?.id;
@@ -111,7 +115,7 @@ const uploadTrack = async (req, res) => {
         FileNameLatin,
         playlistId,
         req,
-        trackDir
+        trackDir,
       );
       res.json({
         track,
@@ -155,7 +159,7 @@ const uploadTrack = async (req, res) => {
         FileNameLatin,
         playlistId,
         req,
-        trackDir
+        trackDir,
       );
       res.json({
         track,
@@ -169,7 +173,7 @@ const uploadTrack = async (req, res) => {
     FileNameLatin,
     playlistId,
     req,
-    trackDir
+    trackDir,
   );
 
   res.json({
@@ -184,8 +188,8 @@ const deleteTrack = async (req, res) => {
     throw HttpError(404, `Track with ${id} not found`);
   }
 
-  const trackPath = publicDir + "/" + track?.trackURL;
-  const coverPath = publicDir + "/" + track?.trackPictureURL;
+  const trackPath = publicDir + '/' + track?.trackURL;
+  const coverPath = publicDir + '/' + track?.trackPictureURL;
 
   const howManyCoverUsed = await Track.countDocuments({
     trackPictureURL: track?.trackPictureURL,
@@ -199,7 +203,7 @@ const deleteTrack = async (req, res) => {
 
   if (
     fs.existsSync(coverPath) &&
-    !coverPath.includes("trackCover_default") &&
+    !coverPath.includes('trackCover_default') &&
     howManyCoverUsed === 1
   ) {
     fs.unlinkSync(coverPath);
@@ -216,21 +220,21 @@ const deleteTrack = async (req, res) => {
   if (playlistWithThisTrack) {
     playlistWithThisTrack.map(
       async ({ _id }) =>
-        await PlayList.updateOne({ _id }, { $pull: { trackList: id } })
+        await PlayList.updateOne({ _id }, { $pull: { trackList: id } }),
     );
   }
 
   if (userPlaylistWithThisTrack) {
     userPlaylistWithThisTrack.map(
       async ({ _id }) =>
-        await UserPlaylist.updateOne({ _id }, { $pull: { trackList: id } })
+        await UserPlaylist.updateOne({ _id }, { $pull: { trackList: id } }),
     );
   }
 
   res.status(200).json({
     message: `Track ${track.artist} ${track.trackName} was deleted `,
 
-    code: "2000",
+    code: '2000',
     object: {
       artist: `${track.artist}`,
       trackName: `${track.trackName}`,
@@ -256,10 +260,10 @@ const addTrackToPlaylists = async (req, res) => {
     { _id: idPlaylists },
     {
       $push: { trackList: id },
-    }
+    },
   );
 
-  res.json({ message: "Track successfully added" });
+  res.json({ message: 'Track successfully added' });
 };
 
 export default {

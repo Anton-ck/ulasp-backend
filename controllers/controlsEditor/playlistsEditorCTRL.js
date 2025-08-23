@@ -267,8 +267,12 @@ const findPlayListById = async (req, res) => {
     throw HttpError(404, `Playlist not found`);
   }
 
+  // const sortedBy = sortPlaylist.sortedTracks
+  //   ? { _id: 1, sortIndex: 1 }
+  //   : { createdAt: -1 };
+
   const sortedBy = sortPlaylist.sortedTracks
-    ? { sortIndex: 1 }
+    ? { sortIndex: 1, _id: 1 }
     : { createdAt: -1 };
 
   const searchOptions = {
@@ -278,10 +282,14 @@ const findPlayListById = async (req, res) => {
     ],
   };
 
-  const playlist = await PlayList.findById(id, '-createdAt -updatedAt')
+  const playlist = await PlayList.findById(
+    id,
+    '-createdAt -updatedAt -favoriteByUsers',
+  )
     .populate({
       path: 'trackList',
-
+      select:
+        'artist trackName trackURL trackPictureURL trackDuration isTopChart',
       match: searchOptions,
       options: {
         sort: sortedBy,
@@ -289,7 +297,7 @@ const findPlayListById = async (req, res) => {
         limit,
       },
     })
-    .populate('playlistGenre');
+    .populate({ path: 'playlistGenre', select: 'genre' });
 
   const trackList = await PlayList.findById(id, 'trackList').populate({
     path: 'trackList',
@@ -304,13 +312,22 @@ const findPlayListById = async (req, res) => {
 
   const tracksSRC = trackList.trackList;
 
-  res.json({ playlist, tracksSRC, totalTracks, totalPages });
+  res.json({
+    playlist,
+    tracksSRC,
+    totalTracks,
+    totalPages,
+  });
 };
 
 const updatePlaylistsSortedTracks = async (req, res) => {
   const { id } = req.params;
 
-  randomSortingService(id);
+  if (!id) {
+    throw HttpError(404, `Id ${id} not found`);
+  }
+
+  await randomSortingService(id);
 
   res.json({ success: true });
 };
@@ -504,7 +521,6 @@ const replaceTracksToPlaylists = async (req, res) => {
 const updateTracksPictureInPlaylist = async (req, res) => {
   const { id } = req.body;
 
-  console.log('ID', id);
   updTracksPicture(id);
 
   res.json({ m: 'ok' });

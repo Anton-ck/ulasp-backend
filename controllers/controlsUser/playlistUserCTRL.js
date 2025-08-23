@@ -43,7 +43,7 @@ const findPlayListById = async (req, res) => {
   }
 
   const sortedBy = sortPlaylist.sortedTracks
-    ? { updatedAt: -1, sortIndex: sort }
+    ? { sortIndex: sort, _id: 1 }
     : { createdAt: sort };
 
   const playlist = await PlayList.findById(id, '-createdAt -updatedAt')
@@ -58,8 +58,7 @@ const findPlayListById = async (req, res) => {
     select: 'artist trackName trackURL addTrackByUsers',
     options: { sort: sortedBy },
   });
-  console.log('playlist :>> ', playlist);
-  console.log('trackList :>> ', trackList);
+
   const totalTracks = trackList.trackList.length;
   const totalPages = Math.ceil(totalTracks / limit);
 

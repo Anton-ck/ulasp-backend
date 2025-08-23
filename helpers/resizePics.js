@@ -85,8 +85,6 @@ export const resizeAvatar = async (file) => {
 };
 
 export const resizeTrackCover = async (link, type) => {
-  console.log('LINK', link);
-
   let fileName;
 
   fileName = link.split('/').pop();

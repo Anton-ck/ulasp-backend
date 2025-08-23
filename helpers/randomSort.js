@@ -7,7 +7,7 @@ export const getRandomNumber = (min, max) => {
 export const randomFn = (typeSwitch) => {
   let sortOptions;
   switch (typeSwitch) {
-    case "1":
+    case '1':
       sortOptions = {
         trackName: getRandomNumber(-1, 1),
         artist: getRandomNumber(-1, 1),
@@ -17,7 +17,7 @@ export const randomFn = (typeSwitch) => {
 
       return sortOptions;
 
-    case "2":
+    case '2':
       sortOptions = {
         createdAt: getRandomNumber(-1, 1),
         trackName: getRandomNumber(-1, 1),
@@ -26,7 +26,7 @@ export const randomFn = (typeSwitch) => {
       };
 
       return sortOptions;
-    case "3":
+    case '3':
       sortOptions = {
         artist: getRandomNumber(-1, 1),
         trackName: getRandomNumber(-1, 1),
@@ -35,7 +35,7 @@ export const randomFn = (typeSwitch) => {
       };
 
       return sortOptions;
-    case "4":
+    case '4':
       sortOptions = {
         trackName: getRandomNumber(-1, 1),
         trackDuration: getRandomNumber(-1, 1),
@@ -55,11 +55,11 @@ export const randomFn = (typeSwitch) => {
   }
 };
 
-
 export const shuffleArray = (array) => {
-  for (let i = array.length - 1; i > 0; i--) {
+  for (let i = array.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
+
   return array;
 };

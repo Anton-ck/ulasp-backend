@@ -20,7 +20,11 @@ router.post(
   controllersPlaylist.createPlayList,
 );
 
-router.get('/playlist/latest', controllersPlaylist.latestPlaylists);
+router.get(
+  '/playlist/latest',
+
+  controllersPlaylist.latestPlaylists,
+);
 
 router.patch(
   '/playlist/replaceTracksToPlaylists',
@@ -59,7 +63,7 @@ router.patch(
   controllersPlaylist.updatePlaylistById,
 );
 
-router.patch(
+router.post(
   '/playlist/sortupdate/:id',
   authenticateAdmin,
   permisionsEditor,

@@ -2,6 +2,7 @@ import express from 'express';
 import logger from 'morgan';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import compression from 'compression';
 
 import authRouter from './routes/api/authAdmin.js';
 import controlAdminRouter from './routes/api/controlAdmin.js';
@@ -29,6 +30,7 @@ app.use(logger(formatsLogger));
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+app.use(compression());
 
 app.use('/admin', authRouter);
 app.use('/admin', controlAdminRouter);
