@@ -12,8 +12,6 @@ const getPictureFromTags = async (pictureData, { artist, trackName }) => {
     throw new Error('Function getPictureFromTags must have arguments');
   }
 
-  let result;
-
   try {
     const imageFormat = pictureData.format.split('/')[1];
     const buffer = Buffer.from(pictureData.data);
@@ -25,13 +23,12 @@ const getPictureFromTags = async (pictureData, { artist, trackName }) => {
 
     await fs.writeFile(tempPicture, buffer);
 
-    result = await resizeTrackCover(tempPicture, 'trackCover');
+    const result = await resizeTrackCover(tempPicture, 'trackCover');
     await fs.unlink(tempPicture);
     return result;
   } catch (error) {
     console.error(error);
   }
-  // return result;
 };
 
 const getPictureFromAlbum = async (artist, album, imageSize = 'large') => {
@@ -54,8 +51,6 @@ const autoPictureForTrack = async (artist, trackName, trackURL) => {
 
     let trackPictureURL = defaultTrackCover;
 
-    //
-
     if (pictureData !== undefined) {
       trackPictureURL = await getPictureFromTags(pictureData, {
         artist,
@@ -64,12 +59,6 @@ const autoPictureForTrack = async (artist, trackName, trackURL) => {
     } else if ((album || artist) !== undefined) {
       trackPictureURL = await getPictureFromAlbum(dataArtist, album);
     }
-
-    //
-
-    // if ((album || artist) !== undefined) {
-    //   trackPictureURL = await getPictureFromAlbum(dataArtist, album);
-    // }
 
     return trackPictureURL;
   } catch (error) {

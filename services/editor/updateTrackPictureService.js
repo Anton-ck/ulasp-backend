@@ -39,7 +39,13 @@ const updateTracksPicture = async (idPlaylist) => {
       }),
     );
 
-    return { res, length: res.length };
+    const incNull = res.filter((el) => el === null);
+    const noIncNull = res.filter((el) => el !== null);
+
+    return {
+      withNull: { length: incNull.length },
+      withOutNull: { noIncNull, length: noIncNull.length },
+    };
   } catch (error) {
     console.log(error);
   }
