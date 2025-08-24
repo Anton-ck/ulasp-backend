@@ -1,0 +1,11 @@
+import expess from 'express';
+
+import sysControllers from '../../controllers/controlsSystem.js';
+
+const router = expess.Router();
+
+router.post('/trackupdate', sysControllers.updateTracksPictureInPlaylist);
+
+router.post('/img_delete', sysControllers.deleteAllPicture);
+
+export default router;

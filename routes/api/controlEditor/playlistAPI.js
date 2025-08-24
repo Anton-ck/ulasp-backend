@@ -98,6 +98,4 @@ router.post(
   controllersPlaylist.createPlayListInShopLibrary,
 );
 
-router.post('/trackupdate', controllersPlaylist.updateTracksPictureInPlaylist);
-
 export default router;
