@@ -17,6 +17,7 @@ import authUserRouter from './routes/api/authUser.js';
 import controlUserRouter from './routes/api/controlUser.js';
 
 import startOnlineCleanup from './services/common/onlineCleanup.js';
+import sysRouter from './routes/api/systemRoute.js';
 
 dotenv.config();
 
@@ -31,6 +32,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 app.use(compression());
+
+app.use('/sys', sysRouter);
 
 app.use('/admin', authRouter);
 app.use('/admin', controlAdminRouter);

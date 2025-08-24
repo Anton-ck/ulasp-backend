@@ -29,6 +29,8 @@ const updateTracksPicture = async (idPlaylist) => {
 
       const result = await autoPictureForTrack(artist, trackName, URL);
 
+      console.log('RESULT', result);
+
       if (result) {
         await Track.findByIdAndUpdate(_id, {
           trackPictureURL: result,
