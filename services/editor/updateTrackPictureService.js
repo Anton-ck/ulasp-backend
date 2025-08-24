@@ -24,19 +24,22 @@ const updateTracksPicture = async (idPlaylist) => {
       trackPictureURL: defaultTrackCover,
     }).lean();
 
-    songs.map(async ({ _id, artist, trackName, trackURL }) => {
-      const URL = path.join(publicDir, trackURL);
+    const res = await Promise.all(
+      songs.map(async ({ _id, artist, trackName, trackURL }) => {
+        const URL = path.join(publicDir, trackURL);
 
-      const result = await autoPictureForTrack(artist, trackName, URL);
+        const result = await autoPictureForTrack(artist, trackName, URL);
 
-      console.log('RESULT', result);
+        if (result) {
+          await Track.findByIdAndUpdate(_id, {
+            trackPictureURL: result,
+          });
+        }
+        return result;
+      }),
+    );
 
-      if (result) {
-        await Track.findByIdAndUpdate(_id, {
-          trackPictureURL: result,
-        });
-      }
-    });
+    return { res, length: res.length };
   } catch (error) {
     console.log(error);
   }

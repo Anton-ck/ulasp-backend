@@ -10,9 +10,9 @@ import updTracksPicture from '../services/editor/updateTrackPictureService.js';
 const updateTracksPictureInPlaylist = async (req, res) => {
   const { id } = req.body;
 
-  await updTracksPicture(id);
+  const result = await updTracksPicture(id);
 
-  res.json({ m: 'ok' });
+  res.json({ m: result });
 };
 
 const deleteAllPicture = async (req, res) => {
