@@ -25,10 +25,10 @@ const updateTracksPicture = async (idPlaylist) => {
     }).lean();
 
     const res = await Promise.all(
-      songs.map(async ({ _id, artist, trackName, trackURL }) => {
+      songs.map(async ({ _id, trackURL }) => {
         const URL = path.join(publicDir, trackURL);
 
-        const result = await autoPictureForTrack(artist, trackName, URL);
+        const result = await autoPictureForTrack(URL);
 
         if (result) {
           await Track.findByIdAndUpdate(_id, {
@@ -39,15 +39,18 @@ const updateTracksPicture = async (idPlaylist) => {
       }),
     );
 
-    const incNull = res.filter((el) => el === null);
-    const noIncNull = res.filter((el) => el !== null);
+    const incNull = res.filter((el) => el === undefined);
+    const noIncNull = res.filter((el) => el !== undefined);
 
-    return {
+    const result = {
       withNull: { length: incNull.length },
       withOutNull: { noIncNull, length: noIncNull.length },
     };
+
+    return result;
   } catch (error) {
     console.log(error);
+    return null;
   }
 };
 

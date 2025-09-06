@@ -8,4 +8,6 @@ router.post('/trackupdate', sysControllers.updateTracksPictureInPlaylist);
 
 router.post('/img_delete', sysControllers.deleteAllPicture);
 
+router.get('/ai', sysControllers.enrichDatabase);
+
 export default router;

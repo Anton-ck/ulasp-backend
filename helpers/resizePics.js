@@ -2,6 +2,8 @@ import fs from 'fs/promises';
 import Jimp from 'jimp';
 import path from 'path';
 
+import { getRandomNumber } from './randomSort.js';
+
 const tempDirResize = path.resolve('tmp', 'resize');
 const picsDir = path.resolve('public', 'covers');
 const avatarsDir = path.resolve('public', 'avatars');
@@ -88,6 +90,10 @@ export const resizeTrackCover = async (link, type) => {
   let fileName;
 
   fileName = link.split('/').pop();
+
+  fileName += getRandomNumber(1, 100000).toString();
+
+  console.log('fileName', fileName);
 
   if (fileName.includes('.')) {
     const [name] = fileName.split('.');

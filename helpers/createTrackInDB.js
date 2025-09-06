@@ -7,6 +7,7 @@ import { resizeTrackCover } from './resizePics.js';
 import HttpError from './HttpError.js';
 import path from 'path';
 import defaultTrackCover from '../common/resources/defaultCovers.js';
+import autoPictureForTrack from './autoPicureForTrack.js';
 
 const createTrackInDB = async (
   file,
@@ -31,6 +32,7 @@ const createTrackInDB = async (
   const tracksDir = trackDir.split(/[\\\/]/g).slice(-1)[0];
 
   const trackURL = path.join(tracksDir, trackFileName);
+  const trackUrlInOS = path.join(trackDir, trackFileName);
 
   const fileName = path.parse(FileNameLatin).name.split('__');
 
@@ -42,15 +44,7 @@ const createTrackInDB = async (
   const resArtist = decodeFromIso8859(artist);
   const resTitle = decodeFromIso8859(title);
 
-  let resizeTrackCoverURL;
-
-  if (resArtist) {
-    const trackPicture = await albumArt(resArtist, {
-      album: album,
-      size: 'large',
-    });
-    resizeTrackCoverURL = await resizeTrackCover(trackPicture, 'trackCover');
-  }
+  const trackCoverUrlDB = await autoPictureForTrack(trackUrlInOS);
 
   const newTrack = await Track.create({
     ...req.body,
@@ -73,9 +67,7 @@ const createTrackInDB = async (
 
       $push: { trackGenre: genre ? genre[0] : null },
       trackDuration: duration ? duration : null,
-      trackPictureURL: resizeTrackCoverURL
-        ? resizeTrackCoverURL
-        : defaultTrackCover || null,
+      trackPictureURL: trackCoverUrlDB || null,
     },
     { new: true },
   );

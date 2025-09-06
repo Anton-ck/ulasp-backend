@@ -4,10 +4,11 @@ import path from 'path';
 import albumArt from 'album-art';
 import getId3Tags from './id3Tags.js';
 import { resizeTrackCover } from './resizePics.js';
-
+import { getRandomNumber } from '../helpers/randomSort.js';
 import defaultTrackCover from '../common/resources/defaultCovers.js';
+import slugify from '../helpers/slugify.js';
 
-const getPictureFromTags = async (pictureData, { artist, trackName }) => {
+const getPictureFromTags = async (pictureData, artist, trackName) => {
   if (!pictureData) {
     throw new Error('Function getPictureFromTags must have arguments');
   }
@@ -16,9 +17,13 @@ const getPictureFromTags = async (pictureData, { artist, trackName }) => {
     const imageFormat = pictureData.format.split('/')[1];
     const buffer = Buffer.from(pictureData.data);
 
+    const clearTrackName = slugify(trackName);
+
+    const rmNumber = getRandomNumber(1, 1000);
+
     const tempPicture = path.resolve(
       'tmp',
-      `${artist}${trackName}.${imageFormat}`,
+      `${clearTrackName}${rmNumber}.${imageFormat}`,
     );
 
     await fs.writeFile(tempPicture, buffer);
@@ -39,25 +44,22 @@ const getPictureFromAlbum = async (artist, album, imageSize = 'large') => {
   return link;
 };
 
-const autoPictureForTrack = async (artist, trackName, trackURL) => {
+const autoPictureForTrack = async (trackURL) => {
   try {
     const metadata = await getId3Tags(trackURL);
 
     const { common } = metadata;
 
-    const { artist: dataArtist, title, album, picture } = common;
+    const { artist, title, album, picture } = common;
 
     const pictureData = picture?.[0];
 
     let trackPictureURL = defaultTrackCover;
 
     if (pictureData !== undefined) {
-      trackPictureURL = await getPictureFromTags(pictureData, {
-        artist,
-        trackName,
-      });
+      trackPictureURL = await getPictureFromTags(pictureData, artist, title);
     } else if ((album || artist) !== undefined) {
-      trackPictureURL = await getPictureFromAlbum(dataArtist, album);
+      trackPictureURL = await getPictureFromAlbum(artist, album);
     }
 
     return trackPictureURL;

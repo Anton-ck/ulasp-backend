@@ -1,29 +1,29 @@
-import path from "path";
-import * as fs from "fs";
+import path from 'path';
+import * as fs from 'fs';
 // import disk from "diskusage";
-import os from "os";
-import Track from "../models/trackModel.js";
-import PlayList from "../models/playlistModel.js";
-import Pics from "../models/picsModel.js";
-import Shop from "../models/shopModel.js";
-import ShopItem from "../models/shopItemModel.js";
-import ShopSubType from "../models/shopSubTypeModel.js";
-import HttpError from "../helpers/HttpError.js";
-import ctrlWrapper from "../helpers/ctrlWrapper.js";
+import os from 'os';
+import Track from '../models/trackModel.js';
+import PlayList from '../models/playlistModel.js';
+import Pics from '../models/picsModel.js';
+import Shop from '../models/shopModel.js';
+import ShopItem from '../models/shopItemModel.js';
+import ShopSubType from '../models/shopSubTypeModel.js';
+import HttpError from '../helpers/HttpError.js';
+import ctrlWrapper from '../helpers/ctrlWrapper.js';
 
-import { resizePics } from "../helpers/resizePics.js";
-import randomCover from "../helpers/randomCover.js";
+import { resizePics } from '../helpers/resizePics.js';
+import randomCover from '../helpers/randomCover.js';
 
-import isExistStringToLowerCase from "../helpers/compareStringToLowerCase.js";
+import isExistStringToLowerCase from '../helpers/compareStringToLowerCase.js';
 
-import autoPictureForTrack from "../helpers/autoPicureForTrack.js";
+import autoPictureForTrack from '../helpers/autoPicureForTrack.js';
 
-const publicDir = path.resolve("public/");
+const publicDir = path.resolve('public/');
 
 const uploadPics = async (req, res) => {
   const { type } = req.body;
   if (!req.file) {
-    throw HttpError(404, "File not found for upload");
+    throw HttpError(404, 'File not found for upload');
   }
   const picsURL = await resizePics(req.file, type);
   const cover = await Pics.create({ picsURL, ...req.body });
@@ -33,7 +33,7 @@ const uploadPics = async (req, res) => {
 };
 
 const getFreeDiskSpace = async (req, res) => {
-  let path = os.platform() === "win32" ? "c:" : "/";
+  let path = os.platform() === 'win32' ? 'c:' : '/';
   // const { free, available, total } = await disk.check(path);
 
   res.json({
@@ -169,8 +169,6 @@ const getFreeDiskSpace = async (req, res) => {
 //   });
 // };
 
-
-
 const updateTrackPicture = async (req, res) => {
   const { id } = req.body;
   const track = await Track.findById(id);
@@ -178,11 +176,9 @@ const updateTrackPicture = async (req, res) => {
     throw HttpError(404, `Track with ${id} not found`);
   }
 
-  const artist = track.artist;
-  const trackName = track.trackName;
   const trackURL = path.join(publicDir, track.trackURL);
 
-  const newCover = await autoPictureForTrack(artist, trackName, trackURL);
+  const newCover = await autoPictureForTrack(trackURL);
 
   if (!newCover) {
     throw HttpError(400, `Update Error`);
@@ -192,7 +188,7 @@ const updateTrackPicture = async (req, res) => {
     trackPictureURL: newCover,
   });
 
-  res.json({ m: "ok" });
+  res.json({ m: 'ok' });
 };
 
 const getTracksInChart = async (req, res) => {
@@ -206,20 +202,20 @@ const getTracksInChart = async (req, res) => {
 
   const tracksInChart = await Track.find(
     { isTopChart: true },
-    "-createdAt -updatedAt",
+    '-createdAt -updatedAt',
     {
       skip,
       limit,
-    }
+    },
   )
     .populate({
-      path: "playList",
-      select: "playListName",
+      path: 'playList',
+      select: 'playListName',
 
       options: {
         populate: {
-          path: "playlistGenre",
-          select: "genre",
+          path: 'playlistGenre',
+          select: 'genre',
         },
       },
     })
@@ -229,7 +225,7 @@ const getTracksInChart = async (req, res) => {
 
   const tracksSRC = await Track.find(
     { isTopChart: true },
-    "artist trackName trackURL"
+    'artist trackName trackURL',
   ).sort({ trackName: 1 });
   const totalPages = Math.ceil(totalTracks / limit);
   const pageNumber = page ? parseInt(page) : null;
@@ -255,7 +251,7 @@ const addTrackToChart = async (req, res) => {
     isTopChart: true,
   });
 
-  res.json({ m: "ok" });
+  res.json({ m: 'ok' });
 };
 
 const removeTrackFromChart = async (req, res) => {
@@ -270,10 +266,8 @@ const removeTrackFromChart = async (req, res) => {
     isTopChart: false,
   });
 
-  res.json({ m: "ok" });
+  res.json({ m: 'ok' });
 };
-
-
 
 const deleteTrackInPlaylist = async (req, res) => {
   const { trackId, playlistId } = req.params;
@@ -301,14 +295,14 @@ const deleteTrackInPlaylist = async (req, res) => {
   } else {
     throw HttpError(
       404,
-      `Track ${track.artist} ${track.trackName} not found in ${playList.playListName} playlist`
+      `Track ${track.artist} ${track.trackName} not found in ${playList.playListName} playlist`,
     );
   }
 
   res.status(200).json({
     message: `Track ${track.artist} ${track.trackName} was deleted in ${playList.playListName} playlist`,
 
-    code: "2000",
+    code: '2000',
     object: {
       artist: `${track.artist}`,
       trackName: `${track.trackName}`,
@@ -318,26 +312,24 @@ const deleteTrackInPlaylist = async (req, res) => {
 
 //написать доки
 
-
-
 const createShop = async (req, res) => {
   const { shopCategoryName } = req.body;
 
   const isExistShop = await Shop.findOne({ shopCategoryName });
 
-  if (shopCategoryName === " ") {
+  if (shopCategoryName === ' ') {
     throw HttpError(404, `shop is empty`);
   }
   if (isExistShop) {
     res.status(409).json({
       message: `${shopCategoryName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${shopCategoryName}`,
     });
     return;
   }
 
-  const randomPicUrl = await randomCover("shop");
+  const randomPicUrl = await randomCover('shop');
 
   const newShop = await Shop.create({
     ...req.body,
@@ -353,13 +345,13 @@ const updateShopById = async (req, res) => {
   const { id } = req.params;
   const { shopCategoryName, type } = req.body;
   const isExistShop = await Shop.findOne({ shopCategoryName });
-  if (shopCategoryName === " ") {
+  if (shopCategoryName === ' ') {
     throw HttpError(404, `shop is empty`);
   }
   if (isExistShop) {
     res.status(409).json({
       message: `${shopCategoryName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${shopCategoryName}`,
     });
     return;
@@ -376,7 +368,7 @@ const updateShopById = async (req, res) => {
     { ...req.body, shopAvatarURL: resizePicURL },
     {
       new: true,
-    }
+    },
   );
   res.json(newShop);
 };
@@ -391,12 +383,12 @@ const deleteShop = async (req, res) => {
   }
 
   if (shop.shopChildItems.length !== 0) {
-    console.log("Попали в if");
+    console.log('Попали в if');
     shop.shopChildItems.map(async (idShopChildItem) => {
       const childItems = await ShopItem.findById(idShopChildItem);
       childItems.shopChildSubType.map(
         async (idShopChildSubType) =>
-          await ShopSubType.findByIdAndRemove(idShopChildSubType)
+          await ShopSubType.findByIdAndRemove(idShopChildSubType),
       );
       await ShopItem.findByIdAndRemove(idShopChildItem);
       await Shop.findByIdAndUpdate(id, {
@@ -405,7 +397,7 @@ const deleteShop = async (req, res) => {
     });
     await Shop.findByIdAndRemove(id);
   } else {
-    console.log("Попали в else");
+    console.log('Попали в else');
     await Shop.findByIdAndRemove(id);
   }
   res.json({
@@ -421,13 +413,13 @@ const createCategoryShop = async (req, res) => {
   if (isExistCategoryShop) {
     res.status(409).json({
       message: `${shopItemName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${shopItemName}`,
     });
     return;
   }
 
-  const randomPicUrl = await randomCover("shop");
+  const randomPicUrl = await randomCover('shop');
 
   const newShopItem = await ShopItem.create({
     ...req.body,
@@ -443,7 +435,7 @@ const createCategoryShop = async (req, res) => {
     {
       $push: { shopParentType: shopId },
     },
-    { new: true }
+    { new: true },
   );
 
   res.status(201).json({
@@ -455,10 +447,10 @@ const getCategoryShopById = async (req, res) => {
   const { id } = req.params;
   const allPlaylistsInShopCategory = [];
   const shop = await ShopItem.findById(id)
-    .populate("playList")
+    .populate('playList')
     .populate({
-      path: "shopChildSubType",
-      options: { populate: "playList" },
+      path: 'shopChildSubType',
+      options: { populate: 'playList' },
     });
 
   if (!shop) {
@@ -469,8 +461,8 @@ const getCategoryShopById = async (req, res) => {
 
   shop.shopChildSubType.map((shopChildSubType) =>
     shopChildSubType.playList.map((playlist) =>
-      allPlaylistsInShopCategory.push(playlist)
-    )
+      allPlaylistsInShopCategory.push(playlist),
+    ),
   );
 
   res.json({ shop, allPlaylistsInShopCategory });
@@ -479,13 +471,13 @@ const updateCategoryShopById = async (req, res) => {
   const { id } = req.params;
   const { shopItemName, type } = req.body;
   const isExistShop = await ShopItem.findOne({ shopItemName });
-  if (shopItemName === " ") {
+  if (shopItemName === ' ') {
     throw HttpError(404, `shop is empty`);
   }
   if (isExistShop) {
     res.status(409).json({
       message: `${shopItemName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${shopItemName}`,
     });
     return;
@@ -502,7 +494,7 @@ const updateCategoryShopById = async (req, res) => {
     { ...req.body, shopItemAvatarURL: resizePicURL },
     {
       new: true,
-    }
+    },
   );
   res.json(newShop);
 };
@@ -522,7 +514,7 @@ const deleteCategoryShop = async (req, res) => {
 
   shopItem.shopChildSubType.map(
     async (idShopChildSubType) =>
-      await ShopSubType.findByIdAndRemove(idShopChildSubType)
+      await ShopSubType.findByIdAndRemove(idShopChildSubType),
   );
 
   await Shop.findByIdAndUpdate(shopItem.shopParentType[0]._id, {
@@ -543,25 +535,25 @@ const createSubCategoryShop = async (req, res) => {
   const isExistSubCategoryShop = await ShopSubType.findOne({
     shopSubTypeName: {
       $regex: shopSubTypeName.toString(),
-      $options: "i",
+      $options: 'i',
     },
   });
 
   const isExist = isExistStringToLowerCase(
     shopSubTypeName,
-    isExistSubCategoryShop?.shopSubTypeName
+    isExistSubCategoryShop?.shopSubTypeName,
   );
 
   if (isExist) {
     res.status(409).json({
       message: `${shopSubTypeName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${shopSubTypeName}`,
     });
     return;
   }
 
-  const randomPicUrl = await randomCover("shop");
+  const randomPicUrl = await randomCover('shop');
 
   const newShopSubCategory = await ShopSubType.create({
     ...req.body,
@@ -577,7 +569,7 @@ const createSubCategoryShop = async (req, res) => {
     {
       $push: { shopParentItem: shopItemId },
     },
-    { new: true }
+    { new: true },
   );
 
   res.status(201).json({
@@ -588,7 +580,7 @@ const createSubCategoryShop = async (req, res) => {
 const getSubCategoryShopById = async (req, res) => {
   const { id } = req.params;
 
-  const shop = await ShopSubType.findById(id).populate("playList");
+  const shop = await ShopSubType.findById(id).populate('playList');
 
   if (!shop) {
     throw HttpError(404, `Shop subcategory with ${id} not found`);
@@ -601,13 +593,13 @@ const updateSubCategoryShopById = async (req, res) => {
   const { id } = req.params;
   const { shopSubTypeName, type } = req.body;
   const isExistShopSubCategory = await ShopSubType.findOne({ shopSubTypeName });
-  if (shopSubTypeName === " ") {
+  if (shopSubTypeName === ' ') {
     throw HttpError(404, `shop is empty`);
   }
   if (isExistShopSubCategory) {
     res.status(409).json({
       message: `${shopSubTypeName} already in use`,
-      code: "4091",
+      code: '4091',
       object: `${shopSubTypeName}`,
     });
   }
@@ -623,7 +615,7 @@ const updateSubCategoryShopById = async (req, res) => {
     { ...req.body, shopSubTypeAvatarURL: resizePicURL },
     {
       new: true,
-    }
+    },
   );
   res.json(newShop);
 };
@@ -672,7 +664,7 @@ const deletePlaylistInShopSubCategory = async (req, res) => {
   } else {
     throw HttpError(
       404,
-      `Playlist "${playlist.playListName} "in subcategory "${subCategoryShop.shopSubTypeName}" not found`
+      `Playlist "${playlist.playListName} "in subcategory "${subCategoryShop.shopSubTypeName}" not found`,
     );
   }
   res.json({
@@ -704,7 +696,7 @@ const deletePlaylistInShopItem = async (req, res) => {
   } else {
     throw HttpError(
       404,
-      `Playlist "${playlist.playListName}" in item "${shopItem.shopItemName}" not found`
+      `Playlist "${playlist.playListName}" in item "${shopItem.shopItemName}" not found`,
     );
   }
   res.json({
