@@ -1,7 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import * as fs from 'fs';
-import generateLatinTranslation from '../helpers/translateToLatin.js';
+import slugify from '../helpers/slugify.js';
 
 const trackDir = path.resolve('public/tracks');
 
@@ -20,7 +20,7 @@ const FileNameToUtf8 = (file) => {
     .toString('utf8')
     .replaceAll(/[ #]/g, '__');
 
-  const fileName = generateLatinTranslation(translatedFileName);
+  const fileName = slugify(translatedFileName);
 
   return { fileName, translatedFileName };
 };
