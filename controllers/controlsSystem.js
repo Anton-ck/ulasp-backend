@@ -447,13 +447,12 @@ const deleteUnusedTracksCovers = async (req, res) => {
   const deletedFiles = new Array();
 
   for await (const file of allFilesInFolder) {
-    console.log('file', file);
     if (
       !resultSet.has(file.name) &&
       file.name !== '55x36_trackCover_default.jpg'
     ) {
       deletedFiles.push(file.name);
-      // await fs.unlink(path.join(trackCoversFolder, file));
+      await fs.unlink(path.join(trackCoversFolder, file.name));
     } else {
       arr.push(file.name);
     }
