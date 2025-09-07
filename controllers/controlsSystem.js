@@ -431,8 +431,46 @@ const updateTracksPictureInPlaylist = async (req, res) => {
   res.json({ m: result });
 };
 
+const deleteUnusedTracksCovers = async (req, res) => {
+  const trackCovers = await Track.find().distinct('trackPictureURL');
+  const publicFolder = path.resolve('public');
+
+  const trackCoversFolder = path.join(publicFolder, 'trackCovers');
+
+  const result = trackCovers.map((item) => item.split('/').pop());
+
+  const resultSet = new Set(result);
+
+  const allFilesInFolder = await fs.opendir(trackCoversFolder);
+
+  const arr = [];
+  const deletedFiles = new Array();
+
+  for await (const file of allFilesInFolder) {
+    console.log('file', file);
+    if (
+      !resultSet.has(file.name) &&
+      file.name !== '55x36_trackCover_default.jpg'
+    ) {
+      deletedFiles.push(file.name);
+      // await fs.unlink(path.join(trackCoversFolder, file));
+    } else {
+      arr.push(file.name);
+    }
+  }
+
+  res.json({
+    deletedFilesLength: deletedFiles.length,
+    deletedFiles,
+
+    remainingFiles: arr.length,
+    remainingList: arr,
+  });
+};
+
 export default {
   updateTracksPictureInPlaylist: ctrlWrapper(updateTracksPictureInPlaylist),
   deleteAllPicture: ctrlWrapper(deleteAllPicture),
   enrichDatabase: ctrlWrapper(enrichDatabase),
+  deleteUnusedTracksCovers: ctrlWrapper(deleteUnusedTracksCovers),
 };
