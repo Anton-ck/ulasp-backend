@@ -28,7 +28,7 @@ const getPictureFromTags = async (pictureData, artist, trackName) => {
 
     await fs.writeFile(tempPicture, buffer);
 
-    const result = await resizeTrackCover(tempPicture, 'trackCover');
+    const result = await resizeTrackCover(tempPicture, 'trackCover', 'file');
     await fs.unlink(tempPicture);
     return result;
   } catch (error) {
@@ -39,7 +39,9 @@ const getPictureFromTags = async (pictureData, artist, trackName) => {
 const getPictureFromAlbum = async (artist, album, imageSize = 'large') => {
   const trackPicture = await albumArt(artist, { album, size: imageSize });
 
-  const link = await resizeTrackCover(trackPicture, 'trackCover');
+  // console.log('файл получили');
+
+  const link = await resizeTrackCover(trackPicture, 'trackCover', 'noFile');
 
   return link;
 };
@@ -59,6 +61,8 @@ const autoPictureForTrack = async (trackURL) => {
     if (pictureData !== undefined) {
       trackPictureURL = await getPictureFromTags(pictureData, artist, title);
     } else if ((album || artist) !== undefined) {
+      console.log('Просим достать файл с интернета');
+
       trackPictureURL = await getPictureFromAlbum(artist, album);
     }
 
