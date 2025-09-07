@@ -24,6 +24,23 @@ const updateTracksPicture = async (idPlaylist) => {
       trackPictureURL: defaultTrackCover,
     }).lean();
 
+    // const res = await songs.reduce((promise, { _id, trackURL }) => {
+    //   const pr = promise.then(async (results) => {
+    //     const URL = path.join(publicDir, trackURL);
+
+    //     const result = await autoPictureForTrack(URL);
+
+    //     if (result) {
+    //       await Track.findByIdAndUpdate(_id, {
+    //         trackPictureURL: result,
+    //       });
+    //     }
+    //     return [...results, result];
+    //   });
+
+    //   return pr;
+    // }, Promise.resolve([]));
+
     const res = await Promise.all(
       songs.map(async ({ _id, trackURL }) => {
         const URL = path.join(publicDir, trackURL);

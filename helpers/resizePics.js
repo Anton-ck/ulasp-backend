@@ -3,6 +3,7 @@ import Jimp from 'jimp';
 import path from 'path';
 
 import { getRandomNumber } from './randomSort.js';
+import slugify from './slugify.js';
 
 const tempDirResize = path.resolve('tmp', 'resize');
 const picsDir = path.resolve('public', 'covers');
@@ -86,23 +87,25 @@ export const resizeAvatar = async (file) => {
   return avatarURL;
 };
 
-export const resizeTrackCover = async (link, type) => {
+export const resizeTrackCover = async (link, type, source = 'noFile') => {
   let fileName;
 
   fileName = link.split('/').pop();
 
-  fileName += getRandomNumber(1, 100000).toString();
+  fileName =
+    source === 'file'
+      ? slugify(fileName)
+      : getRandomNumber(1, 100000).toString();
 
-  console.log('fileName', fileName);
-
-  if (fileName.includes('.')) {
-    const [name] = fileName.split('.');
-
-    fileName = name;
-  }
+  // console.log('создали новое имя', fileName);
 
   const resizeImg = await Jimp.read(link);
+
+  // console.log('прочитали файл');
+
   const extentionFile = resizeImg._originalMime.split('/')[1];
+
+  // console.log('получили расширение файла', extentionFile);
 
   const sizeImg = '55x36_';
   const resizeFileName = `${sizeImg}${type}_${fileName}.${extentionFile}`;
@@ -110,11 +113,14 @@ export const resizeTrackCover = async (link, type) => {
 
   const resizeResultUpload = path.resolve(tempDirResize, resizeFileName);
 
+  // console.log('Просим изменить файл и перенести в папку темп');
   await resizeImg
     .autocrop({ cropSymmetric: true })
     .cover(55, 36)
     .quality(100)
     .writeAsync(`${tempDirResize}/${resizeFileName}`);
+
+  // console.log('просим с папки темп перенести в папку результат');
 
   await fs.rename(resizeResultUpload, resultUpload);
 

@@ -257,6 +257,29 @@ const groqPrompt = (track) => {
 const deleteAllPicture = async (req, res) => {
   const { idPlaylist } = req.body;
 
+  const checkFile = async (file) => {
+    try {
+      await fs.access(file);
+      console.log("It's OK");
+      return true;
+    } catch (error) {
+      console.log(`file doesn't exist`);
+      return false;
+    }
+  };
+
+  const deletePicture = async (file) => {
+    try {
+      const isFileExist = await checkFile(file);
+
+      console.log('isFileExist', isFileExist);
+
+      if (isFileExist) await fs.unlink(file);
+    } catch (error) {
+      console.log('delete picture ERROR');
+    }
+  };
+
   const playlist = await PlayList.findById({ _id: idPlaylist }, 'trackList');
 
   const tracks = await Track.find({ _id: { $in: playlist.trackList } });
@@ -272,15 +295,18 @@ const deleteAllPicture = async (req, res) => {
   const tmpFiles = await fs.readdir(tmpFolder, { withFileTypes: true });
   const resizeFiles = await fs.readdir(resizeFolder, { withFileTypes: true });
 
-  tracks.forEach(async (file) => {
-    const { trackPictureURL } = file;
+  for await (const track of tracks) {
+    const { _id, trackPictureURL } = track;
+    console.log('Прошли по записи', _id);
+
+    const fullPictureURL = path.join(trackCovers, trackPictureURL);
 
     if (trackPictureURL === 'trackCovers/55x36_trackCover_default.jpg') {
       return;
     }
-
-    await fs.unlink(path.join(trackCovers, trackPictureURL));
-  });
+    console.log('Просим удалить файл');
+    await deletePicture(fullPictureURL);
+  }
 
   // trackCoversFiles.forEach(async (file) => {
   //   if (
@@ -310,9 +336,14 @@ const deleteAllPicture = async (req, res) => {
     }
   });
 
-  await Track.updateMany({
-    trackPictureURL: 'trackCovers/55x36_trackCover_default.jpg',
-  });
+  // await Track.updateMany({
+  //   trackPictureURL: 'trackCovers/55x36_trackCover_default.jpg',
+  // });
+
+  await Track.updateMany(
+    { _id: { $in: playlist.trackList } },
+    { $set: { trackPictureURL: 'trackCovers/55x36_trackCover_default.jpg' } },
+  );
 
   res.json({ m: 'ok' });
 };
