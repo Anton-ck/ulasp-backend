@@ -95,7 +95,7 @@ export const resizeTrackCover = async (link, type, source = 'noFile') => {
   fileName =
     source === 'file'
       ? slugify(fileName.split('.')[0])
-      : getRandomNumber(1, 100000).toString();
+      : getRandomNumber(1, 100000).toString() + Date.now();
 
   // console.log('создали новое имя', fileName);
 
