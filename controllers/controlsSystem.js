@@ -467,9 +467,86 @@ const deleteUnusedTracksCovers = async (req, res) => {
   });
 };
 
+const deletePictureInPlaylist = async (req, res) => {
+  const { idPlaylist } = req.body;
+
+  const checkFile = async (file) => {
+    try {
+      await fs.access(file);
+      console.log("It's OK");
+      return true;
+    } catch (error) {
+      console.log(`file doesn't exist`);
+      return false;
+    }
+  };
+
+  const deletePicture = async (file) => {
+    try {
+      const isFileExist = await checkFile(file);
+
+      console.log('isFileExist', isFileExist);
+
+      if (isFileExist) await fs.unlink(file);
+    } catch (error) {
+      console.log('delete picture ERROR');
+    }
+  };
+
+  const playlist = await PlayList.findById({ _id: idPlaylist }, 'trackList');
+
+  const tracks = await Track.find({ _id: { $in: playlist.trackList } });
+
+  const trackCovers = path.resolve('public');
+  const tmpFolder = path.resolve('tmp');
+  const resizeFolder = path.resolve(tmpFolder, 'resize');
+
+  const tmpFiles = await fs.readdir(tmpFolder, { withFileTypes: true });
+  const resizeFiles = await fs.readdir(resizeFolder, { withFileTypes: true });
+
+  const deletedFiles = new Array();
+
+  for await (const track of tracks) {
+    const { _id, trackPictureURL } = track;
+    console.log('Прошли по записи', _id);
+
+    const fullPictureURL = path.join(trackCovers, trackPictureURL);
+
+    if (trackPictureURL !== 'trackCovers/55x36_trackCover_default.jpg') {
+      deletedFiles.push(trackPictureURL.split('/')[1]);
+      console.log('Просим удалить файл');
+      await deletePicture(fullPictureURL);
+    }
+  }
+
+  tmpFiles.forEach(async (file) => {
+    if (file.isFile()) {
+      await fs.unlink(path.join(tmpFolder.toString(), file.name));
+    }
+  });
+
+  resizeFiles.forEach(async (file) => {
+    if (file.name === '.gitkeep') {
+      return;
+    }
+
+    if (file.isFile()) {
+      await fs.unlink(path.join(resizeFolder.toString(), file.name));
+    }
+  });
+
+  await Track.updateMany(
+    { _id: { $in: playlist.trackList } },
+    { $set: { trackPictureURL: 'trackCovers/55x36_trackCover_default.jpg' } },
+  );
+
+  res.json({ deletedFiles });
+};
+
 export default {
   updateTracksPictureInPlaylist: ctrlWrapper(updateTracksPictureInPlaylist),
   deleteAllPicture: ctrlWrapper(deleteAllPicture),
   enrichDatabase: ctrlWrapper(enrichDatabase),
   deleteUnusedTracksCovers: ctrlWrapper(deleteUnusedTracksCovers),
+  deletePictureInPlaylist: ctrlWrapper(deletePictureInPlaylist),
 };

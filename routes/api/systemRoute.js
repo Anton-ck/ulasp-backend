@@ -12,4 +12,6 @@ router.get('/ai', sysControllers.enrichDatabase);
 
 router.post('/delete_track_covers', sysControllers.deleteUnusedTracksCovers);
 
+router.post('/img_delete_playlist', sysControllers.deletePictureInPlaylist);
+
 export default router;
